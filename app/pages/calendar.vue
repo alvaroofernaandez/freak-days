@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Tv, BookOpen, Ticket, Plus, Trash2, X } from 'lucide-vue-next'
-import type { Release, ReleaseType, CreateReleaseDTO } from '../composables/useCalendar'
+import type { Release, ReleaseType, CreateReleaseDTO } from '@/composables/useCalendar'
 
 const calendarApi = useCalendar()
 

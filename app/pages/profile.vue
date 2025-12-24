@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { User, Edit2, Save, LogOut, Sparkles, Trophy, Calendar, Target, X } from 'lucide-vue-next'
-import type { UserProfile } from '../composables/useProfile'
+import type { UserProfile } from '@/composables/useProfile'
 import { useAuthStore } from '~~/stores/auth'
 
 const profileApi = useProfile()

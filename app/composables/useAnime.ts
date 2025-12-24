@@ -26,6 +26,8 @@ export interface CreateAnimeDTO {
   status: AnimeStatus;
   total_episodes?: number;
   score?: number;
+  cover_url?: string;
+  notes?: string;
 }
 
 export function useAnime() {
@@ -62,24 +64,42 @@ export function useAnime() {
   }
 
   async function addAnime(dto: CreateAnimeDTO): Promise<AnimeEntry | null> {
-    if (!authStore.userId) return null;
+    if (!authStore.userId) {
+      console.error('No user ID available')
+      return null
+    }
 
-    const { data, error } = await supabase
-      .from("anime_list")
-      .insert({
-        user_id: authStore.userId,
-        title: dto.title,
-        status: dto.status,
-        total_episodes: dto.total_episodes,
-        score: dto.score,
-        current_episode: 0,
-      })
-      .select()
-      .single();
+    if (!dto.title || !dto.title.trim()) {
+      console.error('Title is required')
+      return null
+    }
 
-    if (error) throw error;
+    try {
+      const { data, error } = await supabase
+        .from("anime_list")
+        .insert({
+          user_id: authStore.userId,
+          title: dto.title.trim(),
+          status: dto.status,
+          total_episodes: dto.total_episodes || null,
+          score: dto.score || null,
+          cover_url: dto.cover_url || null,
+          notes: dto.notes || null,
+          current_episode: 0,
+        })
+        .select()
+        .single();
 
-    return data ? mapDbToAnime(data) : null;
+      if (error) {
+        console.error('Supabase error:', error)
+        throw error
+      }
+
+      return data ? mapDbToAnime(data) : null
+    } catch (error) {
+      console.error('Error in addAnime:', error)
+      throw error
+    }
   }
 
   async function updateProgress(id: string, episode: number): Promise<boolean> {

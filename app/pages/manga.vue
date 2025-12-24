@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { BookOpen, Plus, Star, Trash2, X, Minus } from 'lucide-vue-next'
-import type { MangaEntry, CreateMangaDTO } from '../composables/useManga'
+import type { MangaEntry, CreateMangaDTO } from '@/composables/useManga'
 
 const mangaApi = useManga()
 

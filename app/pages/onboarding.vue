@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { Check, ChevronRight, Dumbbell, BookOpen, Tv, Swords, Users, Calendar } from 'lucide-vue-next'
-import { useModulesStore } from '../../stores/modules'
-import { useAuthStore } from '../../stores/auth'
-import type { ModuleId } from '../../domain/types'
-import Logo from '../components/Logo.vue'
+import { Check, ChevronRight } from 'lucide-vue-next'
+import { useModulesStore } from '~~/stores/modules'
+import { useAuthStore } from '~~/stores/auth'
+import type { ModuleId } from '@/domain/types'
+import Logo from '@/components/Logo.vue'
+import { getModuleIcon } from '@/domain/constants/module-icons'
 
 const modulesStore = useModulesStore()
 const authStore = useAuthStore()
@@ -12,15 +13,6 @@ const router = useRouter()
 
 const selectedModules = ref<Set<ModuleId>>(new Set())
 const saving = ref(false)
-
-const iconMap: Record<string, any> = {
-  dumbbell: Dumbbell,
-  'book-open': BookOpen,
-  tv: Tv,
-  sword: Swords,
-  users: Users,
-  calendar: Calendar
-}
 
 function toggleSelection(id: ModuleId) {
   if (selectedModules.value.has(id)) {
@@ -78,7 +70,7 @@ const canContinue = computed(() => selectedModules.value.size > 0 && !saving.val
           >
             <CardHeader class="flex flex-row items-center gap-4 py-4">
               <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                <component :is="iconMap[module.icon]" class="h-6 w-6 text-primary" />
+                <component :is="getModuleIcon(module.icon)" class="h-6 w-6 text-primary" />
               </div>
               <div class="flex-1 min-w-0">
                 <CardTitle class="text-base">{{ module.name }}</CardTitle>

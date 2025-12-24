@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { CheckCircle2, XCircle, Info, AlertTriangle, X } from 'lucide-vue-next'
-import { useToast, type ToastType } from '../composables/useToast'
+import { useToast, type ToastType } from '@/composables/useToast'
 
 const { toasts, remove } = useToast()
 

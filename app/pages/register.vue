@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { UserPlus, Mail, Lock, Eye, EyeOff, Gamepad2, Sparkles, Zap, Check, ShieldCheck, AlertCircle } from 'lucide-vue-next'
-import { useAuthStore } from '../../stores/auth'
+import { useAuthStore } from '~~/stores/auth'
 
 definePageMeta({
   layout: false

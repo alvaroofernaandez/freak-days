@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ModuleId, AppModule } from "../domain/types";
 import { ALL_MODULES } from "../domain/types";
 
@@ -51,8 +52,7 @@ export const useModulesStore = defineStore("modules", () => {
     synced.value = true;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async function syncToDatabase(supabase: any, userId: string) {
+  async function syncToDatabase(supabase: SupabaseClient, userId: string) {
     const enabledIds = enabledModules.value.map((m) => m.id);
 
     await supabase.from("user_modules").delete().eq("user_id", userId);

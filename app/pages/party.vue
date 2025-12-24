@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Users, Plus, Crown, UserPlus, X, Copy, Check, LogOut } from 'lucide-vue-next'
-import type { Party } from '../composables/useParties'
+import type { Party } from '@/composables/useParties'
 
 const partiesApi = useParties()
 const authStore = useAuthStore()
