@@ -11,8 +11,12 @@ export interface Quest {
   status: QuestStatus;
   streak: number;
   dueDate: Date | null;
+  dueTime: string | null;
+  reminderMinutesBefore: number | null;
   createdAt: Date;
   completedAt: Date | null;
+  isOverdue?: boolean;
+  isDueSoon?: boolean;
 }
 
 export const DIFFICULTY_EXP: Record<QuestDifficulty, number> = {

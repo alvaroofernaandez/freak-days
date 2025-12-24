@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { UserPlus, Mail, Lock, Eye, EyeOff, Gamepad2, Sparkles, Zap, Check, ShieldCheck } from 'lucide-vue-next'
+import { UserPlus, Mail, Lock, Eye, EyeOff, Gamepad2, Sparkles, Zap, Check, ShieldCheck, AlertCircle } from 'lucide-vue-next'
 import { useAuthStore } from '../../stores/auth'
 
 definePageMeta({
@@ -206,7 +206,7 @@ function handleGoogleSignIn() {
               </div>
 
               <div v-if="authStore.error" class="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm flex items-center gap-2">
-                <span class="shrink-0">⚠️</span>
+                <AlertCircle class="h-4 w-4 shrink-0" />
                 {{ authStore.error }}
               </div>
 

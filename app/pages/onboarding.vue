@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { Check, Sparkles, ChevronRight } from 'lucide-vue-next'
+import { Check, ChevronRight, Dumbbell, BookOpen, Tv, Swords, Users, Calendar } from 'lucide-vue-next'
 import { useModulesStore } from '../../stores/modules'
 import { useAuthStore } from '../../stores/auth'
 import type { ModuleId } from '../../domain/types'
+import Logo from '../components/Logo.vue'
 
 const modulesStore = useModulesStore()
 const authStore = useAuthStore()
@@ -12,13 +13,13 @@ const router = useRouter()
 const selectedModules = ref<Set<ModuleId>>(new Set())
 const saving = ref(false)
 
-const iconMap: Record<string, string> = {
-  dumbbell: '🏋️',
-  'book-open': '📚',
-  tv: '📺',
-  sword: '⚔️',
-  users: '👥',
-  calendar: '📅'
+const iconMap: Record<string, any> = {
+  dumbbell: Dumbbell,
+  'book-open': BookOpen,
+  tv: Tv,
+  sword: Swords,
+  users: Users,
+  calendar: Calendar
 }
 
 function toggleSelection(id: ModuleId) {
@@ -51,7 +52,7 @@ const canContinue = computed(() => selectedModules.value.size > 0 && !saving.val
     <div class="flex-1 flex flex-col max-w-lg mx-auto w-full px-4 py-6 sm:py-10">
       <header class="text-center space-y-3 mb-6">
         <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 mb-2">
-          <Sparkles class="h-7 w-7 text-primary" />
+          <Logo class="h-7 w-7" />
         </div>
         <h1 class="text-2xl sm:text-3xl font-bold">Configura tu Aventura</h1>
         <p class="text-muted-foreground text-sm sm:text-base">
@@ -76,7 +77,9 @@ const canContinue = computed(() => selectedModules.value.size > 0 && !saving.val
             ]"
           >
             <CardHeader class="flex flex-row items-center gap-4 py-4">
-              <span class="text-3xl">{{ iconMap[module.icon] }}</span>
+              <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <component :is="iconMap[module.icon]" class="h-6 w-6 text-primary" />
+              </div>
               <div class="flex-1 min-w-0">
                 <CardTitle class="text-base">{{ module.name }}</CardTitle>
                 <CardDescription class="text-xs truncate">{{ module.description }}</CardDescription>

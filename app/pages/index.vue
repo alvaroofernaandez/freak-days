@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Sparkles, ArrowRight, ChevronRight, Zap, Target, Trophy } from 'lucide-vue-next'
+import { ArrowRight, ChevronRight, Zap, Target, Trophy, Dumbbell, BookOpen, Tv, Swords, Users, Calendar } from 'lucide-vue-next'
 import { useModulesStore } from '../../stores/modules'
 import { useAuthStore } from '../../stores/auth'
 import type { UserProfile } from '../composables/useProfile'
@@ -52,13 +52,13 @@ const expProgress = computed(() => {
   return profileApi.expForNextLevel(profile.value.totalExp)
 })
 
-const iconMap: Record<string, string> = {
-  dumbbell: '🏋️',
-  'book-open': '📚',
-  tv: '📺',
-  sword: '⚔️',
-  users: '👥',
-  calendar: '📅'
+const iconMap: Record<string, any> = {
+  dumbbell: Dumbbell,
+  'book-open': BookOpen,
+  tv: Tv,
+  sword: Swords,
+  users: Users,
+  calendar: Calendar
 }
 </script>
 
@@ -68,11 +68,11 @@ const iconMap: Record<string, string> = {
       <div class="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" />
     </div>
     
-    <section v-else-if="!modulesStore.hasCompletedOnboarding" class="flex flex-col items-center text-center space-y-6 py-8">
-      <div class="relative">
-        <div class="absolute -inset-4 bg-primary/20 blur-3xl rounded-full animate-pulse" />
-        <Sparkles class="relative h-16 w-16 text-primary" />
-      </div>
+          <section v-else-if="!authStore.isAuthenticated" class="flex flex-col items-center text-center space-y-6 py-8">
+            <div class="relative">
+              <div class="absolute -inset-4 bg-primary/20 blur-3xl rounded-full animate-pulse" />
+              <Logo class="relative h-16 w-16" />
+            </div>
       
       <div class="space-y-2">
         <h1 class="text-3xl sm:text-4xl font-bold text-gradient">
@@ -155,9 +155,9 @@ const iconMap: Record<string, string> = {
               <div class="absolute inset-0 bg-linear-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-0" />
               <CardHeader class="pb-2 relative z-10">
                 <div class="flex items-center gap-3">
-                  <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <span class="text-2xl">{{ iconMap[module.icon] }}</span>
-                  </div>
+                      <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <component :is="iconMap[module.icon]" class="h-6 w-6 text-primary" />
+                      </div>
                   <div class="flex-1 min-w-0">
                     <CardTitle class="text-base truncate">{{ module.name }}</CardTitle>
                     <CardDescription class="text-xs truncate">{{ module.description }}</CardDescription>

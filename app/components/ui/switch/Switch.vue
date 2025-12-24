@@ -13,7 +13,7 @@ const props = defineProps<SwitchRootProps & { class?: HTMLAttributes["class"] }>
 
 const emits = defineEmits<SwitchRootEmits>()
 
-const delegatedProps = reactiveOmit(props, "class")
+const delegatedProps = reactiveOmit(props, "class", "checked")
 
 const forwarded = useForwardPropsEmits(delegatedProps, emits)
 </script>
@@ -22,6 +22,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
   <SwitchRoot
     v-slot="slotProps"
     data-slot="switch"
+    :checked="!!props.checked"
     v-bind="forwarded"
     :class="cn(
       'peer data-[state=checked]:bg-primary data-[state=unchecked]:bg-input focus-visible:border-ring focus-visible:ring-ring/50 dark:data-[state=unchecked]:bg-input/80 inline-flex h-[1.15rem] w-8 shrink-0 items-center rounded-full border border-transparent shadow-xs transition-all outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',

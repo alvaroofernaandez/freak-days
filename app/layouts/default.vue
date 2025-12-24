@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { Home, Settings, Swords, Calendar, Users, Dumbbell, Sparkles, User, Tv, BookOpen, Menu, X, LogOut } from 'lucide-vue-next'
+import { Home, Settings, Swords, Calendar, Users, Dumbbell, Trophy, User, Tv, BookOpen, Menu, X, LogOut } from 'lucide-vue-next'
 import { useModulesStore } from '../../stores/modules'
 import type { UserProfile } from '../composables/useProfile'
 import { useAuthStore } from '~~/stores/auth'
+import Logo from '../components/Logo.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -74,10 +75,9 @@ async function handleLogout() {
       <div class="container mx-auto flex h-14 items-center px-4">
         <NuxtLink to="/" class="flex items-center gap-2 font-bold text-xl group">
           <div class="relative">
-            <Sparkles class="h-6 w-6 text-primary transition-transform group-hover:scale-110" />
+            <Logo class="h-6 w-6 transition-transform group-hover:scale-110" />
             <div class="absolute inset-0 bg-primary/20 blur-lg rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
-          <span class="text-gradient">FreakDays</span>
         </NuxtLink>
 
         <nav class="ml-8 flex items-center gap-1">
@@ -132,7 +132,7 @@ async function handleLogout() {
             <div class="flex flex-col items-end">
               <div class="flex items-center gap-1.5">
                 <div class="relative">
-                  <Sparkles class="h-4 w-4 text-exp-legendary" />
+                  <Trophy class="h-4 w-4 text-exp-legendary" />
                 </div>
                 <span class="text-sm font-semibold">Lv.{{ profile.level }}</span>
               </div>
@@ -157,8 +157,7 @@ async function handleLogout() {
     <header class="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-xl lg:hidden">
       <div class="flex h-14 items-center justify-between px-4">
         <NuxtLink to="/" class="flex items-center gap-2 font-bold text-lg">
-          <Sparkles class="h-5 w-5 text-primary" />
-          <span class="text-gradient">FreakDays</span>
+          <Logo class="h-5 w-5" />
         </NuxtLink>
         
         <NuxtLink 
@@ -167,7 +166,7 @@ async function handleLogout() {
           class="flex items-center gap-2"
         >
           <div class="flex items-center gap-1.5">
-            <Sparkles class="h-4 w-4 text-exp-legendary" />
+            <Trophy class="h-4 w-4 text-exp-legendary" />
             <span class="text-sm font-semibold">Lv.{{ profile.level }}</span>
           </div>
           <Avatar class="h-8 w-8">
@@ -267,7 +266,7 @@ async function handleLogout() {
                 <div class="font-medium">Mi Perfil</div>
                 <div class="text-xs text-muted-foreground">Ver progreso y estadísticas</div>
               </div>
-              <Sparkles class="h-4 w-4 text-exp-legendary" />
+              <Trophy class="h-4 w-4 text-exp-legendary" />
             </NuxtLink>
             <NuxtLink to="/settings" class="flex items-center gap-3 p-4 hover:bg-muted/50 transition-colors border-b border-border/50">
               <Settings class="h-5 w-5 text-muted-foreground" />
