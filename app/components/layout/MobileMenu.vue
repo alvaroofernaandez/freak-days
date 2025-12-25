@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { User, Settings, LogOut, X } from 'lucide-vue-next'
+import { User, Settings, LogOut, X, Trophy } from 'lucide-vue-next'
 import type { Component } from 'vue'
 
 interface NavItem {
@@ -23,10 +23,12 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div 
-    v-if="open"
-    class="fixed inset-0 z-40 bg-background/95 backdrop-blur-sm lg:hidden flex flex-col pt-16 animate-in slide-in-from-bottom-10 fade-in duration-200"
-  >
+  <Teleport to="body">
+    <div 
+      v-if="open"
+      class="fixed inset-0 z-40 bg-background/95 backdrop-blur-sm lg:hidden flex flex-col pt-16 animate-in slide-in-from-bottom-10 fade-in duration-200"
+      @click.self="emit('close')"
+    >
     <div class="flex-1 overflow-y-auto p-4 space-y-6">
       <div class="grid grid-cols-2 gap-3">
         <ClientOnly>
@@ -59,13 +61,6 @@ const emit = defineEmits<{
             </div>
             <Trophy class="h-4 w-4 text-exp-legendary" />
           </NuxtLink>
-          <NuxtLink to="/settings" class="flex items-center gap-3 p-4 hover:bg-muted/50 transition-colors border-b border-border/50" @click="emit('close')">
-            <Settings class="h-5 w-5 text-muted-foreground" />
-            <div class="flex-1">
-              <div class="font-medium">Configuración</div>
-              <div class="text-xs text-muted-foreground">Gestionar módulos</div>
-            </div>
-          </NuxtLink>
           <button @click="emit('logout')" class="w-full flex items-center gap-3 p-4 hover:bg-destructive/10 transition-colors text-destructive text-left">
             <LogOut class="h-5 w-5" />
             <span class="font-medium">Cerrar Sesión</span>
@@ -80,6 +75,7 @@ const emit = defineEmits<{
         Cerrar Menú
       </Button>
     </div>
-  </div>
+    </div>
+  </Teleport>
 </template>
 

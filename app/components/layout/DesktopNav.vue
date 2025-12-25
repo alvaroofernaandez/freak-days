@@ -16,19 +16,23 @@ defineProps<Props>()
 </script>
 
 <template>
-  <nav class="ml-8 flex items-center gap-1">
-    <NuxtLink 
-      v-for="item in items"
-      :key="item.to"
-      :to="item.to" 
-      class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all"
-      :class="isActive(item.to) 
-        ? 'bg-primary/10 text-primary' 
-        : 'text-muted-foreground hover:text-foreground hover:bg-muted'"
-    >
-      <component :is="item.icon" class="h-4 w-4" />
-      {{ item.label }}
-    </NuxtLink>
-  </nav>
+  <ClientOnly>
+    <nav class="ml-8 flex items-center gap-1" style="position: relative; z-index: 10000;">
+      <NuxtLink v-for="item in items" :key="item.to" :to="item.to"
+        class="relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 group/nav"
+        style="position: relative; z-index: 10001; pointer-events: auto !important;" :class="isActive(item.to)
+          ? 'text-primary'
+          : 'text-muted-foreground hover:text-foreground'">
+        <div v-if="isActive(item.to)" class="absolute inset-0 bg-primary/10 rounded-lg -z-10 pointer-events-none" />
+        <div
+          class="absolute inset-0 bg-muted/50 rounded-lg opacity-0 group-hover/nav:opacity-100 transition-opacity duration-200 -z-10 pointer-events-none"
+          :class="isActive(item.to) && 'opacity-0'" />
+        <component :is="item.icon" class="h-4 w-4 transition-transform duration-200 group-hover/nav:scale-110"
+          :class="isActive(item.to) ? 'text-primary' : ''" />
+        <span class="relative">{{ item.label }}</span>
+        <div v-if="isActive(item.to)"
+          class="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-primary rounded-full pointer-events-none" />
+      </NuxtLink>
+    </nav>
+  </ClientOnly>
 </template>
-
