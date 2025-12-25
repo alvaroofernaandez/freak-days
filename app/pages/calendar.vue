@@ -1,199 +1,174 @@
 <script setup lang="ts">
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Tv, BookOpen, Ticket, Plus, Trash2, X } from 'lucide-vue-next'
-import type { Release, ReleaseType, CreateReleaseDTO } from '@/composables/useCalendar'
+import { Calendar as CalendarIcon, Plus, Ticket, Tv, BookOpen, X } from 'lucide-vue-next'
+import type { ReleaseType } from '@/composables/useCalendar'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DatePicker } from '@/components/ui/date-picker'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import CalendarGrid from '@/components/calendar/CalendarGrid.vue'
+import { useCalendarPage } from '@/composables/useCalendarPage'
 
-const calendarApi = useCalendar()
+const {
+  releases,
+  loading,
+  modal,
+  currentMonth,
+  newRelease,
+  monthName,
+  formatDate,
+  addRelease,
+  updateEventDate,
+  deleteReleaseEntry,
+} = useCalendarPage()
 
-const releases = ref<Release[]>([])
-const loading = ref(true)
-const showAddModal = ref(false)
-const currentMonth = ref(new Date())
-
-const newRelease = ref<CreateReleaseDTO>({
-  title: '',
-  type: 'anime_episode',
-  release_date: new Date().toISOString().split('T')[0],
-  notes: ''
-})
-
-const typeConfig: Record<ReleaseType, { icon: any, color: string, label: string }> = {
+const typeConfig: Record<ReleaseType, { icon: any; color: string; label: string }> = {
   anime_episode: { icon: Tv, color: 'text-primary', label: 'Episodio Anime' },
   manga_volume: { icon: BookOpen, color: 'text-exp-easy', label: 'Tomo Manga' },
-  event: { icon: Ticket, color: 'text-exp-legendary', label: 'Evento' }
+  event: { icon: Ticket, color: 'text-exp-legendary', label: 'Evento' },
 }
 
-onMounted(async () => {
-  await loadReleases()
-})
-
-async function loadReleases() {
-  loading.value = true
-  try {
-    releases.value = await calendarApi.fetchUpcoming(90)
-  } finally {
-    loading.value = false
-  }
+function handleMonthChange(date: Date) {
+  currentMonth.value = date
 }
 
-async function addRelease() {
-  if (!newRelease.value.title.trim()) return
-
-  const created = await calendarApi.addRelease(newRelease.value)
-  if (created) {
-    releases.value.push(created)
-    releases.value.sort((a, b) => a.releaseDate.getTime() - b.releaseDate.getTime())
-    newRelease.value = { title: '', type: 'anime_episode', release_date: new Date().toISOString().split('T')[0], notes: '' }
-    showAddModal.value = false
-  }
+function handleEventUpdate(eventId: string, date: Date) {
+  updateEventDate(eventId, date)
 }
-
-async function deleteReleaseEntry(id: string) {
-  const success = await calendarApi.deleteRelease(id)
-  if (success) {
-    releases.value = releases.value.filter(r => r.id !== id)
-  }
-}
-
-function formatDate(date: Date) {
-  return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
-}
-
-function previousMonth() {
-  currentMonth.value = new Date(currentMonth.value.setMonth(currentMonth.value.getMonth() - 1))
-}
-
-function nextMonth() {
-  currentMonth.value = new Date(currentMonth.value.setMonth(currentMonth.value.getMonth() + 1))
-}
-
-const monthName = computed(() => 
-  currentMonth.value.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
-)
-
-function isThisMonth(date: Date): boolean {
-  return date.getMonth() === currentMonth.value.getMonth() && 
-         date.getFullYear() === currentMonth.value.getFullYear()
-}
-
-const filteredReleases = computed(() => 
-  releases.value.filter(r => isThisMonth(r.releaseDate))
-)
 </script>
 
 <template>
-  <div class="space-y-6">
-    <header class="flex items-center justify-between">
-      <div>
-        <h1 class="text-xl sm:text-2xl font-bold flex items-center gap-2">
-          <CalendarIcon class="h-6 w-6 text-primary" />
-          Calendario
-        </h1>
-        <p class="text-muted-foreground text-sm">
-          Próximos lanzamientos y eventos
-        </p>
-      </div>
-      <Button size="icon" class="h-10 w-10 rounded-full glow-primary" @click="showAddModal = true">
-        <Plus class="h-5 w-5" />
+  <div class="space-y-2 px-1 sm:px-0 pb-2 h-full flex flex-col overflow-visible">
+    <header class="flex items-center justify-between gap-2 sm:gap-3 shrink-0">
+      <h1 class="text-base sm:text-lg font-bold flex items-center gap-2">
+        <CalendarIcon class="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" aria-hidden="true" />
+        <span>Calendario</span>
+      </h1>
+      <Button
+        size="sm"
+        class="h-8 sm:h-9 px-3 glow-primary touch-manipulation shrink-0"
+        @click="modal.open()"
+        aria-label="Añadir nuevo evento"
+      >
+        <Plus class="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5" />
+        <span class="hidden sm:inline">Añadir</span>
       </Button>
     </header>
 
-    <Card>
-      <CardHeader class="flex flex-row items-center justify-between py-3">
-        <Button variant="ghost" size="icon" @click="previousMonth">
-          <ChevronLeft class="h-4 w-4" />
-        </Button>
-        <span class="font-medium capitalize">{{ monthName }}</span>
-        <Button variant="ghost" size="icon" @click="nextMonth">
-          <ChevronRight class="h-4 w-4" />
-        </Button>
-      </CardHeader>
-    </Card>
+    <CalendarGrid
+      :current-month="currentMonth"
+      :events="releases"
+      :loading="loading"
+      @update:current-month="handleMonthChange"
+      @update:event="handleEventUpdate"
+      @delete="deleteReleaseEntry"
+      @add="modal.open()"
+    />
 
-    <section class="space-y-3">
-      <h2 class="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-        Lanzamientos de {{ monthName }}
-      </h2>
-      
-      <div v-if="loading" class="text-center py-8">
-        <div class="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto" />
-      </div>
-      
-      <Card v-for="release in filteredReleases" :key="release.id" class="hover:border-primary/30 transition-colors">
-        <CardHeader class="flex flex-row items-center gap-3 py-3 px-4">
-          <div class="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-            <component :is="typeConfig[release.type].icon" class="h-5 w-5" :class="typeConfig[release.type].color" />
+    <ClientOnly>
+      <Teleport to="body">
+        <Transition name="modal">
+          <div
+            v-if="modal.isOpen.value"
+            class="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-6 bg-background/95 backdrop-blur-sm overflow-y-auto"
+            style="pointer-events: auto;"
+            @click.self="modal.close()"
+            @keydown.esc="modal.close()"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="add-event-title"
+          >
+            <Card class="w-full max-w-md shadow-xl border-2 my-auto" @click.stop>
+              <CardHeader class="flex flex-row items-center justify-between pb-3 sm:pb-4 p-4 sm:p-6">
+                <CardTitle id="add-event-title" class="text-lg sm:text-xl">Nuevo Evento</CardTitle>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  class="h-9 w-9 sm:h-8 sm:w-8 touch-manipulation"
+                  @click="modal.close()"
+                  aria-label="Cerrar"
+                >
+                  <X class="h-4 w-4" />
+                </Button>
+              </CardHeader>
+              <CardContent class="space-y-4 sm:space-y-5 p-4 sm:p-6 pt-0">
+                <div class="space-y-2">
+                  <Label for="title" class="text-sm font-semibold">Título *</Label>
+                  <Input
+                    id="title"
+                    v-model="newRelease.title"
+                    placeholder="Ej: One Piece Ep. 1120"
+                    class="w-full h-11 sm:h-10 text-sm"
+                    maxlength="100"
+                    aria-required="true"
+                    autocomplete="off"
+                    @keydown.enter.prevent="addRelease"
+                  />
+                  <p class="text-xs text-muted-foreground">
+                    {{ newRelease.title.length }}/100 caracteres
+                  </p>
+                </div>
+                <div class="space-y-2">
+                  <Label for="date" class="text-sm font-semibold">Fecha *</Label>
+                  <DatePicker
+                    id="date"
+                    v-model="newRelease.release_date"
+                    placeholder="Selecciona una fecha"
+                    class="w-full h-11 sm:h-10"
+                    aria-required="true"
+                  />
+                </div>
+                <div class="space-y-2">
+                  <Label class="text-sm font-semibold">Tipo *</Label>
+                  <div class="grid grid-cols-3 gap-2 sm:gap-3" role="radiogroup" aria-label="Tipo de evento">
+                    <Button
+                      v-for="(config, type) in typeConfig"
+                      :key="type"
+                      :variant="newRelease.type === type ? 'default' : 'outline'"
+                      size="sm"
+                      class="text-xs sm:text-sm flex-col h-auto py-3 sm:py-4 touch-manipulation min-h-[80px] sm:min-h-[90px] transition-all"
+                      :class="newRelease.type === type && 'ring-2 ring-primary/50 shadow-md'"
+                      :aria-pressed="newRelease.type === type"
+                      role="radio"
+                      :aria-label="config.label"
+                      @click="newRelease.type = type"
+                    >
+                      <component
+                        :is="config.icon"
+                        :class="['h-5 w-5 sm:h-6 sm:w-6 mb-2', config.color]"
+                        aria-hidden="true"
+                      />
+                      <span class="font-semibold">{{ config.label.split(' ')[0] }}</span>
+                    </Button>
+                  </div>
+                </div>
+                <div class="pt-2">
+                  <Button
+                    class="w-full min-h-[44px] text-sm font-semibold glow-primary"
+                    @click="addRelease"
+                    :disabled="!newRelease.title.trim() || !newRelease.release_date"
+                  >
+                    <Plus class="h-4 w-4 mr-2" />
+                    Añadir Evento
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-          <div class="flex-1 min-w-0">
-            <CardTitle class="text-sm font-medium">{{ release.title }}</CardTitle>
-            <CardDescription class="text-xs">
-              {{ typeConfig[release.type].label }} · {{ formatDate(release.releaseDate) }}
-            </CardDescription>
-          </div>
-          <div class="flex items-center gap-2">
-            <Badge variant="outline" class="text-xs">
-              {{ formatDate(release.releaseDate) }}
-            </Badge>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              class="h-8 w-8 text-muted-foreground hover:text-destructive"
-              @click="deleteReleaseEntry(release.id)"
-            >
-              <Trash2 class="h-4 w-4" />
-            </Button>
-          </div>
-        </CardHeader>
-      </Card>
-
-      <div v-if="!loading && filteredReleases.length === 0" class="text-center py-8">
-        <CalendarIcon class="h-12 w-12 text-muted-foreground/30 mx-auto mb-2" />
-        <p class="text-muted-foreground text-sm">No hay lanzamientos este mes</p>
-        <Button variant="outline" size="sm" class="mt-4" @click="showAddModal = true">
-          <Plus class="h-4 w-4 mr-2" />
-          Añadir lanzamiento
-        </Button>
-      </div>
-    </section>
-
-    <div v-if="showAddModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
-      <Card class="w-full max-w-sm">
-        <CardHeader class="flex flex-row items-center justify-between">
-          <CardTitle>Nuevo Lanzamiento</CardTitle>
-          <Button variant="ghost" size="icon" @click="showAddModal = false">
-            <X class="h-4 w-4" />
-          </Button>
-        </CardHeader>
-        <CardContent class="space-y-4">
-          <div class="space-y-2">
-            <Label for="title">Título</Label>
-            <Input id="title" v-model="newRelease.title" placeholder="Ej: One Piece Ep. 1120" class="w-full" />
-          </div>
-          <div class="space-y-2">
-            <Label for="date">Fecha</Label>
-            <DatePicker id="date" v-model="newRelease.release_date" placeholder="Selecciona una fecha" class="w-full" />
-          </div>
-          <div class="space-y-2">
-            <Label>Tipo</Label>
-            <div class="grid grid-cols-3 gap-2">
-              <Button 
-                v-for="(config, type) in typeConfig"
-                :key="type"
-                :variant="newRelease.type === type ? 'default' : 'outline'"
-                size="sm"
-                class="text-xs flex-col h-auto py-2"
-                @click="newRelease.type = type"
-              >
-                <component :is="config.icon" class="h-4 w-4 mb-1" />
-                {{ config.label.split(' ')[0] }}
-              </Button>
-            </div>
-          </div>
-          <Button class="w-full" @click="addRelease" :disabled="!newRelease.title.trim()">
-            Añadir Lanzamiento
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
+        </Transition>
+      </Teleport>
+    </ClientOnly>
   </div>
 </template>
+
+<style scoped>
+.modal-enter-active,
+.modal-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+</style>

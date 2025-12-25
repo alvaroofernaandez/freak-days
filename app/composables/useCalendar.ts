@@ -7,14 +7,16 @@ export interface Release {
   title: string;
   type: ReleaseType;
   releaseDate: Date;
-  notes: string | null;
+  description: string | null;
+  url: string | null;
 }
 
 export interface CreateReleaseDTO {
   title: string;
   type: ReleaseType;
   release_date: string;
-  notes?: string;
+  description?: string;
+  url?: string;
 }
 
 export function useCalendar() {
@@ -63,10 +65,37 @@ export function useCalendar() {
       .insert({
         user_id: authStore.userId,
         title: dto.title,
-        type: dto.type,
+        release_type: dto.type,
         release_date: dto.release_date,
-        notes: dto.notes,
+        description: dto.description,
+        url: dto.url,
       })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return data ? mapDbToRelease(data) : null;
+  }
+
+  async function updateRelease(
+    id: string,
+    dto: Partial<CreateReleaseDTO>
+  ): Promise<Release | null> {
+    if (!authStore.userId) return null;
+
+    const updateData: Record<string, unknown> = {};
+    if (dto.title) updateData.title = dto.title;
+    if (dto.type) updateData.release_type = dto.type;
+    if (dto.release_date) updateData.release_date = dto.release_date;
+    if (dto.description !== undefined) updateData.description = dto.description;
+    if (dto.url !== undefined) updateData.url = dto.url;
+
+    const { data, error } = await supabase
+      .from("release_calendar")
+      .update(updateData)
+      .eq("id", id)
+      .eq("user_id", authStore.userId)
       .select()
       .single();
 
@@ -85,12 +114,16 @@ export function useCalendar() {
   }
 
   function mapDbToRelease(row: Record<string, unknown>): Release {
+    const dateStr = row.release_date as string;
+    const date = new Date(dateStr + "T12:00:00");
+
     return {
       id: row.id as string,
       title: row.title as string,
-      type: row.type as ReleaseType,
-      releaseDate: new Date(row.release_date as string),
-      notes: row.notes as string | null,
+      type: (row.release_type || row.type) as ReleaseType,
+      releaseDate: date,
+      description: (row.description || row.notes) as string | null,
+      url: row.url as string | null,
     };
   }
 
@@ -98,6 +131,7 @@ export function useCalendar() {
     fetchReleases,
     fetchUpcoming,
     addRelease,
+    updateRelease,
     deleteRelease,
   };
 }
