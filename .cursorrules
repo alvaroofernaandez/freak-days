@@ -1,0 +1,297 @@
+# FreakDays - Cursor AI Rules
+
+Este archivo contiene reglas y directrices específicas para que Cursor AI siga las mejores prácticas del proyecto FreakDays.
+
+## Principios Fundamentales
+
+1. **Domain-Driven Design**: La lógica de negocio vive en `domain/`, independiente de Vue/Nuxt
+2. **Composition API**: Siempre usar Vue 3 Composition API con `<script setup>`
+3. **Type Safety**: TypeScript strict mode, sin tipos `any`
+4. **Mobile-First**: Diseñar para móvil, mejorar para desktop
+5. **Código Auto-documentado**: Evitar comentarios innecesarios
+
+## Estructura de Archivos
+
+### Componentes Vue
+
+```vue
+<script setup lang="ts">
+// 1. Imports de Vue y librerías
+import { ref, computed, onMounted } from 'vue'
+import type { Component } from 'vue'
+
+// 2. Imports de tipos
+import type { UserProfile } from '@/composables/useProfile'
+
+// 3. Imports de composables
+import { useAnime } from '@/composables/useAnime'
+import { useToast } from '@/composables/useToast'
+
+// 4. Imports de componentes
+import { Button } from '@/components/ui/button'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+
+// 5. Imports de iconos
+import { Plus, Trash2 } from 'lucide-vue-next'
+
+// 6. Props y Emits
+interface Props {
+  title: string
+  items: Item[]
+}
+
+const props = defineProps<Props>()
+
+const emit = defineEmits<{
+  add: [item: Item]
+  delete: [id: string]
+}>()
+
+// 7. Composables y Stores
+const animeApi = useAnime()
+const toast = useToast()
+
+// 8. Refs y Reactive
+const isLoading = ref(false)
+const searchQuery = ref('')
+
+// 9. Computed
+const filteredItems = computed(() => {
+  return props.items.filter(item => 
+    item.title.toLowerCase().includes(searchQuery.value.toLowerCase())
+  )
+})
+
+// 10. Funciones
+async function handleAdd(item: Item) {
+  isLoading.value = true
+  try {
+    await animeApi.addAnime(item)
+    emit('add', item)
+    toast.success('Añadido exitosamente')
+  } catch (error) {
+    toast.error('Error al añadir')
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// 11. Lifecycle Hooks
+onMounted(() => {
+  // inicialización
+})
+</script>
+
+<template>
+  <Card>
+    <CardHeader>
+      <CardTitle>{{ title }}</CardTitle>
+    </CardHeader>
+    <CardContent>
+      <!-- contenido -->
+    </CardContent>
+  </Card>
+</template>
+```
+
+### Composables
+
+```typescript
+// app/composables/useNewFeature.ts
+import { useAuthStore } from "~~/stores/auth"
+import { useSupabase } from "./useSupabase"
+import type { NewEntity } from "~~/domain/types"
+
+export interface CreateNewEntityDTO {
+  title: string
+  description?: string
+}
+
+export function useNewFeature() {
+  const supabase = useSupabase()
+  const authStore = useAuthStore()
+
+  async function fetchEntities(): Promise<NewEntity[]> {
+    if (!authStore.userId) return []
+
+    const { data, error } = await supabase
+      .from("table_name")
+      .select("*")
+      .eq("user_id", authStore.userId)
+      .order("created_at", { ascending: false })
+
+    if (error) throw error
+
+    return (data ?? []).map(mapDbToEntity)
+  }
+
+  async function createEntity(dto: CreateNewEntityDTO): Promise<NewEntity | null> {
+    if (!authStore.userId) return null
+
+    const { data, error } = await supabase
+      .from("table_name")
+      .insert({
+        user_id: authStore.userId,
+        title: dto.title,
+        description: dto.description,
+      })
+      .select()
+      .single()
+
+    if (error) throw error
+
+    return data ? mapDbToEntity(data) : null
+  }
+
+  function mapDbToEntity(data: any): NewEntity {
+    return {
+      id: data.id,
+      title: data.title,
+      description: data.description,
+      createdAt: new Date(data.created_at),
+    }
+  }
+
+  return {
+    fetchEntities,
+    createEntity,
+  }
+}
+```
+
+## Convenciones de Naming
+
+- **Archivos**: kebab-case (`anime-card.vue`, `use-anime.ts`)
+- **Componentes**: PascalCase (`AnimeCard`, `AnimeStats`)
+- **Composables**: camelCase con prefijo `use` (`useAnime`, `useQuests`)
+- **Stores**: camelCase con sufijo `Store` (`useModulesStore`, `useAuthStore`)
+- **Tipos/Interfaces**: PascalCase (`AnimeEntry`, `CreateAnimeDTO`)
+- **Constantes**: SCREAMING_SNAKE_CASE (`DIFFICULTY_EXP`, `MAX_ITEMS`)
+
+## Manejo de Errores
+
+Siempre usar el composable `useErrorHandler`:
+
+```typescript
+const errorHandler = useErrorHandler()
+
+try {
+  await someOperation()
+} catch (error) {
+  errorHandler.handleError(error)
+}
+```
+
+O usar `handleAsyncError`:
+
+```typescript
+await errorHandler.handleAsyncError(async () => {
+  await someOperation()
+})
+```
+
+## Estado y Reactividad
+
+- Usar `ref` para valores primitivos
+- Usar `computed` para valores derivados
+- Usar `watch` para efectos secundarios
+- Preferir `v-show` sobre `v-if` para elementos que se muestran/ocultan frecuentemente
+
+## Acceso a Datos
+
+1. **Siempre verificar autenticación**:
+```typescript
+if (!authStore.userId) return []
+```
+
+2. **Usar composables específicos**:
+```typescript
+const animeApi = useAnime()
+const animeList = await animeApi.fetchAnimeList()
+```
+
+3. **Manejar errores apropiadamente**:
+```typescript
+try {
+  const data = await animeApi.addAnime(dto)
+} catch (error) {
+  toast.error('Error al añadir anime')
+}
+```
+
+## Componentes UI
+
+Siempre usar componentes de shadcn-vue desde `@/components/ui/`:
+
+```vue
+<Button variant="default" size="md">Click</Button>
+<Card>
+  <CardHeader>
+    <CardTitle>Título</CardTitle>
+  </CardHeader>
+  <CardContent>Contenido</CardContent>
+</Card>
+```
+
+## Testing
+
+Al crear nueva funcionalidad:
+
+1. Escribir tests primero (TDD)
+2. Tests en `tests/unit/` siguiendo la estructura del código
+3. Cobertura objetivo: 80%+ en lógica de negocio
+
+## Base de Datos
+
+1. **Siempre usar RLS**: Todas las queries deben filtrar por `user_id`
+2. **Usar migraciones**: Nunca modificar `schema.sql` directamente
+3. **Validar en cliente y servidor**: RLS es la última línea de defensa
+
+## Performance
+
+1. **Lazy loading** para componentes pesados
+2. **Debouncing** para búsquedas (500ms mínimo)
+3. **AbortController** para cancelar requests
+4. **Skeleton loaders** durante carga de datos
+
+## Accesibilidad
+
+1. **HTML semántico**: Usar `<button>`, `<nav>`, `<main>`, etc.
+2. **ARIA labels**: Para iconos y elementos no descriptivos
+3. **Contraste**: Mínimo 4.5:1 para texto
+
+## Imports
+
+- Usar alias `@/` para archivos en `app/`
+- Usar alias `~~/` para archivos en la raíz
+- Agrupar imports: Vue, tipos, composables, componentes, iconos
+
+## No Hacer
+
+- ❌ No usar tipos `any`
+- ❌ No usar `reactive` para primitivos
+- ❌ No poner lógica de negocio en componentes
+- ❌ No hardcodear valores mágicos (usar constantes)
+- ❌ No commitear archivos `.env`
+- ❌ No usar comentarios innecesarios
+- ❌ No crear componentes sin props tipadas
+- ❌ No acceder directamente a Supabase desde componentes
+
+## Sí Hacer
+
+- ✅ Usar TypeScript strict mode
+- ✅ Usar composables para lógica reutilizable
+- ✅ Usar stores de Pinia para estado global
+- ✅ Usar componentes UI de shadcn-vue
+- ✅ Validar inputs en cliente y servidor
+- ✅ Manejar errores apropiadamente
+- ✅ Usar skeleton loaders durante carga
+- ✅ Seguir la estructura de archivos establecida
+
+## Referencias
+
+- Ver `AGENTS.md` para convenciones detalladas
+- Ver `docs/` para documentación completa
+- Ver componentes existentes como ejemplos
+
+
