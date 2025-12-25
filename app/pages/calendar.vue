@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Tv, BookOpen, Ticket, Plus, Trash2, X } from 'lucide-vue-next'
 import type { Release, ReleaseType, CreateReleaseDTO } from '@/composables/useCalendar'
+import { DatePicker } from '@/components/ui/date-picker'
 
 const calendarApi = useCalendar()
 
@@ -170,7 +171,7 @@ const filteredReleases = computed(() =>
           </div>
           <div class="space-y-2">
             <Label for="date">Fecha</Label>
-            <Input id="date" v-model="newRelease.release_date" type="date" class="w-full" />
+            <DatePicker id="date" v-model="newRelease.release_date" placeholder="Selecciona una fecha" class="w-full" />
           </div>
           <div class="space-y-2">
             <Label>Tipo</Label>

@@ -2,6 +2,7 @@
 import { X } from 'lucide-vue-next'
 import type { QuestDifficulty } from '~~/domain/types'
 import { DIFFICULTY_EXP } from '~~/domain/types'
+import { DatePicker } from '@/components/ui/date-picker'
 
 interface QuestForm {
   title: string
@@ -105,10 +106,10 @@ function handleSubmit() {
         </div>
         <div class="space-y-2">
           <Label for="due_date" class="text-sm font-medium">Fecha límite (opcional)</Label>
-          <Input 
+          <DatePicker 
             id="due_date" 
             v-model="form.due_date" 
-            type="date"
+            placeholder="Selecciona una fecha"
             class="w-full h-11 text-base"
             :disabled="submitting"
           />

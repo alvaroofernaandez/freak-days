@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { X, Play } from 'lucide-vue-next'
 import { getTodayDate } from '@/utils/workout-formatters'
+import { DatePicker } from '@/components/ui/date-picker'
 
 interface WorkoutForm {
   name: string
@@ -67,10 +68,10 @@ function handleStart() {
         
         <div class="space-y-2">
           <Label for="date" class="text-sm font-medium">Fecha</Label>
-          <Input 
+          <DatePicker 
             id="date" 
             v-model="form.workout_date" 
-            type="date" 
+            placeholder="Selecciona una fecha"
             class="w-full h-11 text-base"
           />
         </div>
