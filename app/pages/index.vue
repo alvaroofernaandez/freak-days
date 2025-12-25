@@ -3,6 +3,8 @@ import { TrendingUp, Calendar, Award, Zap, Target, Flame } from 'lucide-vue-next
 import LoadingSpinner from '@/components/index/LoadingSpinner.vue'
 import WelcomeSection from '@/components/index/WelcomeSection.vue'
 import ProfileCard from '@/components/index/ProfileCard.vue'
+import ProfileCardSkeleton from '@/components/index/ProfileCardSkeleton.vue'
+import StatsCardSkeleton from '@/components/index/StatsCardSkeleton.vue'
 import ModuleGrid from '@/components/index/ModuleGrid.vue'
 import SettingsPrompt from '@/components/index/SettingsPrompt.vue'
 import { useIndexPage } from '@/composables/useIndexPage'
@@ -25,13 +27,11 @@ const {
 
 <template>
   <div class="space-y-6 w-full">
-    <LoadingSpinner v-if="isLoading" />
-    
     <div v-show="!isLoading && !authStore.isAuthenticated" class="min-h-[600px]">
       <WelcomeSection />
     </div>
 
-    <section v-show="!isLoading && authStore.isAuthenticated" class="space-y-6">
+    <section v-show="authStore.isAuthenticated" class="space-y-6">
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div class="space-y-2">
           <h1 class="text-3xl sm:text-4xl font-bold bg-linear-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
@@ -51,14 +51,16 @@ const {
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <ProfileCardSkeleton v-if="isLoading || !profile" class="md:col-span-2" />
         <ProfileCard 
-          v-if="profile" 
+          v-else-if="profile" 
           :profile="profile"
           :exp-progress="expProgress"
           class="md:col-span-2"
         />
 
-        <Card v-if="!loadingStats" class="relative overflow-hidden border-primary/20 bg-linear-to-br from-primary/5 to-transparent">
+        <StatsCardSkeleton v-if="loadingStats" />
+        <Card v-else class="relative overflow-hidden border-primary/20 bg-linear-to-br from-primary/5 to-transparent">
           <div class="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl" />
           <CardContent class="relative p-6">
             <div class="flex items-center justify-between">
@@ -73,7 +75,8 @@ const {
           </CardContent>
         </Card>
 
-        <Card v-if="!loadingStats" class="relative overflow-hidden border-exp-easy/20 bg-linear-to-br from-exp-easy/5 to-transparent">
+        <StatsCardSkeleton v-if="loadingStats" />
+        <Card v-else class="relative overflow-hidden border-exp-easy/20 bg-linear-to-br from-exp-easy/5 to-transparent">
           <div class="absolute top-0 right-0 w-32 h-32 bg-exp-easy/10 rounded-full blur-3xl" />
           <CardContent class="relative p-6">
             <div class="flex items-center justify-between">
@@ -88,7 +91,8 @@ const {
           </CardContent>
         </Card>
 
-        <Card v-if="!loadingStats" class="relative overflow-hidden border-exp-legendary/20 bg-linear-to-br from-exp-legendary/5 to-transparent">
+        <StatsCardSkeleton v-if="loadingStats" />
+        <Card v-else class="relative overflow-hidden border-exp-legendary/20 bg-linear-to-br from-exp-legendary/5 to-transparent">
           <div class="absolute top-0 right-0 w-32 h-32 bg-exp-legendary/10 rounded-full blur-3xl" />
           <CardContent class="relative p-6">
             <div class="flex items-center justify-between">
@@ -103,7 +107,8 @@ const {
           </CardContent>
         </Card>
 
-        <Card v-if="!loadingStats" class="relative overflow-hidden border-accent/20 bg-linear-to-br from-accent/5 to-transparent">
+        <StatsCardSkeleton v-if="loadingStats" />
+        <Card v-else class="relative overflow-hidden border-accent/20 bg-linear-to-br from-accent/5 to-transparent">
           <div class="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-full blur-3xl" />
           <CardContent class="relative p-6">
             <div class="flex items-center justify-between">

@@ -3,6 +3,7 @@ import CreatePartyModal from '@/components/party/CreatePartyModal.vue'
 import DeletePartyConfirmModal from '@/components/party/DeletePartyConfirmModal.vue'
 import JoinPartyModal from '@/components/party/JoinPartyModal.vue'
 import PartyCard from '@/components/party/PartyCard.vue'
+import PartyCardSkeleton from '@/components/party/PartyCardSkeleton.vue'
 import PartyDetailsModal from '@/components/party/PartyDetailsModal.vue'
 import PartyEmptyState from '@/components/party/PartyEmptyState.vue'
 import RemoveMemberConfirmModal from '@/components/party/RemoveMemberConfirmModal.vue'
@@ -108,12 +109,16 @@ function handleRegenerateCode(partyId: string) {
       </div>
     </header>
 
-    <div v-if="loading" class="flex items-center justify-center py-8 sm:py-12">
-      <div class="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" role="status"
-        aria-label="Cargando parties" />
-    </div>
+    <section v-if="loading" class="space-y-3 sm:space-y-4">
+      <h2 class="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider px-1">
+        Cargando...
+      </h2>
+      <div class="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        <PartyCardSkeleton v-for="i in 3" :key="i" />
+      </div>
+    </section>
 
-    <section v-if="hasParties" class="space-y-3 sm:space-y-4">
+    <section v-else-if="hasParties" class="space-y-3 sm:space-y-4">
       <h2 class="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider px-1">
         Tus Parties ({{ parties.length }})
       </h2>

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardHeader } from '@/components/ui/card'
 import CalendarDay from './CalendarDay.vue'
 import CalendarEmptyState from './CalendarEmptyState.vue'
+import CalendarGridSkeleton from './CalendarGridSkeleton.vue'
 import type { Release } from '@/composables/useCalendar'
 
 interface Props {
@@ -172,13 +173,7 @@ function handleKeydown(e: KeyboardEvent) {
       </Button>
     </div>
 
-    <div v-if="loading" class="flex items-center justify-center py-12">
-      <div
-        class="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full"
-        role="status"
-        aria-label="Cargando calendario"
-      />
-    </div>
+    <CalendarGridSkeleton v-if="loading" />
 
     <div v-else class="space-y-1.5 sm:space-y-2 flex-1 flex flex-col min-h-0">
       <div class="grid grid-cols-7 gap-1 sm:gap-2 shrink-0">
