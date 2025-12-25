@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Settings, Trophy } from 'lucide-vue-next'
 import type { UserProfile } from '@/composables/useProfile'
-import Logo from '@/components/Logo.vue'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 
 interface Props {
   profile: UserProfile | null
@@ -23,10 +23,18 @@ const emit = defineEmits<{
 <template>
   <header class="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-xl lg:block hidden">
     <div class="container mx-auto flex h-14 items-center px-4">
-      <NuxtLink to="/" class="flex items-center gap-2 font-bold text-xl group">
-        <div class="relative">
-          <Logo class="h-6 w-6 transition-transform group-hover:scale-110" />
-          <div class="absolute inset-0 bg-primary/20 blur-lg rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+      <NuxtLink to="/" class="flex items-center gap-2.5 font-bold text-xl group">
+        <div class="relative flex items-center justify-center">
+          <div class="absolute inset-0 bg-primary/10 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <div class="relative p-1.5 rounded-lg bg-primary/5 border border-primary/10 group-hover:border-primary/30 group-hover:bg-primary/10 transition-all duration-300">
+            <img 
+              src="/logo.png" 
+              alt="FreakDays" 
+              class="h-7 w-7 rounded-lg transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
+              loading="eager"
+              fetchpriority="high"
+            />
+          </div>
         </div>
       </NuxtLink>
 
@@ -51,7 +59,7 @@ const emit = defineEmits<{
               <div class="relative">
                 <Trophy class="h-4 w-4 text-exp-legendary" />
               </div>
-              <span class="text-sm font-semibold">Lv.{{ profile.level }}</span>
+              <span class="text-sm font-semibold">Lv.{{ profile?.level ?? 1 }}</span>
             </div>
             <div class="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
               <div 
@@ -61,8 +69,13 @@ const emit = defineEmits<{
             </div>
           </div>
           <Avatar class="h-9 w-9 ring-2 ring-transparent group-hover:ring-primary/50 transition-all">
+            <AvatarImage 
+              v-if="profile?.avatarUrl" 
+              :src="profile.avatarUrl" 
+              :alt="profile?.displayName || profile?.username"
+            />
             <AvatarFallback class="bg-primary/20 text-primary text-sm">
-              {{ profile.username?.charAt(0)?.toUpperCase() ?? '?' }}
+              {{ profile?.username?.charAt(0)?.toUpperCase() ?? '?' }}
             </AvatarFallback>
           </Avatar>
         </NuxtLink>

@@ -24,19 +24,23 @@ export function getAllNavItems(modulesStore: ReturnType<typeof useModulesStore>)
     { to: '/', icon: Home, label: 'Inicio' }
   ]
 
-  Object.entries(MODULE_ROUTES).forEach(([moduleId, route]) => {
-    const module = modulesStore.getModuleById(moduleId as ModuleId)
-    if (module?.enabled) {
-      const icon = MODULE_ICONS[route.iconName]
-      if (icon) {
-        items.push({ 
-          to: route.to, 
-          icon, 
-          label: route.label 
-        })
+  try {
+    Object.entries(MODULE_ROUTES).forEach(([moduleId, route]) => {
+      const module = modulesStore.getModuleById(moduleId as ModuleId)
+      if (module?.enabled) {
+        const icon = MODULE_ICONS[route.iconName]
+        if (icon) {
+          items.push({ 
+            to: route.to, 
+            icon, 
+            label: route.label 
+          })
+        }
       }
-    }
-  })
+    })
+  } catch (error) {
+    console.warn('Error loading nav items:', error)
+  }
 
   return items
 }
