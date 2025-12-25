@@ -7,10 +7,12 @@ interface Props {
   description?: string
   class?: HTMLAttributes['class']
 }
+
+const props = defineProps<Props>()
 </script>
 
 <template>
-  <div :class="cn('flex flex-col items-center justify-center p-8 text-center', props.class)">
+  <div :class="cn('flex flex-col items-center justify-center p-8 text-center', props.class)" style="pointer-events: none;">
     <slot name="icon">
       <div class="mb-4 h-12 w-12 rounded-full bg-muted flex items-center justify-center">
         <slot name="default-icon" />
@@ -22,7 +24,7 @@ interface Props {
     <p v-if="description || $slots.description" class="text-sm text-muted-foreground max-w-sm">
       <slot name="description">{{ description }}</slot>
     </p>
-    <div v-if="$slots.action" class="mt-4">
+    <div v-if="$slots.action" class="mt-4" style="pointer-events: auto;">
       <slot name="action" />
     </div>
   </div>

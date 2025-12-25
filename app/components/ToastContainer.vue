@@ -20,37 +20,39 @@ const colorMap: Record<ToastType, string> = {
 </script>
 
 <template>
-  <Teleport to="body">
-    <div class="fixed top-4 right-4 z-[100] flex flex-col gap-2 pointer-events-none max-w-sm w-full sm:w-auto">
-      <TransitionGroup
-        name="toast"
-        tag="div"
-        class="flex flex-col gap-2"
-      >
-        <div
-          v-for="toast in toasts"
-          :key="toast.id"
-          class="pointer-events-auto"
+  <ClientOnly>
+    <Teleport to="body">
+      <div class="fixed top-4 right-4 z-100 flex flex-col gap-2 pointer-events-none max-w-sm w-full sm:w-auto">
+        <TransitionGroup
+          name="toast"
+          tag="div"
+          class="flex flex-col gap-2"
         >
           <div
-            :class="[
-              'flex items-center gap-3 p-4 rounded-lg border backdrop-blur-sm shadow-lg animate-in slide-in-from-right',
-              colorMap[toast.type]
-            ]"
+            v-for="toast in toasts"
+            :key="toast.id"
+            class="pointer-events-auto"
           >
-            <component :is="iconMap[toast.type]" class="h-5 w-5 shrink-0" />
-            <p class="text-sm font-medium flex-1">{{ toast.message }}</p>
-            <button
-              @click="remove(toast.id)"
-              class="shrink-0 p-1 rounded hover:bg-black/10 transition-colors"
+            <div
+              :class="[
+                'flex items-center gap-3 p-4 rounded-lg border backdrop-blur-sm shadow-lg animate-in slide-in-from-right',
+                colorMap[toast.type]
+              ]"
             >
-              <X class="h-4 w-4" />
-            </button>
+              <component :is="iconMap[toast.type]" class="h-5 w-5 shrink-0" />
+              <p class="text-sm font-medium flex-1">{{ toast.message }}</p>
+              <button
+                @click="remove(toast.id)"
+                class="shrink-0 p-1 rounded hover:bg-black/10 transition-colors"
+              >
+                <X class="h-4 w-4" />
+              </button>
+            </div>
           </div>
-        </div>
-      </TransitionGroup>
-    </div>
-  </Teleport>
+        </TransitionGroup>
+      </div>
+    </Teleport>
+  </ClientOnly>
 </template>
 
 <style scoped>

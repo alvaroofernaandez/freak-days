@@ -4,8 +4,38 @@ import type { Workout, WorkoutExercise } from '@/composables/useWorkouts'
 import { getElapsedTime } from '@/utils/workout-formatters'
 import ExerciseCard from './ExerciseCard.vue'
 
+type ReadonlyWorkout = {
+  readonly id: string
+  readonly name: string
+  readonly description: string | null
+  readonly workoutDate: Date
+  readonly durationMinutes: number | null
+  readonly notes: string | null
+  readonly status: 'in_progress' | 'completed'
+  readonly startedAt: Date | null
+  readonly completedAt: Date | null
+  readonly exercises: readonly ReadonlyWorkoutExercise[]
+}
+
+type ReadonlyWorkoutExercise = {
+  readonly id: string
+  readonly exerciseName: string
+  readonly notes: string | null
+  readonly orderIndex: number
+  readonly sets: readonly ReadonlyWorkoutSet[]
+}
+
+type ReadonlyWorkoutSet = {
+  readonly id: string
+  readonly setNumber: number
+  readonly reps: number | null
+  readonly weightKg: number | null
+  readonly restSeconds: number | null
+  readonly notes: string | null
+}
+
 interface Props {
-  workout: Workout
+  workout: ReadonlyWorkout | Workout
   elapsedTime: string
   newExerciseName: string
   addingExercise: boolean

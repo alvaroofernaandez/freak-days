@@ -1,14 +1,13 @@
 <script setup lang="ts">
-import { useModulesStore } from '~~/stores/modules'
-import type { UserProfile } from '@/composables/useProfile'
-import { useAuthStore } from '~~/stores/auth'
-import { getAllNavItems } from '@/utils/nav-items'
 import AppHeader from '@/components/layout/AppHeader.vue'
-import MobileHeader from '@/components/layout/MobileHeader.vue'
 import DesktopNav from '@/components/layout/DesktopNav.vue'
 import DesktopNavSecondary from '@/components/layout/DesktopNavSecondary.vue'
-import MobileNav from '@/components/layout/MobileNav.vue'
+import MobileHeader from '@/components/layout/MobileHeader.vue'
 import MobileMenu from '@/components/layout/MobileMenu.vue'
+import MobileNav from '@/components/layout/MobileNav.vue'
+import type { UserProfile } from '@/composables/useProfile'
+import { getAllNavItems } from '@/utils/nav-items'
+import { useModulesStore } from '~~/stores/modules'
 
 const route = useRoute()
 const modulesStore = useModulesStore()
@@ -20,7 +19,7 @@ const mobileMenuOpen = ref(false)
 
 watch(() => route.path, () => {
   mobileMenuOpen.value = false
-})
+}, { immediate: true })
 
 const expProgress = computed(() => {
   if (!profile.value) return { current: 0, needed: 100, progress: 0 }
@@ -49,28 +48,32 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div style="width: 100%; min-height: 100vh; display: flex; flex-direction: column;" class="relative font-sans antialiased overflow-hidden">
+  <div style="width: 100%; min-height: 100vh; display: flex; flex-direction: column;"
+    class="relative font-sans antialiased overflow-hidden">
     <div class="fixed inset-0 -z-10">
       <div class="absolute inset-0 bg-linear-to-br from-background via-background to-background/95" />
-      <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent" />
-      <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,var(--tw-gradient-stops))] from-accent/5 via-transparent to-transparent" />
-      <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,var(--tw-gradient-stops))] from-secondary/3 via-transparent to-transparent" />
-      
-      <div class="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse" style="animation-duration: 8s" />
-      <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/5 rounded-full blur-3xl animate-pulse" style="animation-duration: 10s; animation-delay: 2s" />
-      <div class="absolute top-1/2 left-0 w-80 h-80 bg-secondary/3 rounded-full blur-3xl animate-pulse" style="animation-duration: 12s; animation-delay: 4s" />
-      <div class="absolute bottom-1/3 right-0 w-72 h-72 bg-primary/3 rounded-full blur-3xl animate-pulse" style="animation-duration: 9s; animation-delay: 1s" />
-      
-      <div class="absolute inset-0" style="background-image: radial-gradient(circle at 1px 1px, oklch(0.28 0.04 270 / 0.15) 1px, transparent 0); background-size: 40px 40px;" />
+      <div
+        class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent" />
+      <div
+        class="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,var(--tw-gradient-stops))] from-accent/5 via-transparent to-transparent" />
+      <div
+        class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,var(--tw-gradient-stops))] from-secondary/3 via-transparent to-transparent" />
+
+      <div class="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse"
+        style="animation-duration: 8s" />
+      <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/5 rounded-full blur-3xl animate-pulse"
+        style="animation-duration: 10s; animation-delay: 2s" />
+      <div class="absolute top-1/2 left-0 w-80 h-80 bg-secondary/3 rounded-full blur-3xl animate-pulse"
+        style="animation-duration: 12s; animation-delay: 4s" />
+      <div class="absolute bottom-1/3 right-0 w-72 h-72 bg-primary/3 rounded-full blur-3xl animate-pulse"
+        style="animation-duration: 9s; animation-delay: 1s" />
+
+      <div class="absolute inset-0"
+        style="background-image: radial-gradient(circle at 1px 1px, oklch(0.28 0.04 270 / 0.15) 1px, transparent 0); background-size: 40px 40px;" />
     </div>
 
     <div class="relative z-0">
-      <AppHeader 
-        :profile="profile"
-        :exp-progress="expProgress"
-        :is-active="isActive"
-        @logout="handleLogout"
-      >
+      <AppHeader :profile="profile" :exp-progress="expProgress" :is-active="isActive" @logout="handleLogout">
         <template #nav>
           <DesktopNav :items="desktopNavItems" :is-active="isActive" />
           <DesktopNavSecondary :items="desktopSecondaryNavItems" :is-active="isActive" />
@@ -79,25 +82,17 @@ onMounted(async () => {
 
       <MobileHeader :profile="profile" />
 
-      <MobileNav
-        :items="mobilePreviewItems"
-        :is-active="isActive"
-        v-model:menu-open="mobileMenuOpen"
-      />
+      <MobileNav :items="mobilePreviewItems" :is-active="isActive" v-model:menu-open="mobileMenuOpen" />
 
-      <main style="width: 100%; flex: 1; display: block;" class="px-4 py-4 lg:py-6 pb-20 lg:pb-6 relative z-0">
-        <div style="width: 100%; max-width: 80rem; margin: 0 auto;">
+      <main style="width: 100%; flex: 1; display: block; pointer-events: auto;"
+        class="px-4 py-4 lg:py-6 pb-20 lg:pb-6 relative z-0">
+        <div style="width: 100%; max-width: 80rem; margin: 0 auto; pointer-events: auto;">
           <slot />
         </div>
       </main>
 
-      <MobileMenu
-        :open="mobileMenuOpen"
-        :items="allNavItems"
-        :is-active="isActive"
-        @close="mobileMenuOpen = false"
-        @logout="handleLogout"
-      />
+      <MobileMenu :open="mobileMenuOpen" :items="allNavItems" :is-active="isActive" @close="mobileMenuOpen = false"
+        @logout="handleLogout" />
     </div>
   </div>
 </template>

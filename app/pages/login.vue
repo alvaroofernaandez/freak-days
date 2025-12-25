@@ -37,7 +37,7 @@ function handleGoogleSignIn() {
           <header class="text-center space-y-4">
             <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-linear-to-br from-primary via-accent to-secondary p-[2px] mb-2">
               <div class="w-full h-full rounded-2xl bg-card flex items-center justify-center">
-                <Gamepad2 class="h-10 w-10 text-primary" />
+                <img src="/logo.png" alt="FreakDays" class="h-16 w-16 rounded-lg">
               </div>
             </div>
             

@@ -1,83 +1,105 @@
 import { defineStore } from "pinia";
-import { ref, computed } from "vue";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { ModuleId, AppModule } from "../domain/types";
-import { ALL_MODULES } from "../domain/types";
+import type { AppModule, ModuleId } from "~~/domain/types/modules";
+import { ALL_MODULES } from "~~/domain/types/modules";
 
-export const useModulesStore = defineStore("modules", () => {
-  const modules = ref<AppModule[]>(ALL_MODULES.map((m) => ({ ...m })));
-  const synced = ref(false);
+interface ModuleState {
+  modules: AppModule[];
+  synced: boolean;
+  moduleMap: Record<ModuleId, boolean>;
+}
 
-  const enabledModules = computed(() => modules.value.filter((m) => m.enabled));
+export const useModulesStore = defineStore("modules", {
+  state: (): ModuleState => ({
+    modules: ALL_MODULES.map((m) => ({ ...m, enabled: false })),
+    synced: false,
+    moduleMap: {} as Record<ModuleId, boolean>,
+  }),
 
-  const hasCompletedOnboarding = computed(() =>
-    modules.value.some((m) => m.enabled)
-  );
+  getters: {
+    isEnabled:
+      (state) =>
+      (moduleId: ModuleId): boolean => {
+        return state.moduleMap[moduleId] ?? false;
+      },
 
-  function getModuleById(id: ModuleId) {
-    return modules.value.find((m) => m.id === id);
-  }
+    enabledModules: (state): AppModule[] => {
+      return state.modules.filter((m) => m.enabled);
+    },
 
-  function toggleModule(id: ModuleId) {
-    const module = getModuleById(id);
-    if (module) {
-      module.enabled = !module.enabled;
-    }
-  }
+    hasCompletedOnboarding: (state): boolean => {
+      return state.synced && state.modules.some((m) => m.enabled);
+    },
 
-  function enableModules(ids: ModuleId[]) {
-    ids.forEach((id) => {
-      const module = getModuleById(id);
+    getModuleById:
+      (state) =>
+      (moduleId: ModuleId): AppModule | undefined => {
+        return state.modules.find((m) => m.id === moduleId);
+      },
+  },
+
+  actions: {
+    setModule(moduleId: ModuleId, enabled: boolean) {
+      this.moduleMap[moduleId] = enabled;
+      const module = this.modules.find((m) => m.id === moduleId);
       if (module) {
-        module.enabled = true;
+        module.enabled = enabled;
       }
-    });
-  }
+    },
 
-  function disableAllModules() {
-    modules.value.forEach((m) => {
-      m.enabled = false;
-    });
-  }
+    toggleModule(moduleId: ModuleId) {
+      const current = this.moduleMap[moduleId] ?? false;
+      this.setModule(moduleId, !current);
+    },
 
-  function setModulesFromDb(
-    dbModules: { module_id: string; enabled: boolean }[]
-  ) {
-    dbModules.forEach((dbModule) => {
-      const module = modules.value.find((m) => m.id === dbModule.module_id);
-      if (module) {
-        module.enabled = dbModule.enabled;
+    enableModules(moduleIds: ModuleId[]) {
+      moduleIds.forEach((id) => {
+        this.setModule(id, true);
+      });
+    },
+
+    disableAllModules() {
+      this.modules.forEach((module) => {
+        this.setModule(module.id, false);
+      });
+    },
+
+    setModulesFromDb(data: Array<{ module_id: ModuleId; enabled: boolean }>) {
+      data.forEach(({ module_id, enabled }) => {
+        this.setModule(module_id, enabled);
+      });
+      this.synced = true;
+    },
+
+    async syncToDatabase(supabase: any, userId: string) {
+      const enabledModules = this.modules.filter((m) => m.enabled);
+
+      for (const module of ALL_MODULES) {
+        const isEnabled = this.moduleMap[module.id] ?? false;
+
+        const { error: upsertError } = await supabase
+          .from("user_modules")
+          .upsert(
+            {
+              user_id: userId,
+              module_id: module.id,
+              enabled: isEnabled,
+              enabled_at: isEnabled ? new Date().toISOString() : null,
+            },
+            {
+              onConflict: "user_id,module_id",
+            }
+          );
+
+        if (upsertError) {
+          console.error(`Error syncing module ${module.id}:`, upsertError);
+        }
       }
-    });
-    synced.value = true;
-  }
+    },
 
-  async function syncToDatabase(supabase: SupabaseClient, userId: string) {
-    const enabledIds = enabledModules.value.map((m) => m.id);
-
-    await supabase.from("user_modules").delete().eq("user_id", userId);
-
-    if (enabledIds.length > 0) {
-      const rows = enabledIds.map((moduleId) => ({
-        user_id: userId,
-        module_id: moduleId,
-        enabled: true,
-      }));
-
-      await supabase.from("user_modules").insert(rows);
-    }
-  }
-
-  return {
-    modules,
-    synced,
-    enabledModules,
-    hasCompletedOnboarding,
-    getModuleById,
-    toggleModule,
-    enableModules,
-    disableAllModules,
-    setModulesFromDb,
-    syncToDatabase,
-  };
+    reset() {
+      this.modules = ALL_MODULES.map((m) => ({ ...m, enabled: false }));
+      this.moduleMap = {} as Record<ModuleId, boolean>;
+      this.synced = false;
+    },
+  },
 });

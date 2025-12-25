@@ -1,52 +1,52 @@
-import { defineStore } from "pinia";
-import { ref, computed } from "vue";
-import type { User, Session } from "@supabase/supabase-js";
+import { defineStore } from 'pinia'
+import type { Session } from '@supabase/supabase-js'
 
-export const useAuthStore = defineStore("auth", () => {
-  const user = ref<User | null>(null);
-  const session = ref<Session | null>(null);
-  const loading = ref(true);
-  const error = ref<string | null>(null);
+interface AuthState {
+  session: Session | null
+  loading: boolean
+  error: string | null
+}
 
-  const isAuthenticated = computed(() => !!user.value);
-  const userId = computed(() => user.value?.id);
-  const userEmail = computed(() => user.value?.email);
+export const useAuthStore = defineStore('auth', {
+  state: (): AuthState => ({
+    session: null,
+    loading: false,
+    error: null,
+  }),
 
-  function setUser(newUser: User | null) {
-    user.value = newUser;
-  }
+  getters: {
+    isAuthenticated: (state): boolean => {
+      return !!state.session
+    },
 
-  function setSession(newSession: Session | null) {
-    session.value = newSession;
-    user.value = newSession?.user ?? null;
-  }
+    userId: (state): string | null => {
+      return state.session?.user?.id ?? null
+    },
 
-  function setLoading(value: boolean) {
-    loading.value = value;
-  }
+    userEmail: (state): string | null => {
+      return state.session?.user?.email ?? null
+    },
+  },
 
-  function setError(message: string | null) {
-    error.value = message;
-  }
+  actions: {
+    setSession(session: Session | null) {
+      this.session = session
+    },
 
-  function reset() {
-    user.value = null;
-    session.value = null;
-    error.value = null;
-  }
+    setLoading(loading: boolean) {
+      this.loading = loading
+    },
 
-  return {
-    user,
-    session,
-    loading,
-    error,
-    isAuthenticated,
-    userId,
-    userEmail,
-    setUser,
-    setSession,
-    setLoading,
-    setError,
-    reset,
-  };
-});
+    setError(error: string | null) {
+      this.error = error
+    },
+
+    reset() {
+      this.session = null
+      this.loading = false
+      this.error = null
+    },
+  },
+})
+
+
