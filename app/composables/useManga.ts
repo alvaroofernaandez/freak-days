@@ -10,6 +10,8 @@ export interface MangaEntry {
   score: number | null;
   notes: string | null;
   coverUrl: string | null;
+  pricePerVolume: number | null;
+  totalCost: number | null;
 }
 
 export interface CreateMangaDTO {
@@ -17,6 +19,7 @@ export interface CreateMangaDTO {
   author?: string;
   total_volumes?: number;
   status?: "collecting" | "completed" | "dropped" | "wishlist";
+  price_per_volume?: number;
 }
 
 export function useManga() {
@@ -49,6 +52,8 @@ export function useManga() {
         total_volumes: dto.total_volumes,
         status: dto.status ?? "collecting",
         owned_volumes: [],
+        price_per_volume: dto.price_per_volume,
+        total_cost: 0,
       })
       .select()
       .single();
@@ -68,9 +73,26 @@ export function useManga() {
       volumes.sort((a, b) => a - b);
     }
 
+    const totalCost = manga.pricePerVolume 
+      ? Math.round(volumes.length * manga.pricePerVolume * 100) / 100
+      : manga.totalCost ?? 0;
+
+    const updateData: Record<string, unknown> = { 
+      owned_volumes: volumes,
+      total_cost: totalCost,
+    };
+
+    if (manga.status === 'wishlist' && volumes.length > 0) {
+      updateData.status = 'collecting';
+    }
+
+    if (manga.totalVolumes && volumes.length === manga.totalVolumes) {
+      updateData.status = 'completed';
+    }
+
     const { error } = await supabase
       .from("manga_collection")
-      .update({ owned_volumes: volumes })
+      .update(updateData)
       .eq("id", id);
 
     return !error;
@@ -82,9 +104,22 @@ export function useManga() {
 
     const volumes = manga.ownedVolumes.filter((v) => v !== volume);
 
+    const totalCost = manga.pricePerVolume 
+      ? Math.round(volumes.length * manga.pricePerVolume * 100) / 100
+      : 0;
+
+    const updateData: Record<string, unknown> = { 
+      owned_volumes: volumes,
+      total_cost: totalCost,
+    };
+
+    if (manga.status === 'completed' && volumes.length < (manga.totalVolumes ?? Infinity)) {
+      updateData.status = 'collecting';
+    }
+
     const { error } = await supabase
       .from("manga_collection")
-      .update({ owned_volumes: volumes })
+      .update(updateData)
       .eq("id", id);
 
     return !error;
@@ -94,6 +129,49 @@ export function useManga() {
     const { error } = await supabase
       .from("manga_collection")
       .update({ score })
+      .eq("id", id);
+
+    return !error;
+  }
+
+  async function updatePricePerVolume(id: string, price: number | null): Promise<boolean> {
+    const manga = await getMangaById(id);
+    if (!manga) return false;
+
+    const totalCost = price && manga.ownedVolumes.length > 0
+      ? Math.round(manga.ownedVolumes.length * price * 100) / 100
+      : 0;
+
+    const { error } = await supabase
+      .from("manga_collection")
+      .update({ 
+        price_per_volume: price,
+        total_cost: totalCost,
+      })
+      .eq("id", id);
+
+    return !error;
+  }
+
+  async function updateStatus(id: string, status: MangaEntry["status"]): Promise<boolean> {
+    const manga = await getMangaById(id);
+    if (!manga) return false;
+
+    const updateData: Record<string, unknown> = { status };
+
+    if (status === 'completed' && manga.totalVolumes) {
+      const allVolumes = Array.from({ length: manga.totalVolumes }, (_, i) => i + 1);
+      const totalCost = manga.pricePerVolume 
+        ? Math.round(manga.totalVolumes * manga.pricePerVolume * 100) / 100
+        : manga.totalCost ?? 0;
+
+      updateData.owned_volumes = allVolumes;
+      updateData.total_cost = totalCost;
+    }
+
+    const { error } = await supabase
+      .from("manga_collection")
+      .update(updateData)
       .eq("id", id);
 
     return !error;
@@ -120,6 +198,9 @@ export function useManga() {
   }
 
   function mapDbToManga(row: Record<string, unknown>): MangaEntry {
+    const pricePerVolume = row.price_per_volume
+    const totalCost = row.total_cost
+    
     return {
       id: row.id as string,
       title: row.title as string,
@@ -130,6 +211,8 @@ export function useManga() {
       score: row.score as number | null,
       notes: row.notes as string | null,
       coverUrl: row.cover_url as string | null,
+      pricePerVolume: pricePerVolume != null ? parseFloat(String(pricePerVolume)) : null,
+      totalCost: totalCost != null ? parseFloat(String(totalCost)) : null,
     };
   }
 
@@ -139,6 +222,8 @@ export function useManga() {
     addVolume,
     removeVolume,
     updateScore,
+    updatePricePerVolume,
+    updateStatus,
     getMangaById,
     deleteManga,
   };
