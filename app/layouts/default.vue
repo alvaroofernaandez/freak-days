@@ -21,6 +21,26 @@ watch(() => route.path, () => {
   mobileMenuOpen.value = false
 }, { immediate: true })
 
+let scrollPosition = 0
+
+watch(mobileMenuOpen, (isOpen) => {
+  if (process.client) {
+    if (isOpen) {
+      scrollPosition = window.scrollY
+      document.body.style.overflow = 'hidden'
+      document.body.style.position = 'fixed'
+      document.body.style.top = `-${scrollPosition}px`
+      document.body.style.width = '100%'
+    } else {
+      document.body.style.overflow = ''
+      document.body.style.position = ''
+      document.body.style.top = ''
+      document.body.style.width = ''
+      window.scrollTo(0, scrollPosition)
+    }
+  }
+}, { immediate: true })
+
 const expProgress = computed(() => {
   if (!profile.value) return { current: 0, needed: 100, progress: 0 }
   return profileApi.expForNextLevel(profile.value.totalExp)
@@ -44,6 +64,15 @@ async function handleLogout() {
 
 onMounted(async () => {
   profile.value = await profileApi.fetchProfile()
+})
+
+onBeforeUnmount(() => {
+  if (process.client) {
+    document.body.style.overflow = ''
+    document.body.style.position = ''
+    document.body.style.top = ''
+    document.body.style.width = ''
+  }
 })
 </script>
 
