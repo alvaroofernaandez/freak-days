@@ -620,6 +620,12 @@ Estado vacío cuando el usuario no tiene parties.
 - `create`: Abre modal de creación
 - `join`: Abre modal de unión
 
+#### PartyCardSkeleton
+
+Skeleton loader para PartyCard.
+
+**Ubicación**: `app/components/party/PartyCardSkeleton.vue`
+
 ### Calendar
 
 #### CalendarGrid
@@ -683,6 +689,14 @@ Estado vacío cuando no hay eventos en el calendario.
 
 **Events:**
 - `add`: Abre modal para añadir evento
+
+#### CalendarGridSkeleton
+
+Skeleton loader para CalendarGrid.
+
+**Ubicación**: `app/components/calendar/CalendarGridSkeleton.vue`
+
+Muestra un grid de calendario con skeleton loaders para cada día.
 
 ### Profile
 
@@ -881,6 +895,18 @@ Prompt para completar configuración.
 Spinner de carga.
 
 **Ubicación**: `app/components/index/LoadingSpinner.vue`
+
+#### ProfileCardSkeleton
+
+Skeleton loader para ProfileCard.
+
+**Ubicación**: `app/components/index/ProfileCardSkeleton.vue`
+
+#### StatsCardSkeleton
+
+Skeleton loader para tarjetas de estadísticas.
+
+**Ubicación**: `app/components/index/StatsCardSkeleton.vue`
 
 ---
 
