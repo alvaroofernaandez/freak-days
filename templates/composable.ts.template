@@ -1,0 +1,126 @@
+// Template para nuevos composables
+// app/composables/useModuleName.ts
+
+import { useAuthStore } from "~~/stores/auth"
+import { useSupabase } from "./useSupabase"
+import type { EntityType } from "~~/domain/types"
+
+export interface CreateEntityDTO {
+  title: string
+  description?: string
+  // Añadir más campos según necesidad
+}
+
+export interface UpdateEntityDTO {
+  title?: string
+  description?: string
+  // Añadir más campos según necesidad
+}
+
+export function useModuleName() {
+  const supabase = useSupabase()
+  const authStore = useAuthStore()
+
+  async function fetchAll(): Promise<EntityType[]> {
+    if (!authStore.userId) return []
+
+    const { data, error } = await supabase
+      .from("table_name")
+      .select("*")
+      .eq("user_id", authStore.userId)
+      .order("created_at", { ascending: false })
+
+    if (error) throw error
+
+    return (data ?? []).map(mapDbToEntity)
+  }
+
+  async function fetchById(id: string): Promise<EntityType | null> {
+    if (!authStore.userId) return null
+
+    const { data, error } = await supabase
+      .from("table_name")
+      .select("*")
+      .eq("id", id)
+      .eq("user_id", authStore.userId)
+      .single()
+
+    if (error) throw error
+
+    return data ? mapDbToEntity(data) : null
+  }
+
+  async function create(dto: CreateEntityDTO): Promise<EntityType | null> {
+    if (!authStore.userId) return null
+
+    if (!dto.title || !dto.title.trim()) {
+      throw new Error('Title is required')
+    }
+
+    const { data, error } = await supabase
+      .from("table_name")
+      .insert({
+        user_id: authStore.userId,
+        title: dto.title.trim(),
+        description: dto.description || null,
+      })
+      .select()
+      .single()
+
+    if (error) throw error
+
+    return data ? mapDbToEntity(data) : null
+  }
+
+  async function update(id: string, dto: UpdateEntityDTO): Promise<EntityType | null> {
+    if (!authStore.userId) return null
+
+    const updateData: any = {}
+    if (dto.title !== undefined) updateData.title = dto.title.trim()
+    if (dto.description !== undefined) updateData.description = dto.description
+
+    const { data, error } = await supabase
+      .from("table_name")
+      .update(updateData)
+      .eq("id", id)
+      .eq("user_id", authStore.userId)
+      .select()
+      .single()
+
+    if (error) throw error
+
+    return data ? mapDbToEntity(data) : null
+  }
+
+  async function deleteItem(id: string): Promise<void> {
+    if (!authStore.userId) return
+
+    const { error } = await supabase
+      .from("table_name")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", authStore.userId)
+
+    if (error) throw error
+  }
+
+  function mapDbToEntity(data: any): EntityType {
+    return {
+      id: data.id,
+      title: data.title,
+      description: data.description,
+      createdAt: new Date(data.created_at),
+      updatedAt: new Date(data.updated_at),
+    }
+  }
+
+  return {
+    fetchAll,
+    fetchById,
+    create,
+    update,
+    deleteItem,
+  }
+}
+
+

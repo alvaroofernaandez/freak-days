@@ -1,0 +1,101 @@
+<!-- Template para nuevas páginas -->
+<!-- app/pages/module-name.vue -->
+<script setup lang="ts">
+import { useModule } from '@/composables/useModule'
+import { useToast } from '@/composables/useToast'
+import type { EntityType } from '@/composables/useModule'
+import EntityCard from '@/components/module/EntityCard.vue'
+import EntityCardSkeleton from '@/components/module/EntityCardSkeleton.vue'
+import EntityStats from '@/components/module/EntityStats.vue'
+import AddEntityModal from '@/components/module/AddEntityModal.vue'
+import { Empty } from '@/components/ui/empty'
+import { Button } from '@/components/ui/button'
+import { Plus } from 'lucide-vue-next'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
+
+const moduleApi = useModule()
+const toast = useToast()
+
+const items = ref<EntityType[]>([])
+const isLoading = ref(false)
+const showAddModal = ref(false)
+
+async function loadItems() {
+  isLoading.value = true
+  try {
+    items.value = await moduleApi.fetchAll()
+  } catch (error) {
+    toast.error('Error al cargar elementos')
+  } finally {
+    isLoading.value = false
+  }
+}
+
+function handleAdd() {
+  showAddModal.value = true
+}
+
+function handleItemAdded() {
+  showAddModal.value = false
+  loadItems()
+}
+
+function handleItemUpdate() {
+  loadItems()
+}
+
+function handleItemDelete() {
+  loadItems()
+}
+
+onMounted(() => {
+  loadItems()
+})
+</script>
+
+<template>
+  <div class="container mx-auto py-6 space-y-6">
+    <div class="flex items-center justify-between">
+      <h1 class="text-3xl font-bold">Módulo</h1>
+      
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button @click="handleAdd">
+            <Plus class="h-4 w-4 mr-2" />
+            Añadir
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Añadir nuevo elemento</TooltipContent>
+      </Tooltip>
+    </div>
+
+    <EntityStats v-if="!isLoading" :items="items" />
+
+    <div v-if="isLoading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <EntityCardSkeleton v-for="i in 6" :key="i" />
+    </div>
+
+    <Empty
+      v-else-if="items.length === 0"
+      title="No hay elementos"
+      description="Añade tu primer elemento"
+    />
+
+    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <EntityCard
+        v-for="item in items"
+        :key="item.id"
+        :item="item"
+        @update="handleItemUpdate"
+        @delete="handleItemDelete"
+      />
+    </div>
+
+    <AddEntityModal
+      v-model:open="showAddModal"
+      @add="handleItemAdded"
+    />
+  </div>
+</template>
+
+

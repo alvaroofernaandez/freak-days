@@ -1,0 +1,115 @@
+<!-- Template para nuevos componentes -->
+<!-- app/components/[module]/[ComponentName].vue -->
+<script setup lang="ts">
+// 1. Imports de Vue
+import { ref, computed, onMounted } from 'vue'
+
+// 2. Imports de tipos
+import type { EntityType } from '@/composables/useModule'
+
+// 3. Imports de composables
+import { useModule } from '@/composables/useModule'
+import { useToast } from '@/composables/useToast'
+import { useErrorHandler } from '@/composables/useErrorHandler'
+
+// 4. Imports de componentes UI
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+
+// 5. Imports de iconos
+import { Plus, Trash2, Edit2 } from 'lucide-vue-next'
+
+// 6. Props y Emits
+interface Props {
+  item: EntityType
+  optional?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  optional: false,
+})
+
+const emit = defineEmits<{
+  update: [id: string]
+  delete: [id: string]
+}>()
+
+// 7. Composables y Stores
+const moduleApi = useModule()
+const toast = useToast()
+const errorHandler = useErrorHandler()
+
+// 8. Refs y Reactive
+const isLoading = ref(false)
+const isExpanded = ref(false)
+
+// 9. Computed
+const displayValue = computed(() => {
+  return props.item.title || 'Sin título'
+})
+
+// 10. Funciones
+async function handleUpdate() {
+  isLoading.value = true
+  try {
+    await moduleApi.updateItem(props.item.id, {})
+    emit('update', props.item.id)
+    toast.success('Actualizado exitosamente')
+  } catch (error) {
+    errorHandler.handleError(error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+async function handleDelete() {
+  if (!confirm('¿Estás seguro?')) return
+
+  isLoading.value = true
+  try {
+    await moduleApi.deleteItem(props.item.id)
+    emit('delete', props.item.id)
+    toast.success('Eliminado exitosamente')
+  } catch (error) {
+    errorHandler.handleError(error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// 11. Lifecycle Hooks
+onMounted(() => {
+  // Inicialización si es necesaria
+})
+</script>
+
+<template>
+  <Card>
+    <CardHeader>
+      <CardTitle>{{ displayValue }}</CardTitle>
+    </CardHeader>
+    <CardContent>
+      <div class="flex items-center gap-2">
+        <Button 
+          variant="outline" 
+          size="sm"
+          @click="handleUpdate"
+          :disabled="isLoading"
+        >
+          <Edit2 class="h-4 w-4" />
+        </Button>
+        <Button 
+          variant="destructive" 
+          size="sm"
+          @click="handleDelete"
+          :disabled="isLoading"
+        >
+          <Trash2 class="h-4 w-4" />
+        </Button>
+      </div>
+    </CardContent>
+  </Card>
+</template>
+
+
