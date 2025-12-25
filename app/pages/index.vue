@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { TrendingUp, Calendar, Award, Zap, Target, Flame } from 'lucide-vue-next'
+import { Card, CardContent } from '@/components/ui/card'
 import LoadingSpinner from '@/components/index/LoadingSpinner.vue'
 import WelcomeSection from '@/components/index/WelcomeSection.vue'
 import ProfileCard from '@/components/index/ProfileCard.vue'
@@ -41,13 +42,24 @@ const {
             ¿Qué quieres hacer hoy?
           </p>
         </div>
-        <div v-if="profile" class="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 border border-primary/20">
-          <Flame class="h-5 w-5 text-exp-legendary" />
-          <div class="flex flex-col">
-            <span class="text-xs text-muted-foreground">Nivel</span>
-            <span class="text-lg font-bold text-primary">{{ profile.level }}</span>
-          </div>
-        </div>
+        <Card v-if="profile" class="relative overflow-hidden border-exp-legendary/30 bg-linear-to-br from-exp-legendary/10 via-exp-legendary/5 to-primary/10 hover:border-exp-legendary/50 transition-all duration-300 group">
+          <div class="absolute inset-0 bg-exp-legendary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <div class="absolute top-0 right-0 w-24 h-24 bg-exp-legendary/10 rounded-full blur-2xl opacity-50" />
+          <CardContent class="relative p-4 sm:p-5">
+            <div class="flex items-center gap-3 sm:gap-4">
+              <div class="relative flex-shrink-0">
+                <div class="absolute inset-0 bg-exp-legendary/30 blur-xl rounded-full animate-pulse opacity-60" />
+                <div class="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-linear-to-br from-exp-legendary/30 via-exp-legendary/20 to-primary/30 flex items-center justify-center border-2 border-exp-legendary/40 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <Flame class="h-6 w-6 sm:h-7 sm:w-7 text-exp-legendary drop-shadow-lg" />
+                </div>
+              </div>
+              <div class="flex flex-col min-w-0">
+                <span class="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider mb-0.5">Nivel</span>
+                <span class="text-2xl sm:text-3xl font-logo font-bold text-exp-legendary leading-none drop-shadow-sm">{{ profile.level }}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
