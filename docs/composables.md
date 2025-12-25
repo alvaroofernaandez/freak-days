@@ -4,18 +4,33 @@ Documentación completa de todos los composables Vue utilizados en FreakDays. Lo
 
 ## 📚 Índice
 
-- [useSupabase](#usesupabase)
-- [useAuth](#useauth)
-- [useProfile](#useprofile)
-- [useAnime](#useanime)
-- [useAnimeSearch](#useanimesearch)
-- [useManga](#usemanga)
-- [useQuests](#usequests)
-- [useWorkouts](#useworkouts)
-- [useParties](#useparties)
-- [useCalendar](#usecalendar)
-- [useToast](#usetoast)
-- [useErrorHandler](#useerrorhandler)
+- [Composables de Datos](#composables-de-datos)
+  - [useSupabase](#usesupabase)
+  - [useAuth](#useauth)
+  - [useProfile](#useprofile)
+  - [useAnime](#useanime)
+  - [useAnimeSearch](#useanimesearch)
+  - [useManga](#usemanga)
+  - [useQuests](#usequests)
+  - [useWorkouts](#useworkouts)
+  - [useParties](#useparties)
+  - [useCalendar](#usecalendar)
+- [Composables de Página](#composables-de-página)
+  - [usePageData](#usepagedata)
+  - [useModal](#usemodal)
+  - [useIndexPage](#useindexpage)
+  - [useAnimePage](#useanimepage)
+  - [useMangaPage](#usemangapage)
+  - [useQuestsPage](#usequestspage)
+  - [useWorkoutsPage](#useworkoutspage)
+  - [usePartyPage](#usepartypage)
+  - [useCalendarPage](#usecalendarpage)
+  - [useProfilePage](#useprofilepage)
+  - [useRegisterPage](#useregisterpage)
+- [Composables de Utilidad](#composables-de-utilidad)
+  - [useToast](#usetoast)
+  - [useErrorHandler](#useerrorhandler)
+  - [usePageTransition](#usepagetransition)
 
 ---
 
@@ -593,58 +608,173 @@ Gestiona los grupos/parties del usuario.
 
 **Ubicación**: `app/composables/useParties.ts`
 
+### Tipos
+
+```typescript
+interface Party {
+  id: string
+  name: string
+  description: string | null
+  inviteCode: string | null
+  ownerId: string
+  maxMembers: number
+  createdAt: Date
+  members: PartyMember[]
+}
+
+interface PartyMember {
+  id: string
+  partyId: string
+  userId: string
+  role: 'owner' | 'admin' | 'member'
+  joinedAt: Date
+  profile?: {
+    username: string
+    displayName: string | null
+    avatarUrl: string | null
+  }
+}
+```
+
 ### Funciones
 
-#### `fetchParties()`
+#### `fetchUserParties()`
 
-Obtiene todos los parties del usuario.
+Obtiene todos los parties del usuario actual.
 
 ```typescript
 const partiesApi = useParties()
-const parties = await partiesApi.fetchParties()
+const parties = await partiesApi.fetchUserParties()
 ```
 
-#### `createParty(data: CreatePartyDTO)`
+#### `createParty(name: string, description?: string)`
 
-Crea un nuevo party.
+Crea un nuevo party con código de invitación.
 
 ```typescript
-await partiesApi.createParty({
-  name: 'Mi Grupo',
-  description: 'Grupo de amigos',
-  max_members: 10
-})
+const party = await partiesApi.createParty('Mi Grupo', 'Descripción opcional')
+```
+
+#### `joinByCode(inviteCode: string)`
+
+Se une a un party mediante código de invitación.
+
+```typescript
+const success = await partiesApi.joinByCode('ABC123')
+```
+
+#### `leaveParty(partyId: string)`
+
+Abandona un party.
+
+```typescript
+await partiesApi.leaveParty(partyId)
+```
+
+#### `regenerateInviteCode(partyId: string)`
+
+Regenera el código de invitación de un party.
+
+```typescript
+const newCode = await partiesApi.regenerateInviteCode(partyId)
+```
+
+#### `removeMember(partyId: string, memberId: string)`
+
+Elimina un miembro del party (solo owner/admin).
+
+```typescript
+await partiesApi.removeMember(partyId, memberId)
 ```
 
 ---
 
 ## useCalendar
 
-Gestiona el calendario de lanzamientos.
+Gestiona el calendario de lanzamientos y eventos.
 
 **Ubicación**: `app/composables/useCalendar.ts`
 
+### Tipos
+
+```typescript
+type ReleaseType = "anime_episode" | "manga_volume" | "event" | "movie" | "game"
+
+interface Release {
+  id: string
+  title: string
+  type: ReleaseType
+  releaseDate: Date
+  description: string | null
+  url: string | null
+}
+
+interface CreateReleaseDTO {
+  title: string
+  type: ReleaseType
+  release_date: string
+  description?: string
+  url?: string
+}
+```
+
 ### Funciones
 
-#### `fetchReleases(daysAhead?: number)`
+#### `fetchReleases()`
 
-Obtiene los lanzamientos próximos.
+Obtiene todos los eventos del calendario del usuario.
 
 ```typescript
 const calendarApi = useCalendar()
-const releases = await calendarApi.fetchReleases(90) // Próximos 90 días
+const releases = await calendarApi.fetchReleases()
 ```
 
-#### `createRelease(data: CreateReleaseDTO)`
+#### `fetchUpcoming(daysAhead?: number)`
 
-Crea un nuevo lanzamiento.
+Obtiene los eventos próximos.
 
 ```typescript
-await calendarApi.createRelease({
-  title: 'Nuevo episodio de One Piece',
-  release_type: 'anime_episode',
-  release_date: '2025-01-20'
+const upcoming = await calendarApi.fetchUpcoming(30) // Próximos 30 días
+```
+
+#### `addRelease(dto: CreateReleaseDTO)`
+
+Crea un nuevo evento en el calendario.
+
+```typescript
+const release = await calendarApi.addRelease({
+  title: 'One Piece Ep. 1120',
+  type: 'anime_episode',
+  release_date: '2025-01-20',
+  description: 'Nuevo episodio',
+  url: 'https://...'
 })
+```
+
+#### `updateRelease(id: string, dto: Partial<CreateReleaseDTO>)`
+
+Actualiza un evento existente (útil para drag and drop).
+
+```typescript
+await calendarApi.updateRelease(eventId, {
+  release_date: '2025-01-21'
+})
+```
+
+#### `deleteRelease(id: string)`
+
+Elimina un evento del calendario.
+
+```typescript
+await calendarApi.deleteRelease(eventId)
+```
+
+#### `normalizeDate(date: Date)`
+
+Normaliza una fecha a las 12:00 PM para evitar problemas de zona horaria.
+
+```typescript
+const normalized = calendarApi.normalizeDate(new Date())
 ```
 
 ---
@@ -713,6 +843,162 @@ Envuelve una función async para manejo automático de errores.
 await errorHandler.handleAsyncError(async () => {
   await someAsyncOperation()
 })
+```
+
+---
+
+## Composables de Página
+
+Los composables de página encapsulan toda la lógica de una página específica, separando la lógica de negocio de la presentación.
+
+### usePageData
+
+Composable genérico para cargar datos de página con estado de carga y error.
+
+**Ubicación**: `app/composables/usePageData.ts`
+
+```typescript
+const { data, loading, error, reload } = usePageData({
+  fetcher: () => api.fetchData(),
+  immediate: true,
+  onError: (err) => console.error(err)
+})
+```
+
+### useModal
+
+Composable para gestionar el estado de modales.
+
+**Ubicación**: `app/composables/useModal.ts`
+
+```typescript
+const modal = useModal()
+modal.open()
+modal.close()
+// modal.isOpen.value es un ref<boolean>
+```
+
+### useIndexPage
+
+Lógica de la página principal (dashboard).
+
+**Ubicación**: `app/composables/useIndexPage.ts`
+
+Retorna:
+- `profile`: Perfil del usuario
+- `modules`: Módulos habilitados
+- `loading`: Estado de carga
+
+### useAnimePage
+
+Lógica de la página de anime.
+
+**Ubicación**: `app/composables/useAnimePage.ts`
+
+Retorna:
+- `animeList`: Lista de anime
+- `activeView`: Vista activa ('list' | 'marketplace')
+- `activeTab`: Tab activo
+- `filteredAnime`: Anime filtrado
+- `stats`: Estadísticas
+- Funciones para gestionar anime
+
+### useMangaPage
+
+Lógica de la página de manga.
+
+**Ubicación**: `app/composables/useMangaPage.ts`
+
+Retorna:
+- `mangaCollection`: Colección de manga
+- `activeTab`: Tab activo
+- `filteredMangas`: Mangas filtrados
+- Funciones para gestionar manga
+
+### useQuestsPage
+
+Lógica de la página de quests.
+
+**Ubicación**: `app/composables/useQuestsPage.ts`
+
+Retorna:
+- `quests`: Quests activas
+- `completedIds`: IDs de quests completadas hoy
+- `notifications`: Notificaciones de quests
+- Funciones para gestionar quests
+
+### useWorkoutsPage
+
+Lógica de la página de workouts.
+
+**Ubicación**: `app/composables/useWorkoutsPage.ts`
+
+Retorna:
+- `workouts`: Entrenamientos completados
+- `currentWorkout`: Entrenamiento en curso
+- `stats`: Estadísticas semanales
+- Funciones para gestionar entrenamientos
+
+### usePartyPage
+
+Lógica de la página de party.
+
+**Ubicación**: `app/composables/usePartyPage.ts`
+
+Retorna:
+- `parties`: Parties del usuario
+- `loading`: Estado de carga
+- Modales para crear, unirse, gestionar
+- Funciones para gestionar parties y miembros
+
+### useCalendarPage
+
+Lógica de la página de calendario.
+
+**Ubicación**: `app/composables/useCalendarPage.ts`
+
+Retorna:
+- `releases`: Eventos del calendario
+- `currentMonth`: Mes actual
+- `newRelease`: Formulario de nuevo evento
+- Funciones para añadir, actualizar y eliminar eventos
+- `updateEventDate`: Función para drag and drop
+
+### useProfilePage
+
+Lógica de la página de perfil.
+
+**Ubicación**: `app/composables/useProfilePage.ts`
+
+Retorna:
+- `profile`: Perfil del usuario
+- `isEditing`: Modo edición
+- `form`: Formulario de edición
+- `stats`: Estadísticas del perfil
+- Funciones para actualizar perfil y avatar
+
+### useRegisterPage
+
+Lógica de la página de registro.
+
+**Ubicación**: `app/composables/useRegisterPage.ts`
+
+Retorna:
+- `form`: Formulario de registro
+- `passwordStrength`: Fortaleza de contraseña
+- `strengthLabel`: Etiqueta de fortaleza
+- `strengthColor`: Color de fortaleza
+- `isSubmitting`: Estado de envío
+- Funciones para registro y validación
+
+### usePageTransition
+
+Composable para transiciones de página.
+
+**Ubicación**: `app/composables/usePageTransition.ts`
+
+```typescript
+const { transition } = usePageTransition()
 ```
 
 ---

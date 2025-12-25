@@ -521,6 +521,285 @@ Skeleton loader para WorkoutStats.
 
 **Ubicación**: `app/components/workouts/WorkoutStatsSkeleton.vue`
 
+### Party
+
+#### PartyCard
+
+Tarjeta que muestra un party individual.
+
+**Ubicación**: `app/components/party/PartyCard.vue`
+
+**Props:**
+- `party`: `Party | ReadonlyParty`
+
+**Events:**
+- `view`: Ver detalles del party
+- `delete`: Eliminar party
+- `leave`: Abandonar party
+
+#### PartyDetailsModal
+
+Modal con detalles del party y gestión de miembros.
+
+**Ubicación**: `app/components/party/PartyDetailsModal.vue`
+
+**Props:**
+- `open`: `boolean`
+- `party`: `Party | ReadonlyParty`
+- `getMemberRoleLabel`: `(role: PartyMember['role']) => string`
+
+**Events:**
+- `update:open`
+- `regenerate-code`: Regenera código de invitación
+- `remove-member`: Elimina un miembro
+- `delete`: Elimina el party
+- `leave`: Abandona el party
+
+#### CreatePartyModal
+
+Modal para crear un nuevo party.
+
+**Ubicación**: `app/components/party/CreatePartyModal.vue`
+
+**Props:**
+- `open`: `boolean`
+
+**Events:**
+- `update:open`
+- `create`: Crea el party
+
+#### JoinPartyModal
+
+Modal para unirse a un party mediante código de invitación.
+
+**Ubicación**: `app/components/party/JoinPartyModal.vue`
+
+**Props:**
+- `open`: `boolean`
+
+**Events:**
+- `update:open`
+- `join`: Se une al party
+
+#### DeletePartyConfirmModal
+
+Modal de confirmación para eliminar un party.
+
+**Ubicación**: `app/components/party/DeletePartyConfirmModal.vue`
+
+**Props:**
+- `open`: `boolean`
+- `party`: `Party | ReadonlyParty`
+
+**Events:**
+- `update:open`
+- `confirm`: Confirma la eliminación
+
+#### RemoveMemberConfirmModal
+
+Modal de confirmación para eliminar un miembro del party.
+
+**Ubicación**: `app/components/party/RemoveMemberConfirmModal.vue`
+
+**Props:**
+- `open`: `boolean`
+- `party`: `Party | ReadonlyParty`
+- `member`: `PartyMember | Readonly<PartyMember>`
+
+**Events:**
+- `update:open`
+- `confirm`: Confirma la eliminación
+
+#### PartyEmptyState
+
+Estado vacío cuando el usuario no tiene parties.
+
+**Ubicación**: `app/components/party/PartyEmptyState.vue`
+
+**Events:**
+- `create`: Abre modal de creación
+- `join`: Abre modal de unión
+
+### Calendar
+
+#### CalendarGrid
+
+Grid principal del calendario mensual con navegación.
+
+**Ubicación**: `app/components/calendar/CalendarGrid.vue`
+
+**Props:**
+- `currentMonth`: `Date`
+- `events`: `Release[]`
+- `loading`: `boolean` (opcional)
+
+**Events:**
+- `update:currentMonth`: Cambia el mes
+- `update:event`: Actualiza la fecha de un evento (drag and drop)
+- `delete`: Elimina un evento
+- `add`: Abre modal para añadir evento
+
+#### CalendarDay
+
+Tarjeta de un día individual en el calendario, actúa como drop zone.
+
+**Ubicación**: `app/components/calendar/CalendarDay.vue`
+
+**Props:**
+- `date`: `Date`
+- `events`: `Release[]`
+- `isToday`: `boolean`
+- `isCurrentMonth`: `boolean`
+- `isDragging`: `boolean`
+- `isHovered`: `boolean` (opcional)
+
+**Events:**
+- `drop`: Evento soltado en este día
+- `delete`: Elimina un evento
+- `dragstart`: Inicia el arrastre de un evento
+- `dragend`: Termina el arrastre
+- `hover`: Indica que el día está siendo hovered durante drag
+
+#### CalendarEventCard
+
+Mini card de evento arrastrable dentro de un día.
+
+**Ubicación**: `app/components/calendar/CalendarEventCard.vue`
+
+**Props:**
+- `release`: `Release`
+- `isDragging`: `boolean` (opcional)
+
+**Events:**
+- `delete`: Elimina el evento
+- `dragstart`: Inicia el arrastre
+- `dragend`: Termina el arrastre
+
+#### CalendarEmptyState
+
+Estado vacío cuando no hay eventos en el calendario.
+
+**Ubicación**: `app/components/calendar/CalendarEmptyState.vue`
+
+**Events:**
+- `add`: Abre modal para añadir evento
+
+### Profile
+
+#### ProfileHeader
+
+Header del perfil con avatar y controles de edición.
+
+**Ubicación**: `app/components/profile/ProfileHeader.vue`
+
+**Props:**
+- `profile`: `UserProfile | null`
+- `isEditing`: `boolean`
+
+**Events:**
+- `upload-avatar`: Sube un avatar
+- `delete-avatar`: Elimina el avatar
+- `edit`: Activa modo edición
+- `cancel`: Cancela edición
+
+#### ProfileEditForm
+
+Formulario de edición del perfil.
+
+**Ubicación**: `app/components/profile/ProfileEditForm.vue`
+
+**Props:**
+- `form`: `Partial<UserProfile>`
+
+**Events:**
+- `update:form`: Actualiza el formulario
+- `save`: Guarda los cambios
+- `cancel`: Cancela la edición
+
+#### ProfileStats
+
+Estadísticas del perfil del usuario.
+
+**Ubicación**: `app/components/profile/ProfileStats.vue`
+
+**Props:**
+- `profile`: `UserProfile | null`
+- `stats`: `{ quests: number; anime: number; workouts: number; manga: number }`
+
+#### ProfileProgressCard
+
+Tarjeta que muestra el progreso hacia el siguiente nivel.
+
+**Ubicación**: `app/components/profile/ProfileProgressCard.vue`
+
+**Props:**
+- `currentExp`: `number`
+- `neededExp`: `number`
+- `progress`: `number`
+- `level`: `number`
+
+#### ProfileInfoCards
+
+Tarjetas informativas del perfil (bio, ubicación, etc.).
+
+**Ubicación**: `app/components/profile/ProfileInfoCards.vue`
+
+**Props:**
+- `profile`: `UserProfile | null`
+
+### Auth
+
+#### RegisterForm
+
+Formulario de registro con validación de contraseña.
+
+**Ubicación**: `app/components/auth/RegisterForm.vue`
+
+**Props:**
+- `loading`: `boolean`
+- `error`: `string | null | undefined`
+
+**Events:**
+- `submit`: Envía el formulario de registro
+
+#### RegisterHeader
+
+Header de la página de registro.
+
+**Ubicación**: `app/components/auth/RegisterHeader.vue`
+
+#### RegisterSuccessMessage
+
+Mensaje de éxito después del registro.
+
+**Ubicación**: `app/components/auth/RegisterSuccessMessage.vue`
+
+**Props:**
+- `email`: `string`
+
+#### PasswordStrengthIndicator
+
+Indicador visual de la fortaleza de la contraseña.
+
+**Ubicación**: `app/components/auth/PasswordStrengthIndicator.vue`
+
+**Props:**
+- `strength`: `number` (0-4)
+- `label`: `string`
+- `color`: `string`
+
+#### GoogleSignInButton
+
+Botón para iniciar sesión con Google.
+
+**Ubicación**: `app/components/auth/GoogleSignInButton.vue`
+
+**Props:**
+- `loading`: `boolean`
+
+**Events:**
+- `click`: Inicia sesión con Google
+
 ---
 
 ## Componentes de Error

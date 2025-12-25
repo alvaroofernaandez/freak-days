@@ -65,8 +65,8 @@ FreakDays está organizado en los siguientes módulos principales:
 - **📚 Manga**: Colección física, wishlist y tracking de volúmenes
 - **💪 Workouts**: Registro de entrenamientos y ejercicios
 - **✅ Quests**: Sistema de misiones diarias con dificultades
-- **👥 Party**: Sistema de grupos y colaboración
-- **📅 Calendar**: Calendario de lanzamientos y eventos
+- **👥 Party**: Sistema de grupos con códigos de invitación y gestión de miembros
+- **📅 Calendar**: Calendario mensual completo con drag and drop para eventos
 
 ## 🚀 Inicio Rápido
 
@@ -105,5 +105,27 @@ Antes de contribuir, asegúrate de:
 ---
 
 **Última actualización**: Enero 2025
+
+## 📦 Nuevas Funcionalidades
+
+### Calendario con Drag and Drop
+- Calendario mensual completo con grid de días
+- Arrastrar y soltar eventos entre días
+- Mini cards compactas dentro de cada día
+- Normalización de fechas para evitar problemas de zona horaria
+- Diseño responsive y mobile-first
+
+### Sistema de Party Mejorado
+- Códigos de invitación únicos
+- Gestión completa de miembros (añadir, eliminar, roles)
+- Regeneración de códigos de invitación
+- Modales para crear, unirse y gestionar parties
+- Diseño responsive y mobile-first
+
+### Refactorización de Páginas
+- Separación de lógica en composables de página
+- Componentes modulares para register, profile, party, calendar
+- Mejora de mantenibilidad y escalabilidad
+- Composables genéricos: `usePageData`, `useModal`
 
 

@@ -29,8 +29,8 @@
 - 📚 **Colección de Manga**: Tracking físico, wishlist, gestión de volúmenes y costos
 - 💪 **Entrenamientos**: Registro de workouts, ejercicios y estadísticas
 - ✅ **Quests (Misiones)**: Sistema de tareas diarias con dificultades y recompensas EXP
-- 👥 **Party System**: Creación y gestión de grupos con amigos
-- 📅 **Calendario**: Próximos lanzamientos y eventos importantes
+- 👥 **Party System**: Creación y gestión de grupos con códigos de invitación
+- 📅 **Calendario**: Calendario mensual completo con drag and drop para eventos
 - 📊 **Estadísticas**: Dashboard completo con métricas y progreso
 
 ### 🛠️ Tecnologías

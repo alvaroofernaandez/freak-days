@@ -65,13 +65,23 @@ Página de inicio de sesión.
 Página de registro.
 
 **Características:**
-- Formulario de registro
-- Validación de contraseña
+- Formulario de registro con validación
+- Indicador de fortaleza de contraseña
 - Confirmación de contraseña
 - Manejo de errores
+- Botón de inicio de sesión con Google
+- Mensaje de éxito después del registro
+
+**Componentes utilizados:**
+- `RegisterHeader`
+- `RegisterForm`
+- `PasswordStrengthIndicator`
+- `GoogleSignInButton`
+- `RegisterSuccessMessage`
 
 **Funcionalidad:**
-- Usa `useAuth().signUp()`
+- Usa `useRegisterPage()` composable
+- Validación en tiempo real de contraseña
 - Crea perfil automáticamente
 - Redirige a `/onboarding` después del registro
 
@@ -232,17 +242,32 @@ Página principal del módulo de workouts.
 Página principal del módulo de party system.
 
 **Características:**
-- Lista de parties del usuario
-- Crear nuevo party
-- Unirse a party por código
-- Gestionar miembros
-- Listas compartidas
+- Lista de parties del usuario con diseño responsive
+- Crear nuevo party con modal
+- Unirse a party por código de invitación
+- Gestionar miembros (añadir, eliminar, roles)
+- Regenerar códigos de invitación
+- Abandonar parties
+- Estado vacío mejorado
+- Diseño mobile-first y responsive
+
+**Componentes utilizados:**
+- `PartyCard`
+- `PartyEmptyState`
+- `CreatePartyModal`
+- `JoinPartyModal`
+- `PartyDetailsModal`
+- `DeletePartyConfirmModal`
+- `RemoveMemberConfirmModal`
 
 **Funcionalidad:**
-- Carga parties del usuario
-- Permite crear parties
-- Genera códigos de invitación
-- Gestiona roles de miembros
+- Usa `usePartyPage()` composable
+- Carga parties del usuario con miembros
+- Permite crear parties con nombre y descripción
+- Genera códigos de invitación únicos
+- Gestiona roles (owner, admin, member)
+- Permite abandonar o eliminar parties
+- Diseño responsive con adaptación móvil/desktop
 
 ---
 
@@ -250,19 +275,35 @@ Página principal del módulo de party system.
 
 **Archivo**: `app/pages/calendar.vue`
 
-Página del calendario de lanzamientos.
+Página del calendario de lanzamientos con drag and drop.
 
 **Características:**
-- Vista de calendario
-- Lanzamientos próximos
+- Vista de calendario mensual completo
+- Grid de días con eventos
+- Drag and drop para mover eventos entre días
 - Añadir eventos personalizados
-- Filtros por tipo
+- Tipos de eventos: anime_episode, manga_volume, event, movie, game
+- Navegación entre meses
+- Diseño mobile-first y responsive
+- Normalización de fechas para evitar problemas de zona horaria
+
+**Componentes utilizados:**
+- `CalendarGrid`
+- `CalendarDay`
+- `CalendarEventCard`
+- `CalendarEmptyState`
+- `DatePicker`
+- `Button`, `Card`, `Input`, `Label`
 
 **Funcionalidad:**
-- Carga lanzamientos próximos
-- Permite añadir eventos
-- Filtra por tipo (anime, manga, eventos, etc.)
-- Muestra lanzamientos globales y personales
+- Usa `useCalendarPage()` composable
+- Carga todos los eventos del usuario
+- Permite añadir eventos con título, fecha, tipo, descripción y URL
+- Drag and drop funcional para cambiar fechas
+- Actualización automática al mover eventos
+- Eliminación de eventos
+- Vista optimizada para viewport (no requiere scroll en desktop)
+- Mini cards compactas dentro de cada día
 
 ---
 
@@ -273,25 +314,30 @@ Página del calendario de lanzamientos.
 Página de perfil del usuario.
 
 **Características:**
-- Información del perfil
-- Edición de datos
-- Subida de avatar
-- Estadísticas personales
-- Progreso de EXP y nivel
+- Información del perfil con diseño modular
+- Edición de datos con formulario
+- Subida y eliminación de avatar
+- Estadísticas personales (quests, anime, workouts, manga)
+- Progreso de EXP y nivel con barra visual
+- Tarjetas informativas (bio, ubicación, enlaces sociales)
+- Diseño responsive
 
 **Componentes utilizados:**
-- `Avatar`
-- `Progress`
-- `DatePicker`
-- `Input`
-- `Button`
+- `ProfileHeader`
+- `ProfileEditForm`
+- `ProfileStats`
+- `ProfileProgressCard`
+- `ProfileInfoCards`
+- `Avatar`, `Progress`, `Button`, `Input`
 
 **Funcionalidad:**
+- Usa `useProfilePage()` composable
 - Carga perfil del usuario
-- Permite editar todos los campos
-- Sube/elimina avatar
-- Muestra estadísticas
-- Calcula progreso de EXP
+- Modo edición con formulario completo
+- Sube/elimina avatar con preview
+- Muestra estadísticas de todos los módulos
+- Calcula y muestra progreso de EXP hacia siguiente nivel
+- Guarda cambios con validación
 
 ---
 
