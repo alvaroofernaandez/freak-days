@@ -51,11 +51,13 @@ export default defineNuxtConfig({
         },
         {
           name: "description",
-          content: "FreakDays es una aplicación de gestión de vida cotidiana para personas frikis. Gestiona entrenamientos, colecciones de manga, animes, misiones diarias (quests), grupos (party system) y calendario de lanzamientos. Gamificación, tracking y productividad en un solo lugar.",
+          content:
+            "FreakDays es una aplicación de gestión de vida cotidiana para personas frikis. Gestiona entrenamientos, colecciones de manga, animes, misiones diarias (quests), grupos (party system) y calendario de lanzamientos. Gamificación, tracking y productividad en un solo lugar.",
         },
         {
           name: "keywords",
-          content: "freakdays, gestión vida friki, anime, manga, quests, entrenamientos, gamificación, tracking, productividad, gestión tareas, colección manga, lista anime, party system, calendario lanzamientos",
+          content:
+            "freakdays, gestión vida friki, anime, manga, quests, entrenamientos, gamificación, tracking, productividad, gestión tareas, colección manga, lista anime, party system, calendario lanzamientos",
         },
         {
           name: "author",
@@ -63,7 +65,8 @@ export default defineNuxtConfig({
         },
         {
           name: "robots",
-          content: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+          content:
+            "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
         },
         {
           name: "theme-color",
@@ -95,11 +98,13 @@ export default defineNuxtConfig({
         },
         {
           property: "og:title",
-          content: "FreakDays - Tu compañero definitivo para gestionar tu vida friki",
+          content:
+            "FreakDays - Tu compañero definitivo para gestionar tu vida friki",
         },
         {
           property: "og:description",
-          content: "Gestiona entrenamientos, colecciones de manga, animes, misiones diarias (quests), grupos (party system) y calendario de lanzamientos. Gamificación, tracking y productividad en un solo lugar.",
+          content:
+            "Gestiona entrenamientos, colecciones de manga, animes, misiones diarias (quests), grupos (party system) y calendario de lanzamientos. Gamificación, tracking y productividad en un solo lugar.",
         },
         {
           property: "og:image",
@@ -135,11 +140,13 @@ export default defineNuxtConfig({
         },
         {
           name: "twitter:title",
-          content: "FreakDays - Tu compañero definitivo para gestionar tu vida friki",
+          content:
+            "FreakDays - Tu compañero definitivo para gestionar tu vida friki",
         },
         {
           name: "twitter:description",
-          content: "Gestiona entrenamientos, colecciones de manga, animes, misiones diarias (quests), grupos (party system) y calendario de lanzamientos.",
+          content:
+            "Gestiona entrenamientos, colecciones de manga, animes, misiones diarias (quests), grupos (party system) y calendario de lanzamientos.",
         },
         {
           name: "twitter:image",
@@ -187,7 +194,7 @@ export default defineNuxtConfig({
         },
         {
           rel: "stylesheet",
-          href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&display=swap",
+          href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&family=Righteous&family=Inconsolata:wght@400;500;600;700&display=swap",
         },
         {
           rel: "canonical",
