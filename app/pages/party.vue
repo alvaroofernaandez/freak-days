@@ -1,221 +1,221 @@
 <script setup lang="ts">
-import { Users, Plus, Crown, UserPlus, X, Copy, Check, LogOut } from 'lucide-vue-next'
-import type { Party } from '@/composables/useParties'
+import CreatePartyModal from '@/components/party/CreatePartyModal.vue'
+import DeletePartyConfirmModal from '@/components/party/DeletePartyConfirmModal.vue'
+import JoinPartyModal from '@/components/party/JoinPartyModal.vue'
+import PartyCard from '@/components/party/PartyCard.vue'
+import PartyDetailsModal from '@/components/party/PartyDetailsModal.vue'
+import PartyEmptyState from '@/components/party/PartyEmptyState.vue'
+import RemoveMemberConfirmModal from '@/components/party/RemoveMemberConfirmModal.vue'
+import { Button } from '@/components/ui/button'
+import { usePartyPage } from '@/composables/usePartyPage'
+import { Plus, UserPlus, Users } from 'lucide-vue-next'
+import { computed, onMounted } from 'vue'
+import { useAuthStore } from '~~/stores/auth'
 
-const partiesApi = useParties()
 const authStore = useAuthStore()
 
-const parties = ref<Party[]>([])
-const loading = ref(true)
-const showCreateModal = ref(false)
-const showJoinModal = ref(false)
-const copiedCode = ref<string | null>(null)
+const {
+  parties,
+  loading,
+  createModal,
+  joinModal,
+  detailsModal,
+  deleteConfirmModal,
+  removeMemberModal,
+  newParty,
+  joinCode,
+  selectedParty,
+  memberToRemove,
+  copiedCode,
+  isSubmitting,
+  isRegeneratingCode,
+  createParty,
+  joinParty,
+  leaveParty,
+  regenerateInviteCode,
+  removeMember,
+  deleteParty,
+  copyInviteCode,
+  openDeleteConfirm,
+  openRemoveMemberConfirm,
+  openDetails,
+  isOwner,
+  canManageMembers,
+  getMemberRoleLabel,
+  initialize,
+} = usePartyPage()
 
-const newParty = ref({
-  name: '',
-  description: ''
+const hasParties = computed(() => !loading.value && parties.value.length > 0)
+const isEmpty = computed(() => !loading.value && parties.value.length === 0)
+
+onMounted(() => {
+  initialize()
 })
 
-const joinCode = ref('')
-
-onMounted(async () => {
-  await loadParties()
-})
-
-async function loadParties() {
-  loading.value = true
-  try {
-    parties.value = await partiesApi.fetchUserParties()
-  } finally {
-    loading.value = false
-  }
+function formatDate(date: Date): string {
+  return new Intl.DateTimeFormat('es-ES', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  }).format(date)
 }
 
-async function createParty() {
-  if (!newParty.value.name.trim()) return
-
-  const created = await partiesApi.createParty(newParty.value.name, newParty.value.description || undefined)
-  if (created) {
-    parties.value.push(created)
-    newParty.value = { name: '', description: '' }
-    showCreateModal.value = false
-  }
+function handleCreateParty() {
+  createParty()
 }
 
-async function joinParty() {
-  if (!joinCode.value.trim()) return
-
-  const joined = await partiesApi.joinByCode(joinCode.value)
-  if (joined) {
-    parties.value.push(joined)
-    joinCode.value = ''
-    showJoinModal.value = false
-  }
+function handleJoinParty() {
+  joinParty()
 }
 
-async function leaveParty(partyId: string) {
-  const success = await partiesApi.leaveParty(partyId)
-  if (success) {
-    parties.value = parties.value.filter(p => p.id !== partyId)
-  }
+function handleDeleteParty(partyId: string) {
+  deleteParty(partyId)
 }
 
-function copyInviteCode(code: string) {
-  navigator.clipboard.writeText(code)
-  copiedCode.value = code
-  setTimeout(() => {
-    copiedCode.value = null
-  }, 2000)
+function handleRemoveMember(partyId: string, memberId: string) {
+  removeMember(partyId, memberId)
 }
 
-function isOwner(party: Party): boolean {
-  return party.ownerId === authStore.userId
+function handleRegenerateCode(partyId: string) {
+  regenerateInviteCode(partyId)
 }
 </script>
 
 <template>
-  <div class="space-y-6">
-    <header class="flex items-center justify-between">
+  <div class="space-y-4 sm:space-y-6 px-1 sm:px-0">
+    <header class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
       <div>
-        <h1 class="text-xl sm:text-2xl font-bold flex items-center gap-2">
-          <Users class="h-6 w-6 text-primary" />
-          Party System
+        <h1 class="text-lg sm:text-xl md:text-2xl font-bold flex items-center gap-2">
+          <Users class="h-5 w-5 sm:h-6 sm:w-6 text-primary shrink-0" aria-hidden="true" />
+          <span>Party System</span>
         </h1>
-        <p class="text-muted-foreground text-sm">
-          Crea grupos con tus amigos
+        <p class="text-muted-foreground text-xs sm:text-sm mt-1">
+          Crea grupos con tus amigos y comparte tus progresos
         </p>
       </div>
-      <Button size="icon" class="h-10 w-10 rounded-full glow-primary" @click="showCreateModal = true">
-        <Plus class="h-5 w-5" />
-      </Button>
+      <div class="flex gap-2 sm:gap-2">
+        <Button variant="outline" size="sm" class="flex-1 sm:flex-none min-h-[44px] sm:min-h-0"
+          @click="joinModal.open()" aria-label="Unirse a una party con código">
+          <UserPlus class="h-4 w-4 sm:mr-2" />
+          <span class="hidden sm:inline">Unirse</span>
+        </Button>
+        <Button size="sm" class="flex-1 sm:flex-none glow-primary min-h-[44px] sm:min-h-0" @click="createModal.open()"
+          aria-label="Crear nueva party">
+          <Plus class="h-4 w-4 sm:mr-2" />
+          <span class="hidden sm:inline">Crear Party</span>
+          <span class="sm:hidden">Crear</span>
+        </Button>
+      </div>
     </header>
 
-    <section v-if="!loading && parties.length > 0" class="space-y-3">
-      <h2 class="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-        Tus Parties
-      </h2>
-      
-      <Card v-for="party in parties" :key="party.id" class="hover:border-primary/30 transition-colors">
-        <CardHeader class="flex flex-col gap-3 py-4 px-4">
-          <div class="flex items-center gap-3">
-            <Avatar class="h-12 w-12">
-              <AvatarFallback class="bg-primary/20 text-primary text-lg">
-                {{ party.name.charAt(0) }}
-              </AvatarFallback>
-            </Avatar>
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2">
-                <CardTitle class="text-base font-medium">{{ party.name }}</CardTitle>
-                <Crown v-if="isOwner(party)" class="h-4 w-4 text-exp-medium" />
-              </div>
-              <CardDescription class="text-sm">{{ party.members.length }} miembros</CardDescription>
-            </div>
-          </div>
-          
-          <div class="flex items-center justify-between gap-2">
-            <div v-if="party.inviteCode" class="flex items-center gap-2">
-              <code class="px-2 py-1 bg-muted rounded text-xs font-mono">{{ party.inviteCode }}</code>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                class="h-7 w-7"
-                @click="copyInviteCode(party.inviteCode!)"
-              >
-                <Check v-if="copiedCode === party.inviteCode" class="h-3 w-3 text-exp-easy" />
-                <Copy v-else class="h-3 w-3" />
-              </Button>
-            </div>
-            <Button 
-              v-if="!isOwner(party)"
-              variant="ghost" 
-              size="sm"
-              class="text-destructive hover:text-destructive"
-              @click="leaveParty(party.id)"
-            >
-              <LogOut class="h-4 w-4 mr-1" />
-              Salir
-            </Button>
-          </div>
+    <div v-if="loading" class="flex items-center justify-center py-8 sm:py-12">
+      <div class="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" role="status"
+        aria-label="Cargando parties" />
+    </div>
 
-          <div class="flex -space-x-2">
-            <Avatar v-for="member in party.members.slice(0, 5)" :key="member.id" class="h-8 w-8 border-2 border-background">
-              <AvatarFallback class="text-xs">
-                {{ member.profile?.username?.charAt(0) ?? '?' }}
-              </AvatarFallback>
-            </Avatar>
-            <div v-if="party.members.length > 5" class="h-8 w-8 rounded-full bg-muted border-2 border-background flex items-center justify-center text-xs">
-              +{{ party.members.length - 5 }}
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
+    <section v-if="hasParties" class="space-y-3 sm:space-y-4">
+      <h2 class="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider px-1">
+        Tus Parties ({{ parties.length }})
+      </h2>
+
+      <div class="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        <TransitionGroup name="list" tag="div" class="contents">
+          <PartyCard v-for="(party, index) in parties" :key="party.id" :party="party" :is-owner="isOwner(party)"
+            :copied-code="copiedCode" :is-submitting="isSubmitting" :style="{ animationDelay: `${index * 50}ms` }"
+            @copy-code="copyInviteCode" @view-details="openDetails" @leave="leaveParty" />
+        </TransitionGroup>
+      </div>
     </section>
 
-    <div v-if="loading" class="text-center py-8">
-      <div class="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto" />
-    </div>
+    <Transition name="fade">
+      <PartyEmptyState v-if="isEmpty" @create="createModal.open()" @join="joinModal.open()" />
+    </Transition>
 
-    <Card class="border-dashed border-2">
-      <CardHeader class="text-center py-8">
-        <UserPlus class="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
-        <CardTitle class="text-base">Únete a una Party</CardTitle>
-        <CardDescription class="text-sm">
-          Usa un código de invitación para unirte
-        </CardDescription>
-        <Button variant="outline" class="mt-4" @click="showJoinModal = true">
-          Introducir Código
-        </Button>
-      </CardHeader>
-    </Card>
+    <CreatePartyModal :open="createModal.isOpen.value" v-model:name="newParty.name"
+      v-model:description="newParty.description" :is-submitting="isSubmitting" @close="createModal.close()"
+      @submit="handleCreateParty" />
 
-    <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
-      <Card class="w-full max-w-sm">
-        <CardHeader class="flex flex-row items-center justify-between">
-          <CardTitle>Crear Party</CardTitle>
-          <Button variant="ghost" size="icon" @click="showCreateModal = false">
-            <X class="h-4 w-4" />
-          </Button>
-        </CardHeader>
-        <CardContent class="space-y-4">
-          <div class="space-y-2">
-            <Label for="name">Nombre</Label>
-            <Input id="name" v-model="newParty.name" placeholder="Ej: Nakamas del Anime" class="w-full" />
-          </div>
-          <div class="space-y-2">
-            <Label for="description">Descripción (opcional)</Label>
-            <Input id="description" v-model="newParty.description" placeholder="Descripción del grupo" class="w-full" />
-          </div>
-          <Button class="w-full" @click="createParty" :disabled="!newParty.name.trim()">
-            Crear Party
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
+    <JoinPartyModal :open="joinModal.isOpen.value" v-model:code="joinCode" :is-submitting="isSubmitting"
+      @close="joinModal.close()" @submit="handleJoinParty" />
 
-    <div v-if="showJoinModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
-      <Card class="w-full max-w-sm">
-        <CardHeader class="flex flex-row items-center justify-between">
-          <CardTitle>Unirse a Party</CardTitle>
-          <Button variant="ghost" size="icon" @click="showJoinModal = false">
-            <X class="h-4 w-4" />
-          </Button>
-        </CardHeader>
-        <CardContent class="space-y-4">
-          <div class="space-y-2">
-            <Label for="code">Código de Invitación</Label>
-            <Input 
-              id="code" 
-              v-model="joinCode" 
-              placeholder="ABC123" 
-              class="w-full font-mono uppercase text-center text-lg tracking-widest"
-              maxlength="6"
-            />
-          </div>
-          <Button class="w-full" @click="joinParty" :disabled="joinCode.length !== 6">
-            Unirse
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
+    <PartyDetailsModal :open="detailsModal.isOpen.value" :party="selectedParty" :member-to-remove="memberToRemove"
+      :copied-code="copiedCode" :is-owner="selectedParty ? isOwner(selectedParty) : false"
+      :can-manage-members="selectedParty ? canManageMembers(selectedParty) : false" :is-submitting="isSubmitting"
+      :is-regenerating-code="isRegeneratingCode" :current-user-id="authStore.userId"
+      :get-member-role-label="(role: string) => getMemberRoleLabel(role as 'owner' | 'admin' | 'member')"
+      :format-date="formatDate" @close="detailsModal.close()" @copy-code="copyInviteCode"
+      @regenerate-code="handleRegenerateCode" @remove-member="openRemoveMemberConfirm"
+      @delete-party="openDeleteConfirm" />
+
+    <DeletePartyConfirmModal :open="deleteConfirmModal.isOpen.value" :party="selectedParty as any"
+      :is-submitting="isSubmitting" @close="deleteConfirmModal.close()" @confirm="handleDeleteParty" />
+
+    <RemoveMemberConfirmModal :open="removeMemberModal.isOpen.value" :party="selectedParty as any"
+      :member="memberToRemove as any" :is-submitting="isSubmitting" @close="removeMemberModal.close()"
+      @confirm="handleRemoveMember" />
   </div>
 </template>
+
+<style scoped>
+.modal-enter-active,
+.modal-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+
+.fade-enter-active {
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.fade-enter-from {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.fade-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.list-enter-active {
+  transition: all 0.4s ease;
+}
+
+.list-enter-from {
+  opacity: 0;
+  transform: translateY(20px) scale(0.95);
+}
+
+.list-leave-active {
+  transition: all 0.3s ease;
+}
+
+.list-leave-to {
+  opacity: 0;
+  transform: translateY(-10px) scale(0.95);
+}
+
+.list-move {
+  transition: transform 0.3s ease;
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+</style>
