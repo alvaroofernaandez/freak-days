@@ -83,7 +83,7 @@ export function useWorkouts() {
       .eq("status", "in_progress")
       .order("started_at", { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (error || !data) return null;
     return mapDbToWorkout(data);

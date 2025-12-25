@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { Plus, Star, Calendar, Tv } from 'lucide-vue-next'
-import type { AnimeSearchResult } from '@/composables/useAnimeSearch'
+import type { AnimeSearchResult } from '@/composables/useAnimeSearch';
+import { Calendar, Plus, Star, Tv } from 'lucide-vue-next';
 
 interface Props {
-  anime: AnimeSearchResult
+  anime: AnimeSearchResult | Readonly<AnimeSearchResult>
   isAdding?: boolean
 }
 
@@ -15,21 +15,21 @@ const emit = defineEmits<{
   add: [anime: AnimeSearchResult]
 }>()
 
-const coverUrl = computed(() => 
-  props.anime.images?.jpg?.large_image_url || 
-  props.anime.images?.jpg?.image_url || 
+const coverUrl = computed(() =>
+  props.anime.images?.jpg?.large_image_url ||
+  props.anime.images?.jpg?.image_url ||
   props.anime.images?.webp?.large_image_url ||
   null
 )
 
-const displayTitle = computed(() => 
+const displayTitle = computed(() =>
   props.anime.title_english || props.anime.title
 )
 
 const synopsis = computed(() => {
   if (!props.anime.synopsis) return null
-  return props.anime.synopsis.length > 150 
-    ? props.anime.synopsis.substring(0, 150) + '...' 
+  return props.anime.synopsis.length > 150
+    ? props.anime.synopsis.substring(0, 150) + '...'
     : props.anime.synopsis
 })
 </script>
@@ -38,23 +38,20 @@ const synopsis = computed(() => {
   <Card class="group hover:border-primary/50 transition-all overflow-hidden">
     <div class="flex gap-4 p-4">
       <div class="relative w-20 h-28 sm:w-24 sm:h-32 rounded-lg overflow-hidden shrink-0 bg-muted">
-        <img
-          v-if="coverUrl"
-          :src="coverUrl"
-          :alt="displayTitle"
-          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-        />
+        <img v-if="coverUrl" :src="coverUrl" :alt="displayTitle"
+          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
         <div v-else class="w-full h-full flex items-center justify-center">
           <Tv class="h-8 w-8 text-muted-foreground/50" />
         </div>
       </div>
-      
+
       <div class="flex-1 min-w-0 space-y-2">
         <div>
           <h3 class="font-semibold text-sm sm:text-base line-clamp-2 group-hover:text-primary transition-colors">
             {{ displayTitle }}
           </h3>
-          <p v-if="anime.title_japanese && anime.title_japanese !== anime.title" class="text-xs text-muted-foreground mt-0.5">
+          <p v-if="anime.title_japanese && anime.title_japanese !== anime.title"
+            class="text-xs text-muted-foreground mt-0.5">
             {{ anime.title_japanese }}
           </p>
         </div>
@@ -82,29 +79,19 @@ const synopsis = computed(() => {
         </div>
 
         <div v-if="anime.genres && anime.genres.length > 0" class="flex flex-wrap gap-1">
-          <Badge
-            v-for="genre in anime.genres.slice(0, 3)"
-            :key="genre.mal_id"
-            variant="secondary"
-            class="text-[10px]"
-          >
+          <Badge v-for="genre in anime.genres.slice(0, 3)" :key="genre.mal_id" variant="secondary" class="text-[10px]">
             {{ genre.name }}
           </Badge>
         </div>
       </div>
 
       <div class="shrink-0">
-        <Button
-          size="sm"
-          class="h-9 w-9 p-0"
-          :disabled="isAdding"
-          @click="emit('add', anime)"
-        >
+        <Button size="sm" class="h-9 w-9 p-0" :disabled="isAdding" @click="emit('add', anime)">
           <Plus v-if="!isAdding" class="h-4 w-4" />
-          <div v-else class="animate-spin w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full" />
+          <div v-else
+            class="animate-spin w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full" />
         </Button>
       </div>
     </div>
   </Card>
 </template>
-
