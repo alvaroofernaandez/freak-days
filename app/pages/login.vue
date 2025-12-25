@@ -144,8 +144,9 @@ function handleGoogleSignIn() {
           </p>
         </div>
 
-        <p class="text-center text-xs text-muted-foreground/60 mt-6">
-          +1000 XP esperándote 🎮
+        <p class="text-center text-xs text-muted-foreground/60 mt-6 flex items-center justify-center gap-1">
+          +1000 XP esperándote
+          <Gamepad2 class="h-3 w-3" />
         </p>
       </div>
     </div>

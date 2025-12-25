@@ -2,6 +2,7 @@
 import { Search, Loader2 } from 'lucide-vue-next'
 import type { AnimeSearchResult } from '@/composables/useAnimeSearch'
 import { useAnimeSearch } from '@/composables/useAnimeSearch'
+import { Empty } from '@/components/ui/empty'
 import AnimeSearchBar from './AnimeSearchBar.vue'
 import AnimeSearchCard from './AnimeSearchCard.vue'
 
@@ -123,17 +124,25 @@ watch(() => props.adding, (isAdding) => {
       </Button>
     </div>
 
-    <div v-else-if="searchQuery && !animeSearch.searching.value" class="text-center py-12">
-      <Search class="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
-      <p class="text-sm text-muted-foreground">No se encontraron resultados</p>
-      <p class="text-xs text-muted-foreground/70 mt-1">Intenta con otro término de búsqueda</p>
-    </div>
+    <Empty
+      v-else-if="searchQuery && !animeSearch.searching.value"
+      title="No se encontraron resultados"
+      description="Intenta con otro término de búsqueda"
+    >
+      <template #icon>
+        <Search class="h-12 w-12 text-muted-foreground/30" />
+      </template>
+    </Empty>
 
-    <div v-else class="text-center py-12">
-      <Search class="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
-      <p class="text-sm text-muted-foreground">Busca animes para añadirlos a tu lista</p>
-      <p class="text-xs text-muted-foreground/70 mt-1">Ejemplo: One Piece, Naruto, Attack on Titan...</p>
-    </div>
+    <Empty
+      v-else
+      title="Busca animes para añadirlos a tu lista"
+      description="Ejemplo: One Piece, Naruto, Attack on Titan..."
+    >
+      <template #icon>
+        <Search class="h-12 w-12 text-muted-foreground/30" />
+      </template>
+    </Empty>
   </div>
 </template>
 

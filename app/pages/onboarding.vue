@@ -2,9 +2,8 @@
 import { Check, ChevronRight } from 'lucide-vue-next'
 import { useModulesStore } from '~~/stores/modules'
 import { useAuthStore } from '~~/stores/auth'
-import type { ModuleId } from '@/domain/types'
-import Logo from '@/components/Logo.vue'
-import { getModuleIcon } from '@/domain/constants/module-icons'
+import type { ModuleId } from '~~/domain/types'
+import { getModuleIcon } from '~~/domain/constants/module-icons'
 
 const modulesStore = useModulesStore()
 const authStore = useAuthStore()
@@ -44,7 +43,7 @@ const canContinue = computed(() => selectedModules.value.size > 0 && !saving.val
     <div class="flex-1 flex flex-col max-w-lg mx-auto w-full px-4 py-6 sm:py-10">
       <header class="text-center space-y-3 mb-6">
         <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 mb-2">
-          <Logo class="h-7 w-7" />
+          <img src="/logo.png" alt="FreakDays" class="h-7 w-7 rounded-lg" />
         </div>
         <h1 class="text-2xl sm:text-3xl font-bold">Configura tu Aventura</h1>
         <p class="text-muted-foreground text-sm sm:text-base">

@@ -17,21 +17,21 @@ export function parseJikanAnimeToDTO(anime: AnimeSearchResult, status: 'watching
   
   if (anime.synopsis) {
     const synopsis = anime.synopsis.replace(/\n\n/g, '\n').trim()
-    notesParts.push(`📖 Sinopsis:\n${synopsis}`)
+    notesParts.push(`Sinopsis:\n${synopsis}`)
   }
   
   if (anime.title_japanese && anime.title_japanese !== anime.title && anime.title_japanese !== anime.title_english) {
-    notesParts.push(`🇯🇵 Título japonés: ${anime.title_japanese}`)
+    notesParts.push(`Título japonés: ${anime.title_japanese}`)
   }
   
   if (anime.genres && anime.genres.length > 0) {
     const genres = anime.genres.map(g => g.name).join(', ')
-    notesParts.push(`🏷️ Géneros: ${genres}`)
+    notesParts.push(`Géneros: ${genres}`)
   }
   
   if (anime.studios && anime.studios.length > 0) {
     const studios = anime.studios.map(s => s.name).join(', ')
-    notesParts.push(`🎬 Estudios: ${studios}`)
+    notesParts.push(`Estudios: ${studios}`)
   }
   
   const metadataParts: string[] = []
@@ -75,11 +75,11 @@ export function parseJikanAnimeToDTO(anime: AnimeSearchResult, status: 'watching
   }
   
   if (metadataParts.length > 0) {
-    notesParts.push(`\n📊 Información:\n${metadataParts.join(' • ')}`)
+    notesParts.push(`\nInformación:\n${metadataParts.join(' • ')}`)
   }
   
   if (anime.mal_id) {
-    notesParts.push(`\n🔗 MyAnimeList ID: ${anime.mal_id}`)
+    notesParts.push(`\nMyAnimeList ID: ${anime.mal_id}`)
   }
 
   const notes = notesParts.length > 0 ? notesParts.join('\n\n') : undefined

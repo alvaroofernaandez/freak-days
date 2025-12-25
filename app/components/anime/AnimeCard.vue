@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Tv, Plus, Minus, Trash2, Star, Calendar, RotateCcw, FileText, ChevronDown, ChevronUp, CheckCircle2 } from 'lucide-vue-next'
+import { Tv, Plus, Minus, Trash2, Star, Calendar, RotateCcw, FileText, ChevronDown, ChevronUp, CheckCircle2, BookOpen, Globe, Tag, BarChart3, Link } from 'lucide-vue-next'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import type { AnimeEntry, AnimeStatus } from '@/composables/useAnime'
 
 interface Props {
@@ -25,7 +26,7 @@ const progress = computed(() => {
 const synopsis = computed(() => {
   const notes = props.anime.notes
   if (!notes) return null
-  const synopsisMatch = notes.match(/📖 Sinopsis:\s*([\s\S]*?)(?=\n\n|🇯🇵|🏷️|📊|🔗|$)/)
+  const synopsisMatch = notes.match(/Sinopsis:\s*([\s\S]*?)(?=\n\n|Título japonés:|Géneros:|Información:|MyAnimeList ID:|$)/)
   return synopsisMatch?.[1]?.trim() ?? null
 })
 
@@ -97,10 +98,17 @@ const hasAdditionalInfo = computed(() => {
         </div>
 
         <div v-if="anime.status === 'completed'" class="flex items-center gap-2 text-xs sm:text-sm">
-          <div class="flex items-center gap-1.5 px-2 py-1 rounded-md bg-exp-easy/20 text-exp-easy">
-            <CheckCircle2 class="h-3.5 w-3.5 fill-current" />
-            <span class="font-medium">Completado</span>
-          </div>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <div class="flex items-center gap-1.5 px-2 py-1 rounded-md bg-exp-easy/20 text-exp-easy cursor-help">
+                <CheckCircle2 class="h-3.5 w-3.5 fill-current" />
+                <span class="font-medium">Completado</span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Anime completado</p>
+            </TooltipContent>
+          </Tooltip>
           <span v-if="anime.totalEpisodes" class="text-muted-foreground">
             {{ anime.totalEpisodes }} episodios
           </span>
@@ -166,33 +174,54 @@ const hasAdditionalInfo = computed(() => {
 
       <div class="flex flex-col items-end gap-1 shrink-0">
         <div v-if="anime.status === 'watching'" class="flex items-center gap-1">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            class="h-8 w-8"
-            :disabled="anime.currentEpisode <= 0"
-            @click="emit('decrement', anime)"
-          >
-            <Minus class="h-4 w-4" />
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            class="h-8 w-8"
-            :disabled="anime.totalEpisodes ? anime.currentEpisode >= anime.totalEpisodes : false"
-            @click="emit('increment', anime)"
-          >
-            <Plus class="h-4 w-4" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                class="h-8 w-8"
+                :disabled="anime.currentEpisode <= 0"
+                @click="emit('decrement', anime)"
+              >
+                <Minus class="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Decrementar episodio</p>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                class="h-8 w-8"
+                :disabled="anime.totalEpisodes ? anime.currentEpisode >= anime.totalEpisodes : false"
+                @click="emit('increment', anime)"
+              >
+                <Plus class="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Incrementar episodio</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          class="h-8 w-8 text-muted-foreground hover:text-destructive"
-          @click="emit('delete', anime.id)"
-        >
-          <Trash2 class="h-4 w-4" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              class="h-8 w-8 text-muted-foreground hover:text-destructive"
+              @click="emit('delete', anime.id)"
+            >
+              <Trash2 class="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Eliminar anime</p>
+          </TooltipContent>
+        </Tooltip>
       </div>
     </div>
   </Card>

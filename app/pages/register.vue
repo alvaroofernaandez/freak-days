@@ -93,7 +93,10 @@ function handleGoogleSignIn() {
               <h3 class="text-xl font-bold text-exp-easy">¡Cuenta creada!</h3>
               <p class="text-muted-foreground text-sm">
                 Revisa tu email para confirmar tu cuenta<br/>
-                <span class="text-xs">y desbloquear tu primera quest 🎮</span>
+                <span class="text-xs flex items-center justify-center gap-1">
+                  y desbloquear tu primera quest
+                  <Gamepad2 class="h-3 w-3" />
+                </span>
               </p>
             </div>
             <Button as-child class="w-full h-12 bg-linear-to-r from-primary to-accent">
@@ -201,7 +204,8 @@ function handleGoogleSignIn() {
                   />
                 </div>
                 <p v-if="confirmPassword && !passwordsMatch" class="text-xs text-destructive flex items-center gap-1">
-                  <span>⚠️</span> Las contraseñas no coinciden
+                  <AlertCircle class="h-3 w-3" />
+                  Las contraseñas no coinciden
                 </p>
               </div>
 
@@ -236,8 +240,9 @@ function handleGoogleSignIn() {
           </template>
         </div>
 
-        <p class="text-center text-xs text-muted-foreground/60 mt-6">
-          🎮 Nivel 1 · +500 XP de bienvenida
+        <p class="text-center text-xs text-muted-foreground/60 mt-6 flex items-center justify-center gap-1">
+          <Gamepad2 class="h-3 w-3" />
+          Nivel 1 · +500 XP de bienvenida
         </p>
       </div>
     </div>
