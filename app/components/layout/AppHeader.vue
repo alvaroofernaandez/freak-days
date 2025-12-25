@@ -38,7 +38,7 @@ const emit = defineEmits<{
           </div>
         </div>
         <span
-          class="text-xl font-gamer bg-linear-to-r from-primary via-accent to-primary bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-300">
+          class="text-xl font-logo bg-linear-to-r from-primary via-accent to-primary bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-300">
           FreakDays
         </span>
       </NuxtLink>
