@@ -1,0 +1,19 @@
+{
+  "name": "FreakDays",
+  "short_name": "FreakDays",
+  "description": "Tu compañero definitivo para gestionar tu vida friki",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0f23",
+  "theme_color": "#0f0f23",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
+
