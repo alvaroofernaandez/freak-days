@@ -2,6 +2,7 @@
 import { Dumbbell, Plus } from 'lucide-vue-next'
 import type { Workout } from '@/composables/useWorkouts'
 import WorkoutCard from './WorkoutCard.vue'
+import WorkoutCardSkeleton from './WorkoutCardSkeleton.vue'
 
 interface Props {
   workouts: Workout[]
@@ -23,9 +24,9 @@ const emit = defineEmits<{
       Historial Reciente
     </h2>
     
-    <div v-if="loading" class="text-center py-12">
-      <div class="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto" />
-    </div>
+    <template v-if="loading">
+      <WorkoutCardSkeleton v-for="i in 3" :key="i" />
+    </template>
     
     <div v-else-if="workouts.length === 0" class="text-center py-12 sm:py-16">
       <div class="flex flex-col items-center gap-4">

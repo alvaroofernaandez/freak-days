@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Card } from '@/components/ui/card'
+
 interface Props {
   pending: number
   completed: number

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Flame } from 'lucide-vue-next'
+import { Card } from '@/components/ui/card'
 
 interface Props {
   weeklyCount: number

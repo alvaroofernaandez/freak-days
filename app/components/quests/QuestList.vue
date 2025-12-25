@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { Plus, Trophy, Clock, Loader2 } from 'lucide-vue-next'
 import type { Quest } from '~~/domain/types'
+import { Empty } from '@/components/ui/empty'
 import QuestCard from './QuestCard.vue'
+import QuestCardSkeleton from './QuestCardSkeleton.vue'
 
 interface Props {
   quests: Quest[]
@@ -22,30 +24,26 @@ const emit = defineEmits<{
 
 <template>
   <div>
-    <div v-if="loading" class="text-center py-12">
-      <Loader2 class="animate-spin w-8 h-8 text-primary mx-auto" />
-    </div>
+    <template v-if="loading">
+      <QuestCardSkeleton v-for="i in 3" :key="i" />
+    </template>
 
-    <div v-else-if="quests.length === 0" class="text-center py-12 sm:py-16">
-      <div class="flex flex-col items-center gap-4">
-        <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-primary/10 flex items-center justify-center">
-          <Trophy v-if="!isCompleted" class="h-8 w-8 sm:h-10 sm:w-10 text-primary/50" />
-          <Clock v-else class="h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground/50" />
-        </div>
-        <div class="space-y-2">
-          <p class="text-muted-foreground text-sm sm:text-base font-medium">
-            {{ isCompleted ? 'Aún no has completado ninguna quest' : '¡Todas las quests completadas!' }}
-          </p>
-          <p class="text-muted-foreground/70 text-xs sm:text-sm">
-            {{ isCompleted ? 'Completa tus primeras misiones para ganar EXP' : 'Crea una nueva misión para continuar' }}
-          </p>
-        </div>
-        <Button v-if="!isCompleted" variant="outline" size="lg" class="mt-2" @click="emit('add')">
+    <Empty
+      v-else-if="quests.length === 0"
+      :title="isCompleted ? 'Aún no has completado ninguna quest' : '¡Todas las quests completadas!'"
+      :description="isCompleted ? 'Completa tus primeras misiones para ganar EXP' : 'Crea una nueva misión para continuar'"
+    >
+      <template #icon>
+        <Trophy v-if="!isCompleted" class="h-12 w-12 text-primary/50" />
+        <Clock v-else class="h-12 w-12 text-muted-foreground/50" />
+      </template>
+      <template #action>
+        <Button v-if="!isCompleted" variant="outline" size="lg" @click="emit('add')">
           <Plus class="h-4 w-4 mr-2" />
           Nueva misión
         </Button>
-      </div>
-    </div>
+      </template>
+    </Empty>
 
     <div v-else class="space-y-2 sm:space-y-3">
       <QuestCard
