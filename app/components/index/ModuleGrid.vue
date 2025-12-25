@@ -10,12 +10,12 @@ defineProps<Props>()
 </script>
 
 <template>
-  <div class="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+  <div class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
     <NuxtLink
       v-for="module in modules" 
       :key="module.id"
       :to="`/${module.id}`"
-      class="group block"
+      class="group block transition-transform hover:scale-[1.02] active:scale-[0.98]"
     >
       <ModuleCard :module="module" />
     </NuxtLink>
