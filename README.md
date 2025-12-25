@@ -40,7 +40,7 @@
 - **Estado**: Pinia
 - **Backend**: Supabase (PostgreSQL, Auth, Storage)
 - **Iconos**: Lucide Icons
-- **Fuentes**: Inter, Orbitron (Google Fonts)
+- **Fuentes**: Inter (textos), Outfit (títulos), Righteous (logos), Inconsolata (códigos) - Google Fonts
 
 ---
 
@@ -48,36 +48,40 @@
 
 ### Prerrequisitos
 
-- Node.js 18+ 
+- Node.js 18+
 - pnpm (recomendado), npm, yarn o bun
 - Cuenta de Supabase (para backend)
 
 ### Instalación
 
 1. **Clona el repositorio**
+
    ```bash
    git clone https://github.com/alvaroofernaandez/freak-days.git
    cd freak-days
    ```
 
 2. **Instala las dependencias**
+
    ```bash
    pnpm install
    ```
 
 3. **Configura las variables de entorno**
-   
+
    Crea un archivo `.env` en la raíz del proyecto:
+
    ```env
    SUPABASE_URL=tu_supabase_url
    SUPABASE_ANON_KEY=tu_supabase_anon_key
    ```
 
 4. **Ejecuta las migraciones de base de datos**
-   
+
    Aplica las migraciones SQL desde el directorio `database/migrations/` en tu proyecto de Supabase.
 
 5. **Inicia el servidor de desarrollo**
+
    ```bash
    pnpm dev
    ```
