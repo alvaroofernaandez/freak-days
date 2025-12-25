@@ -104,7 +104,7 @@ function goBack() {
           </div>
         </div>
         <div>
-          <CardTitle class="text-4xl font-gamer mb-2 text-gradient">
+          <CardTitle class="text-4xl font-logo mb-2 text-gradient">
             {{ error?.statusCode || 'Error' }}
           </CardTitle>
           <CardDescription class="text-xl text-muted-foreground">

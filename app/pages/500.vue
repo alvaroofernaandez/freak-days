@@ -48,7 +48,7 @@ function retry() {
           </div>
         </div>
         <div>
-          <CardTitle class="text-6xl font-gamer mb-2 text-gradient">
+          <CardTitle class="text-6xl font-logo mb-2 text-gradient">
             500
           </CardTitle>
           <CardDescription class="text-2xl text-muted-foreground">
