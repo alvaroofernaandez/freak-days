@@ -1,118 +1,26 @@
 <script setup lang="ts">
-import { useModulesStore } from '~~/stores/modules'
-import { useAuthStore } from '~~/stores/auth'
-import type { UserProfile } from '@/composables/useProfile'
-import { getGreeting } from '@/utils/greeting'
 import { TrendingUp, Calendar, Award, Zap, Target, Flame } from 'lucide-vue-next'
 import LoadingSpinner from '@/components/index/LoadingSpinner.vue'
 import WelcomeSection from '@/components/index/WelcomeSection.vue'
 import ProfileCard from '@/components/index/ProfileCard.vue'
 import ModuleGrid from '@/components/index/ModuleGrid.vue'
 import SettingsPrompt from '@/components/index/SettingsPrompt.vue'
+import { useIndexPage } from '@/composables/useIndexPage'
+import { useAuthStore } from '~~/stores/auth'
+import { useProfile } from '@/composables/useProfile'
 
-const modulesStore = useModulesStore()
-const profileApi = useProfile()
-const supabase = useSupabase()
 const authStore = useAuthStore()
-const questsApi = useQuests()
-const animeApi = useAnime()
-const workoutsApi = useWorkouts()
+const profileApi = useProfile()
 
-const { data: profile, pending: profilePending } = await useAsyncData<UserProfile | null>(
-  'profile',
-  () => profileApi.fetchProfile(),
-  { default: () => null, server: false }
-)
-
-const { pending: modulesPending } = await useAsyncData(
-  'user-modules',
-  async () => {
-    if (import.meta.server) return null
-    if (!authStore.isAuthenticated || !authStore.userId) return null
-    if (modulesStore.synced) return null
-    
-    const { data } = await supabase
-      .from("user_modules")
-      .select("module_id, enabled")
-      .eq("user_id", authStore.userId)
-    
-    if (data && data.length > 0) {
-      modulesStore.setModulesFromDb(data)
-    } else {
-      modulesStore.synced = true
-    }
-    
-    return data
-  },
-  { default: () => null, server: false }
-)
-
-const isLoading = computed(() => profilePending.value || modulesPending.value)
-const greeting = computed(() => getGreeting())
-
-const expProgress = computed(() => {
-  if (!profile.value) return { current: 0, needed: 100, progress: 0 }
-  return profileApi.expForNextLevel(profile.value.totalExp)
-})
-
-const quickStats = ref({
-  questsToday: 0,
-  questsPending: 0,
-  animeWatching: 0,
-  workoutsThisWeek: 0,
-})
-
-const loadingStats = ref(false)
-
-onMounted(async () => {
-  if (authStore.isAuthenticated) {
-    await loadQuickStats()
-  }
-})
-
-async function loadQuickStats() {
-  loadingStats.value = true
-  try {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    
-    const [quests, completions, anime, workouts] = await Promise.all([
-      questsApi.fetchQuests().catch(() => []),
-      questsApi.fetchTodayCompletions().catch(() => []),
-      animeApi.fetchAnimeList().catch(() => []),
-      workoutsApi.fetchWorkouts().catch(() => [])
-    ])
-
-    const questsToday = completions.length
-
-    const completionSet = new Set(completions)
-    const questsPending = quests.filter(q => !completionSet.has(q.id)).length
-
-    const weekAgo = new Date()
-    weekAgo.setDate(weekAgo.getDate() - 7)
-
-    quickStats.value = {
-      questsToday: questsToday,
-      questsPending: questsPending,
-      animeWatching: anime.filter(a => a.status === 'watching').length,
-      workoutsThisWeek: workouts.filter(w => {
-        if (!w.workoutDate) return false
-        const workoutDate = new Date(w.workoutDate)
-        return workoutDate >= weekAgo && w.status === 'completed'
-      }).length,
-    }
-  } catch (error) {
-    console.error('Error loading quick stats:', error)
-  } finally {
-    loadingStats.value = false
-  }
-}
-
-watch(() => authStore.isAuthenticated, async (isAuth) => {
-  if (isAuth) {
-    await loadQuickStats()
-  }
-})
+const {
+  profile,
+  isLoading,
+  greeting,
+  expProgress,
+  quickStats,
+  loadingStats,
+  modulesStore,
+} = useIndexPage()
 </script>
 
 <template>
