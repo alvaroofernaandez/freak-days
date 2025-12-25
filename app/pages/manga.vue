@@ -1,25 +1,41 @@
 <script setup lang="ts">
-import { BookOpen, Plus, Star, Trash2, X, Minus } from 'lucide-vue-next'
+import { BookOpen, Plus, CheckCircle2, Heart, TrendingUp, List } from 'lucide-vue-next'
 import type { MangaEntry, CreateMangaDTO } from '@/composables/useManga'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
+import MangaStats from '@/components/manga/MangaStats.vue'
+import MangaStatsSkeleton from '@/components/manga/MangaStatsSkeleton.vue'
+import MangaList from '@/components/manga/MangaList.vue'
+import AddMangaModal from '@/components/manga/AddMangaModal.vue'
+import { ErrorState } from '@/components/error'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { Button } from '@/components/ui/button'
+import { useErrorHandler } from '@/composables/useErrorHandler'
 
 const mangaApi = useManga()
+const { handleError } = useErrorHandler()
 
 const mangaCollection = ref<MangaEntry[]>([])
 const loading = ref(true)
+const error = ref<Error | null>(null)
 const showAddModal = ref(false)
 
-const newManga = ref<CreateMangaDTO>({
-  title: '',
-  author: '',
-  total_volumes: undefined,
-  status: 'collecting'
-})
+type TabValue = 'all' | 'collecting' | 'completed' | 'wishlist'
 
-const stats = computed(() => ({
-  total: mangaCollection.value.length,
-  volumes: mangaCollection.value.reduce((sum, m) => sum + m.ownedVolumes.length, 0),
-  completed: mangaCollection.value.filter(m => m.status === 'completed').length
-}))
+const activeTab = ref<TabValue>('all')
+
+const tabs = [
+  { value: 'all' as TabValue, label: 'Todos', icon: List },
+  { value: 'collecting' as TabValue, label: 'En curso', icon: TrendingUp },
+  { value: 'completed' as TabValue, label: 'Completadas', icon: CheckCircle2 },
+  { value: 'wishlist' as TabValue, label: 'Wishlist', icon: Heart },
+]
+
+const filteredMangas = computed(() => {
+  if (activeTab.value === 'all') {
+    return mangaCollection.value
+  }
+  return mangaCollection.value.filter(m => m.status === activeTab.value)
+})
 
 onMounted(async () => {
   await loadManga()
@@ -27,56 +43,102 @@ onMounted(async () => {
 
 async function loadManga() {
   loading.value = true
+  error.value = null
   try {
     mangaCollection.value = await mangaApi.fetchCollection()
+  } catch (err) {
+    error.value = err instanceof Error ? err : new Error('Error al cargar la colección de manga')
+    handleError(err, { customMessage: 'No se pudo cargar tu colección de manga' })
   } finally {
     loading.value = false
   }
 }
 
-async function addManga() {
-  if (!newManga.value.title.trim()) return
-
-  const created = await mangaApi.addManga(newManga.value)
-  if (created) {
-    mangaCollection.value.unshift(created)
-    newManga.value = { title: '', author: '', total_volumes: undefined, status: 'collecting' }
-    showAddModal.value = false
+async function addManga(dto: CreateMangaDTO) {
+  try {
+    const created = await mangaApi.addManga(dto)
+    if (created) {
+      await loadManga()
+      showAddModal.value = false
+    } else {
+      handleError(new Error('No se pudo añadir el manga'), { customMessage: 'No se pudo añadir el manga a tu colección' })
+    }
+  } catch (err) {
+    handleError(err, { customMessage: 'Error al añadir el manga' })
   }
 }
 
-async function addVolume(manga: MangaEntry) {
+async function handleAddVolume(id: string) {
+  const manga = mangaCollection.value.find(m => m.id === id)
+  if (!manga) return
+
   const nextVolume = manga.ownedVolumes.length > 0 
     ? Math.max(...manga.ownedVolumes) + 1 
     : 1
     
   if (manga.totalVolumes && nextVolume > manga.totalVolumes) return
   
-  const success = await mangaApi.addVolume(manga.id, nextVolume)
-  if (success) {
-    manga.ownedVolumes.push(nextVolume)
-    manga.ownedVolumes.sort((a, b) => a - b)
-    
-    if (manga.totalVolumes && manga.ownedVolumes.length === manga.totalVolumes) {
-      manga.status = 'completed'
+  try {
+    const success = await mangaApi.addVolume(id, nextVolume)
+    if (success) {
+      await loadManga()
+    } else {
+      handleError(new Error('No se pudo añadir el volumen'), { customMessage: 'No se pudo añadir el volumen' })
     }
+  } catch (err) {
+    handleError(err, { customMessage: 'Error al añadir el volumen' })
   }
 }
 
-async function removeLastVolume(manga: MangaEntry) {
-  if (manga.ownedVolumes.length === 0) return
-  
-  const lastVolume = Math.max(...manga.ownedVolumes)
-  const success = await mangaApi.removeVolume(manga.id, lastVolume)
-  if (success) {
-    manga.ownedVolumes = manga.ownedVolumes.filter(v => v !== lastVolume)
+async function handleRemoveVolume(id: string, volume: number) {
+  try {
+    const success = await mangaApi.removeVolume(id, volume)
+    if (success) {
+      await loadManga()
+    } else {
+      handleError(new Error('No se pudo eliminar el volumen'), { customMessage: 'No se pudo eliminar el volumen' })
+    }
+  } catch (err) {
+    handleError(err, { customMessage: 'Error al eliminar el volumen' })
   }
 }
 
-async function deleteMangaEntry(id: string) {
-  const success = await mangaApi.deleteManga(id)
-  if (success) {
-    mangaCollection.value = mangaCollection.value.filter(m => m.id !== id)
+async function handleDelete(id: string) {
+  try {
+    const success = await mangaApi.deleteManga(id)
+    if (success) {
+      await loadManga()
+    } else {
+      handleError(new Error('No se pudo eliminar el manga'), { customMessage: 'No se pudo eliminar el manga' })
+    }
+  } catch (err) {
+    handleError(err, { customMessage: 'Error al eliminar el manga' })
+  }
+}
+
+async function handleUpdatePrice(id: string, price: number | null) {
+  try {
+    const success = await mangaApi.updatePricePerVolume(id, price)
+    if (success) {
+      await loadManga()
+    } else {
+      handleError(new Error('No se pudo actualizar el precio'), { customMessage: 'No se pudo actualizar el precio' })
+    }
+  } catch (err) {
+    handleError(err, { customMessage: 'Error al actualizar el precio' })
+  }
+}
+
+async function handleUpdateStatus(id: string, status: MangaEntry['status']) {
+  try {
+    const success = await mangaApi.updateStatus(id, status)
+    if (success) {
+      await loadManga()
+    } else {
+      handleError(new Error('No se pudo actualizar el estado'), { customMessage: 'No se pudo actualizar el estado del manga' })
+    }
+  } catch (err) {
+    handleError(err, { customMessage: 'Error al actualizar el estado' })
   }
 }
 </script>
@@ -90,133 +152,96 @@ async function deleteMangaEntry(id: string) {
           Colección Manga
         </h1>
         <p class="text-muted-foreground text-sm">
-          Tu biblioteca personal
+          Gestiona tu biblioteca física de mangas
         </p>
       </div>
-      <Button size="icon" class="h-10 w-10 rounded-full glow-primary" @click="showAddModal = true">
-        <Plus class="h-5 w-5" />
-      </Button>
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button size="icon" class="h-10 w-10 rounded-full glow-primary" @click="showAddModal = true">
+            <Plus class="h-5 w-5" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Añadir manga</p>
+        </TooltipContent>
+      </Tooltip>
     </header>
 
-    <div class="grid grid-cols-3 gap-3">
-      <Card class="text-center py-3">
-        <div class="text-2xl font-bold text-primary">{{ stats.total }}</div>
-        <div class="text-xs text-muted-foreground">Series</div>
-      </Card>
-      <Card class="text-center py-3">
-        <div class="text-2xl font-bold text-exp-easy">{{ stats.volumes }}</div>
-        <div class="text-xs text-muted-foreground">Tomos</div>
-      </Card>
-      <Card class="text-center py-3">
-        <div class="text-2xl font-bold text-exp-legendary">{{ stats.completed }}</div>
-        <div class="text-xs text-muted-foreground">Completas</div>
-      </Card>
-    </div>
+    <MangaStatsSkeleton v-if="loading" />
+    <ErrorState 
+      v-else-if="error"
+      :message="error.message"
+      action-label="Reintentar"
+      @action="loadManga"
+    />
+    <MangaStats v-else :mangas="mangaCollection" />
 
-    <section class="space-y-3">
-      <h2 class="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-        Tu Colección
-      </h2>
-      
-      <div v-if="loading" class="text-center py-8">
-        <div class="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto" />
-      </div>
-      
-      <Card v-for="manga in mangaCollection" :key="manga.id" class="hover:border-primary/30 transition-colors">
-        <CardHeader class="flex flex-row items-center gap-3 py-3 px-4">
-          <div class="w-12 h-16 rounded-lg bg-muted flex items-center justify-center shrink-0">
-            <BookOpen class="h-6 w-6 text-muted-foreground" />
-          </div>
-          <div class="flex-1 min-w-0">
-            <CardTitle class="text-sm font-medium truncate">{{ manga.title }}</CardTitle>
-            <CardDescription v-if="manga.author" class="text-xs truncate">{{ manga.author }}</CardDescription>
-            <div class="flex items-center gap-2 mt-1">
-              <Badge variant="outline" class="text-[10px]">
-                {{ manga.ownedVolumes.length }} / {{ manga.totalVolumes ?? '?' }} tomos
-              </Badge>
-              <span v-if="manga.score" class="text-xs text-exp-medium flex items-center gap-0.5">
-                <Star class="h-3 w-3" />
-                {{ manga.score }}
-              </span>
-            </div>
-          </div>
-          <div class="flex flex-col items-end gap-1">
-            <div class="text-xs text-muted-foreground">
-              {{ manga.totalVolumes ? Math.round((manga.ownedVolumes.length / manga.totalVolumes) * 100) : 0 }}%
-            </div>
-            <div class="w-12 h-1.5 bg-muted rounded-full overflow-hidden">
-              <div 
-                class="h-full bg-primary rounded-full transition-all"
-                :style="{ width: `${manga.totalVolumes ? (manga.ownedVolumes.length / manga.totalVolumes) * 100 : 0}%` }"
-              />
-            </div>
-            <div class="flex items-center gap-1 mt-1">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                class="h-7 w-7"
-                @click="removeLastVolume(manga)"
-                :disabled="manga.ownedVolumes.length === 0"
-              >
-                <Minus class="h-3 w-3" />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                class="h-7 w-7"
-                @click="addVolume(manga)"
-              >
-                <Plus class="h-3 w-3" />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                class="h-7 w-7 text-muted-foreground hover:text-destructive"
-                @click="deleteMangaEntry(manga.id)"
-              >
-                <Trash2 class="h-3 w-3" />
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
+    <Tabs v-model="activeTab" class="w-full">
+      <TabsList class="grid w-full grid-cols-4">
+        <TabsTrigger 
+          v-for="tab in tabs" 
+          :key="tab.value" 
+          :value="tab.value"
+          class="flex items-center gap-2"
+        >
+          <component :is="tab.icon" class="h-4 w-4" />
+          <span class="hidden sm:inline">{{ tab.label }}</span>
+        </TabsTrigger>
+      </TabsList>
 
-      <div v-if="!loading && mangaCollection.length === 0" class="text-center py-8">
-        <BookOpen class="h-12 w-12 text-muted-foreground/30 mx-auto mb-2" />
-        <p class="text-muted-foreground text-sm">No tienes mangas en tu colección</p>
-        <Button variant="outline" size="sm" class="mt-4" @click="showAddModal = true">
-          <Plus class="h-4 w-4 mr-2" />
-          Añadir manga
-        </Button>
-      </div>
-    </section>
+      <TabsContent value="all" class="mt-4">
+        <MangaList
+          :mangas="filteredMangas"
+          :loading="loading"
+          @add-volume="handleAddVolume"
+          @remove-volume="handleRemoveVolume"
+          @delete="handleDelete"
+          @update-price="handleUpdatePrice"
+          @update-status="handleUpdateStatus"
+        />
+      </TabsContent>
 
-    <div v-if="showAddModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
-      <Card class="w-full max-w-sm">
-        <CardHeader class="flex flex-row items-center justify-between">
-          <CardTitle>Añadir Manga</CardTitle>
-          <Button variant="ghost" size="icon" @click="showAddModal = false">
-            <X class="h-4 w-4" />
-          </Button>
-        </CardHeader>
-        <CardContent class="space-y-4">
-          <div class="space-y-2">
-            <Label for="title">Título</Label>
-            <Input id="title" v-model="newManga.title" placeholder="Ej: One Piece" class="w-full" />
-          </div>
-          <div class="space-y-2">
-            <Label for="author">Autor (opcional)</Label>
-            <Input id="author" v-model="newManga.author" placeholder="Ej: Eiichiro Oda" class="w-full" />
-          </div>
-          <div class="space-y-2">
-            <Label for="volumes">Tomos totales (opcional)</Label>
-            <Input id="volumes" v-model.number="newManga.total_volumes" type="number" placeholder="107" class="w-full" />
-          </div>
-          <Button class="w-full" @click="addManga" :disabled="!newManga.title.trim()">
-            Añadir Manga
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
+      <TabsContent value="collecting" class="mt-4">
+        <MangaList
+          :mangas="filteredMangas"
+          :loading="loading"
+          @add-volume="handleAddVolume"
+          @remove-volume="handleRemoveVolume"
+          @delete="handleDelete"
+          @update-price="handleUpdatePrice"
+          @update-status="handleUpdateStatus"
+        />
+      </TabsContent>
+
+      <TabsContent value="completed" class="mt-4">
+        <MangaList
+          :mangas="filteredMangas"
+          :loading="loading"
+          @add-volume="handleAddVolume"
+          @remove-volume="handleRemoveVolume"
+          @delete="handleDelete"
+          @update-price="handleUpdatePrice"
+          @update-status="handleUpdateStatus"
+        />
+      </TabsContent>
+
+      <TabsContent value="wishlist" class="mt-4">
+        <MangaList
+          :mangas="filteredMangas"
+          :loading="loading"
+          @add-volume="handleAddVolume"
+          @remove-volume="handleRemoveVolume"
+          @delete="handleDelete"
+          @update-price="handleUpdatePrice"
+          @update-status="handleUpdateStatus"
+        />
+      </TabsContent>
+    </Tabs>
+
+    <AddMangaModal 
+      :show="showAddModal" 
+      @close="showAddModal = false"
+      @submit="addManga"
+    />
   </div>
 </template>

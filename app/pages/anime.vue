@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import { Tv, Plus, Play, CheckCircle2, Pause, X, Search, BookOpen, List } from 'lucide-vue-next'
+import { Empty } from '@/components/ui/empty'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import type { AnimeStatus, AnimeEntry, CreateAnimeDTO } from '@/composables/useAnime'
 import type { AnimeSearchResult } from '@/composables/useAnimeSearch'
 import { parseJikanAnimeToDTO } from '@/utils/anime-parser'
 import AnimeStats from '@/components/anime/AnimeStats.vue'
+import AnimeStatsSkeleton from '@/components/anime/AnimeStatsSkeleton.vue'
 import AnimeCard from '@/components/anime/AnimeCard.vue'
+import AnimeCardSkeleton from '@/components/anime/AnimeCardSkeleton.vue'
 import AnimeMarketplace from '@/components/anime/AnimeMarketplace.vue'
 import AddAnimeStatusModal from '@/components/anime/AddAnimeStatusModal.vue'
 
@@ -239,27 +243,40 @@ async function deleteAnimeEntry(id: string) {
         </p>
       </div>
       <div class="flex items-center gap-2 w-full sm:w-auto">
-        <Button 
-          variant="outline"
-          size="lg"
-          class="flex-1 sm:flex-none"
-          @click="setActiveView(activeView === 'list' ? 'marketplace' : 'list')"
-        >
-          <Search v-if="activeView === 'list'" class="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-          <BookOpen v-else class="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-          <span class="sm:hidden">{{ activeView === 'list' ? 'Buscar' : 'Mi Lista' }}</span>
-          <span class="hidden sm:inline">{{ activeView === 'list' ? 'Buscar Animes' : 'Mi Lista' }}</span>
-        </Button>
-        <Button 
-          v-if="activeView === 'list'"
-          size="lg"
-          class="flex-1 sm:flex-none sm:h-10 sm:w-auto rounded-full glow-primary" 
-          @click="showAddModal = true"
-        >
-          <Plus class="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-          <span class="sm:hidden">Añadir</span>
-          <span class="hidden sm:inline">Añadir Manual</span>
-        </Button>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button 
+              variant="outline"
+              size="lg"
+              class="flex-1 sm:flex-none"
+              @click="setActiveView(activeView === 'list' ? 'marketplace' : 'list')"
+            >
+              <Search v-if="activeView === 'list'" class="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+              <BookOpen v-else class="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+              <span class="sm:hidden">{{ activeView === 'list' ? 'Buscar' : 'Mi Lista' }}</span>
+              <span class="hidden sm:inline">{{ activeView === 'list' ? 'Buscar Animes' : 'Mi Lista' }}</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{{ activeView === 'list' ? 'Buscar animes en el marketplace' : 'Ver mi lista de animes' }}</p>
+          </TooltipContent>
+        </Tooltip>
+        <Tooltip v-if="activeView === 'list'">
+          <TooltipTrigger as-child>
+            <Button 
+              size="lg"
+              class="flex-1 sm:flex-none sm:h-10 sm:w-auto rounded-full glow-primary" 
+              @click="showAddModal = true"
+            >
+              <Plus class="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+              <span class="sm:hidden">Añadir</span>
+              <span class="hidden sm:inline">Añadir Manual</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Añadir anime manualmente</p>
+          </TooltipContent>
+        </Tooltip>
       </div>
     </header>
 
@@ -268,7 +285,9 @@ async function deleteAnimeEntry(id: string) {
     </div>
 
     <div v-else class="space-y-4 sm:space-y-6">
+      <AnimeStatsSkeleton v-if="loading" />
       <AnimeStats 
+        v-else
         :watching="stats.watching"
         :completed="stats.completed"
         :total="stats.total"
@@ -289,19 +308,19 @@ async function deleteAnimeEntry(id: string) {
       </div>
 
       <section class="space-y-3">
-        <div v-if="loading" class="text-center py-12">
-          <div class="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto" />
-        </div>
+        <template v-if="loading">
+          <AnimeCardSkeleton v-for="i in 3" :key="i" />
+        </template>
 
-        <div v-else-if="filteredAnime.length === 0" class="text-center py-12 sm:py-16">
-          <div class="flex flex-col items-center gap-4">
-            <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-primary/10 flex items-center justify-center">
-              <Tv class="h-8 w-8 sm:h-10 sm:w-10 text-primary/50" />
-            </div>
-            <div class="space-y-2">
-              <p class="text-muted-foreground text-sm sm:text-base font-medium">No hay animes en esta categoría</p>
-              <p class="text-muted-foreground/70 text-xs sm:text-sm">Añade animes desde el marketplace o manualmente</p>
-            </div>
+        <Empty
+          v-else-if="filteredAnime.length === 0"
+          title="No hay animes en esta categoría"
+          description="Añade animes desde el marketplace o manualmente"
+        >
+          <template #icon>
+            <Tv class="h-12 w-12 text-primary/50" />
+          </template>
+          <template #action>
             <div class="flex gap-2">
               <Button variant="outline" size="lg" @click="setActiveView('marketplace')">
                 <Search class="h-4 w-4 mr-2" />
@@ -312,8 +331,8 @@ async function deleteAnimeEntry(id: string) {
                 Añadir Manual
               </Button>
             </div>
-          </div>
-        </div>
+          </template>
+        </Empty>
 
         <div v-else class="space-y-2 sm:space-y-3">
           <AnimeCard

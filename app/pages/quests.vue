@@ -4,6 +4,7 @@ import type { Quest, QuestDifficulty } from '~~/domain/types'
 import { DIFFICULTY_EXP } from '~~/domain/types'
 import { useQuests } from '@/composables/useQuests'
 import QuestStats from '@/components/quests/QuestStats.vue'
+import QuestStatsSkeleton from '@/components/quests/QuestStatsSkeleton.vue'
 import OverdueBanner from '@/components/quests/OverdueBanner.vue'
 import QuestList from '@/components/quests/QuestList.vue'
 import QuestFormModal from '@/components/quests/QuestFormModal.vue'
@@ -195,7 +196,9 @@ const unreadNotifications = computed(() =>
       </div>
     </header>
 
+    <QuestStatsSkeleton v-if="loading" />
     <QuestStats 
+      v-else
       :pending="pendingQuests.length"
       :completed="completedQuests.length"
       :exp-today="totalExpToday"

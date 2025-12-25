@@ -3,6 +3,7 @@ import { Dumbbell, Plus, Play } from 'lucide-vue-next'
 import type { Workout, WorkoutExercise } from '@/composables/useWorkouts'
 import { getElapsedTime, getTodayDate } from '@/utils/workout-formatters'
 import WorkoutStats from '@/components/workouts/WorkoutStats.vue'
+import WorkoutStatsSkeleton from '@/components/workouts/WorkoutStatsSkeleton.vue'
 import WorkoutList from '@/components/workouts/WorkoutList.vue'
 import StartWorkoutModal from '@/components/workouts/StartWorkoutModal.vue'
 import ActiveWorkoutModal from '@/components/workouts/ActiveWorkoutModal.vue'
@@ -254,7 +255,9 @@ onUnmounted(() => {
       </div>
     </header>
 
+    <WorkoutStatsSkeleton v-if="loading" />
     <WorkoutStats 
+      v-else
       :weekly-count="stats.count"
       :total-count="workouts.length"
       :weekly-minutes="stats.totalMinutes"
