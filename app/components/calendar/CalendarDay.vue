@@ -106,8 +106,8 @@ function handleMouseLeave() {
 <template>
   <Card
     :class="[
-      'h-[calc((100vh-200px)/6)] sm:h-[calc((100vh-220px)/6)] md:h-[calc((100vh-240px)/6)] max-h-[140px] sm:max-h-[160px] md:max-h-[180px] transition-all duration-200',
-      'hover:shadow-md hover:border-primary/30 relative',
+      'h-[calc((100vh-180px)/6)] sm:h-[calc((100vh-220px)/6)] md:h-[calc((100vh-240px)/6)] min-h-[80px] sm:min-h-[100px] max-h-[120px] sm:max-h-[160px] md:max-h-[180px] transition-all duration-200',
+      'hover:shadow-md hover:border-primary/30 relative active:scale-[0.98] sm:active:scale-100',
       isCurrentMonth ? 'bg-background border-border' : 'bg-muted/30 border-muted/50',
       isToday && 'ring-2 ring-primary/60 bg-primary/10 border-primary/40 shadow-md',
       isDragOver && 'bg-primary/20 ring-2 ring-primary border-primary scale-[1.02] shadow-lg z-10',
@@ -125,10 +125,10 @@ function handleMouseLeave() {
     @mouseleave="handleMouseLeave"
   >
     <div class="p-1.5 sm:p-2 h-full flex flex-col" :class="events.length > 0 ? 'overflow-visible' : 'overflow-hidden'">
-      <div class="flex items-start gap-2 mb-1 shrink-0 relative z-10">
+      <div class="flex items-start gap-1.5 sm:gap-2 mb-1 sm:mb-1.5 shrink-0 relative z-10">
         <span
           :class="[
-            'text-xs sm:text-sm md:text-base font-bold transition-colors shrink-0',
+            'text-sm sm:text-sm md:text-base font-bold transition-colors shrink-0 leading-none',
             isToday
               ? 'text-primary'
               : isCurrentMonth
@@ -141,11 +141,11 @@ function handleMouseLeave() {
       </div>
       <div
         v-if="events.length > 0"
-        class="flex-1 space-y-1 min-w-0 relative z-20"
+        class="flex-1 space-y-1 sm:space-y-1 min-w-0 relative z-20 overflow-y-auto"
       >
         <TransitionGroup name="event" tag="div" class="space-y-1">
             <CalendarEventCard
-              v-for="event in events.slice(0, 3)"
+              v-for="event in events.slice(0, 2)"
               :key="event.id"
               :release="event"
               :is-dragging="isDragging"
@@ -157,10 +157,10 @@ function handleMouseLeave() {
             />
         </TransitionGroup>
         <div
-          v-if="events.length > 3"
-          class="text-[9px] sm:text-[10px] text-muted-foreground text-center py-0.5 font-medium relative z-10"
+          v-if="events.length > 2"
+          class="text-[10px] sm:text-[10px] text-muted-foreground text-center py-0.5 font-medium relative z-10"
         >
-          +{{ events.length - 3 }} más
+          +{{ events.length - 2 }} más
         </div>
       </div>
       <div
