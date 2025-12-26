@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { Calendar as CalendarIcon, Plus, Ticket, Tv, BookOpen, X } from 'lucide-vue-next'
-import type { ReleaseType, Release } from '@/composables/useCalendar'
+import CalendarGrid from '@/components/calendar/CalendarGrid.vue'
+import DeleteEventConfirmModal from '@/components/calendar/DeleteEventConfirmModal.vue'
+import EditEventSheet from '@/components/calendar/EditEventSheet.vue'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DatePicker } from '@/components/ui/date-picker'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import CalendarGrid from '@/components/calendar/CalendarGrid.vue'
-import DeleteEventConfirmModal from '@/components/calendar/DeleteEventConfirmModal.vue'
-import EditEventSheet from '@/components/calendar/EditEventSheet.vue'
+import type { Release, ReleaseType } from '@/composables/useCalendar'
 import { useCalendarPage } from '@/composables/useCalendarPage'
+import { BookOpen, Calendar as CalendarIcon, Plus, Ticket, Tv, X } from 'lucide-vue-next'
 
 const {
   releases,
@@ -93,112 +93,66 @@ function handleEventUpdate(eventId: string, date: Date) {
         <CalendarIcon class="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" aria-hidden="true" />
         <span>Calendario</span>
       </h1>
-      <Button
-        size="sm"
+      <Button size="sm"
         class="h-10 sm:h-9 px-3 sm:px-3 glow-primary touch-manipulation shrink-0 min-h-[44px] sm:min-h-[36px]"
-        @click="modal.open()"
-        aria-label="Añadir nuevo evento"
-      >
+        @click="modal.open()" aria-label="Añadir nuevo evento">
         <Plus class="h-4 w-4 sm:h-4 sm:w-4 sm:mr-1.5" />
         <span class="hidden sm:inline">Añadir</span>
       </Button>
     </header>
 
-    <CalendarGrid
-      :current-month="currentMonth"
-      :events="releases"
-      :loading="loading"
-      @update:current-month="handleMonthChange"
-      @update:event="handleEventUpdate"
-      @delete="deleteReleaseEntry"
-      @deleteRequest="handleDeleteRequest"
-      @editRequest="handleEditRequest"
-      @add="modal.open()"
-    />
+    <CalendarGrid :current-month="currentMonth" :events="releases" :loading="loading"
+      @update:current-month="handleMonthChange" @update:event="handleEventUpdate" @delete="deleteReleaseEntry"
+      @deleteRequest="handleDeleteRequest" @editRequest="handleEditRequest" @add="modal.open()" />
 
     <ClientOnly>
       <Teleport to="body">
         <Transition name="modal">
-          <div
-            v-if="modal.isOpen.value"
+          <div v-if="modal.isOpen.value"
             class="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-6 bg-background/95 backdrop-blur-sm overflow-y-auto"
-            style="pointer-events: auto;"
-            @click.self="modal.close()"
-            @keydown.esc="modal.close()"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="add-event-title"
-          >
+            style="pointer-events: auto;" @click.self="modal.close()" @keydown.esc="modal.close()" role="dialog"
+            aria-modal="true" aria-labelledby="add-event-title">
             <Card class="w-full max-w-md shadow-xl border-2 my-auto" @click.stop>
               <CardHeader class="flex flex-row items-center justify-between pb-3 sm:pb-4 p-4 sm:p-6">
                 <CardTitle id="add-event-title" class="text-lg sm:text-xl">Nuevo Evento</CardTitle>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  class="h-9 w-9 sm:h-8 sm:w-8 touch-manipulation"
-                  @click="modal.close()"
-                  aria-label="Cerrar"
-                >
+                <Button variant="ghost" size="icon" class="h-9 w-9 sm:h-8 sm:w-8 touch-manipulation"
+                  @click="modal.close()" aria-label="Cerrar">
                   <X class="h-4 w-4" />
                 </Button>
               </CardHeader>
               <CardContent class="space-y-4 sm:space-y-5 p-4 sm:p-6 pt-0">
                 <div class="space-y-2">
                   <Label for="title" class="text-sm font-semibold">Título *</Label>
-                  <Input
-                    id="title"
-                    v-model="newRelease.title"
-                    placeholder="Ej: One Piece Ep. 1120"
-                    class="w-full h-11 sm:h-10 text-sm"
-                    maxlength="100"
-                    aria-required="true"
-                    autocomplete="off"
-                    @keydown.enter.prevent="addRelease"
-                  />
+                  <Input id="title" v-model="newRelease.title" placeholder="Ej: One Piece Ep. 1120"
+                    class="w-full h-11 sm:h-10 text-sm" maxlength="100" aria-required="true" autocomplete="off"
+                    @keydown.enter.prevent="addRelease" />
                   <p class="text-xs text-muted-foreground">
                     {{ newRelease.title.length }}/100 caracteres
                   </p>
                 </div>
                 <div class="space-y-2">
                   <Label for="date" class="text-sm font-semibold">Fecha *</Label>
-                  <DatePicker
-                    id="date"
-                    v-model="newRelease.release_date"
-                    placeholder="Selecciona una fecha"
-                    class="w-full h-11 sm:h-10"
-                    aria-required="true"
-                  />
+                  <DatePicker id="date" v-model="newRelease.release_date" placeholder="Selecciona una fecha"
+                    class="w-full h-11 sm:h-10" aria-required="true" />
                 </div>
                 <div class="space-y-2">
                   <Label class="text-sm font-semibold">Tipo *</Label>
                   <div class="grid grid-cols-3 gap-2 sm:gap-3" role="radiogroup" aria-label="Tipo de evento">
-                    <Button
-                      v-for="(config, type) in typeConfig"
-                      :key="type"
-                      :variant="newRelease.type === type ? 'default' : 'outline'"
-                      size="sm"
+                    <Button v-for="(config, type) in typeConfig" :key="type"
+                      :variant="newRelease.type === type ? 'default' : 'outline'" size="sm"
                       class="text-xs sm:text-sm flex-col h-auto py-3 sm:py-4 touch-manipulation min-h-[80px] sm:min-h-[90px] transition-all"
                       :class="newRelease.type === type && 'ring-2 ring-primary/50 shadow-md'"
-                      :aria-pressed="newRelease.type === type"
-                      role="radio"
-                      :aria-label="config.label"
-                      @click="newRelease.type = type"
-                    >
-                      <component
-                        :is="config.icon"
-                        :class="['h-5 w-5 sm:h-6 sm:w-6 mb-2', config.color]"
-                        aria-hidden="true"
-                      />
+                      :aria-pressed="newRelease.type === type" role="radio" :aria-label="config.label"
+                      @click="newRelease.type = type">
+                      <component :is="config.icon" :class="['h-5 w-5 sm:h-6 sm:w-6 mb-2', config.color]"
+                        aria-hidden="true" />
                       <span class="font-semibold">{{ config.label.split(' ')[0] }}</span>
                     </Button>
                   </div>
                 </div>
                 <div class="pt-2">
-                  <Button
-                    class="w-full min-h-[44px] text-sm font-semibold glow-primary"
-                    @click="addRelease"
-                    :disabled="!newRelease.title.trim() || !newRelease.release_date"
-                  >
+                  <Button class="w-full min-h-[44px] text-sm font-semibold glow-primary" @click="addRelease"
+                    :disabled="!newRelease.title.trim() || !newRelease.release_date">
                     <Plus class="h-4 w-4 mr-2" />
                     Añadir Evento
                   </Button>
@@ -210,21 +164,11 @@ function handleEventUpdate(eventId: string, date: Date) {
       </Teleport>
     </ClientOnly>
 
-    <DeleteEventConfirmModal
-      :open="deleteModal.isOpen.value"
-      :release="releaseToDelete"
-      :is-submitting="isDeleting"
-      @close="deleteModal.close()"
-      @confirm="handleDeleteConfirm"
-    />
+    <DeleteEventConfirmModal :open="deleteModal.isOpen.value" :release="releaseToDelete" :is-submitting="isDeleting"
+      @close="deleteModal.close()" @confirm="handleDeleteConfirm" />
 
-    <EditEventSheet
-      :open="editSheetOpen"
-      :release="releaseToEdit"
-      :is-submitting="isUpdating"
-      @update:open="editSheetOpen = $event"
-      @save="handleEditSave"
-    />
+    <EditEventSheet :open="editSheetOpen" :release="releaseToEdit" :is-submitting="isUpdating"
+      @update:open="editSheetOpen = $event" @save="handleEditSave" />
   </div>
 </template>
 

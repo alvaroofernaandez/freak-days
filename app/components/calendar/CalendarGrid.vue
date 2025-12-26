@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
-import { Card, CardHeader } from '@/components/ui/card'
+import type { Release } from '@/composables/useCalendar'
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import CalendarDay from './CalendarDay.vue'
 import CalendarGridSkeleton from './CalendarGridSkeleton.vue'
-import type { Release } from '@/composables/useCalendar'
 
 interface Props {
   currentMonth: Date
@@ -137,36 +136,24 @@ function handleKeydown(e: KeyboardEvent) {
 <template>
   <div class="space-y-1 sm:space-y-1.5 flex-1 flex flex-col min-h-0" @keydown="handleKeydown" tabindex="0">
     <div class="flex items-center justify-between gap-2 px-2 sm:px-3 py-2 sm:py-1.5 shrink-0">
-      <div class="flex items-center gap-1 sm:gap-1.5 sm:gap-2 flex-1">
-        <Button
-          variant="ghost"
-          size="icon"
+      <div class="flex items-center gap-1 sm:gap-1.5 flex-1">
+        <Button variant="ghost" size="icon"
           class="h-10 w-10 sm:h-8 sm:w-8 touch-manipulation min-h-[44px] min-w-[44px] sm:min-h-[32px] sm:min-w-[32px]"
-          @click="previousMonth"
-          aria-label="Mes anterior"
-        >
+          @click="previousMonth" aria-label="Mes anterior">
           <ChevronLeft class="h-4 w-4 sm:h-4 sm:w-4" />
         </Button>
         <h2 class="text-sm sm:text-base font-bold capitalize min-w-0 flex-1 text-center px-1">
           {{ monthName }}
         </h2>
-        <Button
-          variant="ghost"
-          size="icon"
+        <Button variant="ghost" size="icon"
           class="h-10 w-10 sm:h-8 sm:w-8 touch-manipulation min-h-[44px] min-w-[44px] sm:min-h-[32px] sm:min-w-[32px]"
-          @click="nextMonth"
-          aria-label="Mes siguiente"
-        >
+          @click="nextMonth" aria-label="Mes siguiente">
           <ChevronRight class="h-4 w-4 sm:h-4 sm:w-4" />
         </Button>
       </div>
-      <Button
-        variant="outline"
-        size="sm"
+      <Button variant="outline" size="sm"
         class="h-10 sm:h-8 px-3 sm:px-3 text-xs touch-manipulation shrink-0 min-h-[44px] sm:min-h-[32px]"
-        @click="goToToday"
-        aria-label="Ir a hoy"
-      >
+        @click="goToToday" aria-label="Ir a hoy">
         <CalendarIcon class="h-4 w-4 sm:h-3.5 sm:w-3.5 sm:mr-1.5" />
         <span class="hidden sm:inline">Hoy</span>
       </Button>
@@ -174,39 +161,25 @@ function handleKeydown(e: KeyboardEvent) {
 
     <CalendarGridSkeleton v-if="loading" />
 
-    <div v-else class="space-y-1 sm:space-y-1.5 sm:space-y-2 flex-1 flex flex-col min-h-0">
-      <div class="grid grid-cols-7 gap-0.5 sm:gap-1 sm:gap-2 shrink-0">
-        <div
-          v-for="day in weekDays"
-          :key="day"
-          class="text-center text-[10px] sm:text-xs sm:text-sm font-semibold text-muted-foreground py-1 sm:py-1.5 sm:py-2 px-0.5 sm:px-1"
-          role="columnheader"
-        >
+    <div v-else class="space-y-1 sm:space-y-1.5 flex-1 flex flex-col min-h-0">
+      <div class="grid grid-cols-7 gap-0.5 sm:gap-1 shrink-0">
+        <div v-for="day in weekDays" :key="day"
+          class="text-center text-[10px] sm:text-sm font-semibold text-muted-foreground py-1 sm:py-1.5 px-0.5 sm:px-1"
+          role="columnheader">
           <span class="hidden sm:inline">{{ day }}</span>
           <span class="sm:hidden">{{ day.charAt(0) }}</span>
         </div>
       </div>
 
-      <div class="grid grid-cols-7 gap-0.5 sm:gap-1 sm:gap-2 flex-1 min-h-0 relative overflow-visible" role="grid" style="z-index: 1">
-        <CalendarDay
-          v-for="(day, index) in calendarDays"
-          :key="`${day.getTime()}-${index}`"
-          :date="day"
-          :events="getEventsForDate(day)"
-          :is-today="isToday(day)"
-          :is-current-month="isCurrentMonth(day)"
-          :is-dragging="draggingEventId !== null"
-          :is-hovered="hoveredDate?.getTime() === day.getTime()"
-          @drop="handleDrop"
-          @delete="emit('delete', $event)"
-          @deleteRequest="emit('deleteRequest', $event)"
-          @editRequest="emit('editRequest', $event)"
-          @dragstart="handleDragStart"
-          @dragend="handleDragEnd"
-          @hover="handleDateHover"
-        />
+      <div class="grid grid-cols-7 gap-0.5 sm:gap-2 flex-1 min-h-0 relative overflow-visible" role="grid"
+        style="z-index: 1">
+        <CalendarDay v-for="(day, index) in calendarDays" :key="`${day.getTime()}-${index}`" :date="day"
+          :events="getEventsForDate(day)" :is-today="isToday(day)" :is-current-month="isCurrentMonth(day)"
+          :is-dragging="draggingEventId !== null" :is-hovered="hoveredDate?.getTime() === day.getTime()"
+          @drop="handleDrop" @delete="emit('delete', $event)" @deleteRequest="emit('deleteRequest', $event)"
+          @editRequest="emit('editRequest', $event)" @dragstart="handleDragStart" @dragend="handleDragEnd"
+          @hover="handleDateHover" />
       </div>
     </div>
   </div>
 </template>
-
