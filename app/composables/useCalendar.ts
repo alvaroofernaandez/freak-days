@@ -105,10 +105,13 @@ export function useCalendar() {
   }
 
   async function deleteRelease(id: string): Promise<boolean> {
+    if (!authStore.userId) return false;
+
     const { error } = await supabase
       .from("release_calendar")
       .delete()
-      .eq("id", id);
+      .eq("id", id)
+      .eq("user_id", authStore.userId);
 
     return !error;
   }
