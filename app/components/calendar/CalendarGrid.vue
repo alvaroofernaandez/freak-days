@@ -3,7 +3,6 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-vue-
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader } from '@/components/ui/card'
 import CalendarDay from './CalendarDay.vue'
-import CalendarEmptyState from './CalendarEmptyState.vue'
 import CalendarGridSkeleton from './CalendarGridSkeleton.vue'
 import type { Release } from '@/composables/useCalendar'
 
@@ -56,8 +55,6 @@ const today = computed(() => {
   const now = new Date()
   return new Date(now.getFullYear(), now.getMonth(), now.getDate())
 })
-
-const totalEvents = computed(() => props.events.length)
 
 function isToday(date: Date): boolean {
   return (
@@ -190,10 +187,7 @@ function handleKeydown(e: KeyboardEvent) {
         </div>
       </div>
 
-      <div v-if="totalEvents === 0" class="pt-4 flex-1">
-        <CalendarEmptyState @add="emit('add')" />
-      </div>
-      <div v-else class="grid grid-cols-7 gap-1 sm:gap-2 flex-1 min-h-0 relative overflow-visible" role="grid" style="z-index: 1">
+      <div class="grid grid-cols-7 gap-1 sm:gap-2 flex-1 min-h-0 relative overflow-visible" role="grid" style="z-index: 1">
         <CalendarDay
           v-for="(day, index) in calendarDays"
           :key="`${day.getTime()}-${index}`"
