@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { Calendar as CalendarIcon, Plus, Ticket, Tv, BookOpen, X } from 'lucide-vue-next'
-import type { ReleaseType } from '@/composables/useCalendar'
+import type { ReleaseType, Release } from '@/composables/useCalendar'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DatePicker } from '@/components/ui/date-picker'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import CalendarGrid from '@/components/calendar/CalendarGrid.vue'
+import DeleteEventConfirmModal from '@/components/calendar/DeleteEventConfirmModal.vue'
 import { useCalendarPage } from '@/composables/useCalendarPage'
 
 const {
@@ -21,6 +22,28 @@ const {
   updateEventDate,
   deleteReleaseEntry,
 } = useCalendarPage()
+
+const deleteModal = useModal()
+const releaseToDelete = ref<Release | null>(null)
+const isDeleting = ref(false)
+
+function handleDeleteRequest(release: Release) {
+  releaseToDelete.value = release
+  deleteModal.open()
+}
+
+async function handleDeleteConfirm(releaseId: string) {
+  if (isDeleting.value) return
+
+  isDeleting.value = true
+  try {
+    await deleteReleaseEntry(releaseId)
+    deleteModal.close()
+    releaseToDelete.value = null
+  } finally {
+    isDeleting.value = false
+  }
+}
 
 const typeConfig: Record<ReleaseType, { icon: any; color: string; label: string }> = {
   anime_episode: { icon: Tv, color: 'text-primary', label: 'Episodio Anime' },
@@ -62,6 +85,7 @@ function handleEventUpdate(eventId: string, date: Date) {
       @update:current-month="handleMonthChange"
       @update:event="handleEventUpdate"
       @delete="deleteReleaseEntry"
+      @deleteRequest="handleDeleteRequest"
       @add="modal.open()"
     />
 
@@ -158,6 +182,14 @@ function handleEventUpdate(eventId: string, date: Date) {
         </Transition>
       </Teleport>
     </ClientOnly>
+
+    <DeleteEventConfirmModal
+      :open="deleteModal.isOpen.value"
+      :release="releaseToDelete"
+      :is-submitting="isDeleting"
+      @close="deleteModal.close()"
+      @confirm="handleDeleteConfirm"
+    />
   </div>
 </template>
 
