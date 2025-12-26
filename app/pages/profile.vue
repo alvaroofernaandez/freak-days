@@ -11,8 +11,9 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useProfilePage } from '@/composables/useProfilePage'
-import { Check, LogOut, Power, RefreshCw, Settings, User } from 'lucide-vue-next'
+import { Check, LogOut, Power, RefreshCw, Settings, Trash2, Upload, User } from 'lucide-vue-next'
 import { useModulesStore } from '~~/stores/modules'
 
 const modulesStore = useModulesStore()
@@ -24,12 +25,15 @@ const {
   savingModules,
   modulesSaved,
   uploadingAvatar,
+  uploadingBanner,
   editing,
   confirmDialog,
   moduleToDisable,
   editForm,
   avatarFileInput,
   avatarPreview,
+  bannerFileInput,
+  bannerPreview,
   expProgress,
   favoriteAnime,
   favoriteManga,
@@ -42,6 +46,9 @@ const {
   handleAvatarUpload,
   handleDeleteAvatar,
   triggerAvatarUpload,
+  handleBannerUpload,
+  handleDeleteBanner,
+  triggerBannerUpload,
   handleLogout,
   handleToggleModule,
   confirmDisable,
@@ -97,9 +104,67 @@ onMounted(() => {
         <div class="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
         <div class="absolute bottom-0 left-0 w-80 h-80 bg-accent/5 rounded-full blur-3xl" />
 
-        <div class="h-32 bg-linear-to-r from-primary/20 via-accent/10 to-primary/20 relative overflow-hidden">
-          <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(var(--primary),0.2),transparent)]" />
-          <div class="absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,rgba(var(--accent),0.15),transparent)]" />
+        <div class="h-32 sm:h-40 md:h-48 relative overflow-hidden group">
+          <img
+            v-if="bannerPreview || profile.bannerUrl"
+            :src="bannerPreview || profile.bannerUrl"
+            :alt="`Banner de ${profile.displayName || profile.username}`"
+            class="w-full h-full object-cover"
+          />
+          <div
+            v-else
+            class="w-full h-full bg-linear-to-r from-primary/20 via-accent/10 to-primary/20"
+          >
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(var(--primary),0.2),transparent)]" />
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,rgba(var(--accent),0.15),transparent)]" />
+          </div>
+          <div
+            v-if="editing"
+            class="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm"
+          >
+            <div class="flex gap-2">
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    class="h-10 w-10"
+                    @click="triggerBannerUpload"
+                    :disabled="uploadingBanner"
+                  >
+                    <Upload class="h-5 w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Subir banner</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button
+                    v-if="bannerPreview || profile.bannerUrl"
+                    size="icon"
+                    variant="destructive"
+                    class="h-10 w-10"
+                    @click="handleDeleteBanner"
+                    :disabled="uploadingBanner"
+                  >
+                    <Trash2 class="h-5 w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Eliminar banner</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          </div>
+          <input
+            :ref="(el) => { if (el) bannerFileInput = el as HTMLInputElement }"
+            type="file"
+            accept="image/*"
+            class="hidden"
+            @change="handleBannerUpload"
+          />
         </div>
 
         <CardContent class="-mt-16 relative z-10">
