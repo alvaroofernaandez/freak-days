@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { toRef } from 'vue'
 import ProfileEditForm from '@/components/profile/ProfileEditForm.vue'
 import ProfileHeader from '@/components/profile/ProfileHeader.vue'
 import ProfileInfoCards from '@/components/profile/ProfileInfoCards.vue'
 import ProfileProgressCard from '@/components/profile/ProfileProgressCard.vue'
 import ProfileStats from '@/components/profile/ProfileStats.vue'
+import BannerCropModal from '@/components/profile/BannerCropModal.vue'
 import ConfirmDisableDialog from '@/components/settings/ConfirmDisableDialog.vue'
 import ModuleCard from '@/components/settings/ModuleCard.vue'
 import { Badge } from '@/components/ui/badge'
@@ -13,10 +15,14 @@ import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useProfilePage } from '@/composables/useProfilePage'
+import { useToast } from '@/composables/useToast'
+import { useProfile } from '@/composables/useProfile'
 import { Check, LogOut, Power, RefreshCw, Settings, Trash2, Upload, User } from 'lucide-vue-next'
 import { useModulesStore } from '~~/stores/modules'
 
 const modulesStore = useModulesStore()
+const toast = useToast()
+const profileApi = useProfile()
 
 const profilePage = useProfilePage()
 
@@ -27,13 +33,11 @@ const {
   savingModules,
   modulesSaved,
   uploadingAvatar,
-  uploadingBanner,
   editing,
   confirmDialog,
   moduleToDisable,
   editForm,
   avatarPreview,
-  bannerPreview,
   expProgress,
   favoriteAnime,
   favoriteManga,
@@ -46,9 +50,7 @@ const {
   handleAvatarUpload,
   handleDeleteAvatar,
   triggerAvatarUpload,
-  handleBannerUpload,
   handleDeleteBanner,
-  triggerBannerUpload,
   handleLogout,
   handleToggleModule,
   confirmDisable,
@@ -57,8 +59,74 @@ const {
   initialize,
 } = profilePage
 
-const avatarFileInput = profilePage.avatarFileInput
-const bannerFileInput = profilePage.bannerFileInput
+const uploadingBanner = toRef(profilePage, 'uploadingBanner')
+const bannerPreview = toRef(profilePage, 'bannerPreview')
+
+const bannerFileInputLocal = ref<HTMLInputElement | null>(null)
+const bannerCropModalOpen = ref(false)
+const selectedBannerFile = ref<File | null>(null)
+
+function triggerBannerUploadLocal() {
+  if (bannerFileInputLocal.value) {
+    bannerFileInputLocal.value.click()
+  } else {
+    console.error('bannerFileInputLocal is not available')
+  }
+}
+
+function handleBannerFileSelect(event: Event) {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) return
+
+  if (!file.type.startsWith('image/')) {
+    toast.error('Por favor, selecciona una imagen válida')
+    return
+  }
+
+  if (file.size > 10 * 1024 * 1024) {
+    toast.error('La imagen no puede ser mayor a 10MB')
+    return
+  }
+
+  selectedBannerFile.value = file
+  bannerCropModalOpen.value = true
+}
+
+async function handleBannerCrop(croppedFile: File) {
+  uploadingBanner.value = true
+  try {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      bannerPreview.value = e.target?.result as string
+    }
+    reader.readAsDataURL(croppedFile)
+
+    const bannerUrl = await profileApi.uploadBanner(croppedFile)
+    if (bannerUrl) {
+      await initialize()
+      toast.success('Banner actualizado correctamente')
+    } else {
+      toast.error('Error al subir el banner')
+    }
+  } catch (error) {
+    console.error('Error uploading banner:', error)
+    toast.error('Error al subir el banner')
+  } finally {
+    uploadingBanner.value = false
+    selectedBannerFile.value = null
+    if (bannerFileInputLocal.value) {
+      bannerFileInputLocal.value.value = ''
+    }
+  }
+}
+
+function handleBannerCropCancel() {
+  selectedBannerFile.value = null
+  if (bannerFileInputLocal.value) {
+    bannerFileInputLocal.value.value = ''
+  }
+}
 
 onMounted(() => {
   initialize()
@@ -132,7 +200,7 @@ onMounted(() => {
                     size="icon"
                     variant="secondary"
                     class="h-10 w-10"
-                    @click="triggerBannerUpload"
+                    @click="triggerBannerUploadLocal"
                     :disabled="uploadingBanner"
                   >
                     <Upload class="h-5 w-5" />
@@ -161,14 +229,14 @@ onMounted(() => {
               </Tooltip>
             </div>
           </div>
-          <input
-            ref="bannerFileInput"
-            type="file"
-            accept="image/*"
-            class="hidden"
-            @change="handleBannerUpload"
-          />
         </div>
+        <input
+          ref="bannerFileInputLocal"
+          type="file"
+          accept="image/*"
+          class="hidden"
+          @change="handleBannerFileSelect"
+        />
 
         <CardContent class="-mt-16 relative z-10">
           <ProfileHeader :profile="profile" :editing="editing" :avatar-preview="avatarPreview"
@@ -282,5 +350,14 @@ onMounted(() => {
 
     <ConfirmDisableDialog :open="confirmDialog.isOpen.value" :module-name="moduleToDisable?.name ?? null"
       :saving="savingModules" @confirm="confirmDisable" @cancel="cancelDisable" />
+
+    <BannerCropModal
+      :open="bannerCropModalOpen"
+      :image-file="selectedBannerFile"
+      :aspect-ratio="16 / 9"
+      @update:open="bannerCropModalOpen = $event"
+      @crop="handleBannerCrop"
+      @cancel="handleBannerCropCancel"
+    />
   </div>
 </template>

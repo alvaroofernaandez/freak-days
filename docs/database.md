@@ -18,6 +18,7 @@ CREATE TABLE public.profiles (
     username TEXT UNIQUE,
     display_name TEXT,
     avatar_url TEXT,
+    banner_url TEXT,
     total_exp INTEGER DEFAULT 0,
     level INTEGER DEFAULT 1,
     bio TEXT,
@@ -446,6 +447,31 @@ WHERE user_id = $1
 - [Row Level Security](https://supabase.com/docs/guides/auth/row-level-security)
 
 ---
+
+## Storage Buckets
+
+### avatars
+
+Bucket para almacenar avatares de usuarios.
+
+**Políticas RLS:**
+- Lectura pública
+- Escritura solo para el propietario
+- Path: `{userId}/{filename}`
+
+### banners
+
+Bucket para almacenar banners de perfil de usuarios.
+
+**Políticas RLS:**
+- Lectura pública
+- Escritura solo para el propietario
+- Path: `{userId}/{filename}`
+
+**Configuración:**
+- Tamaño máximo: 10MB
+- Tipos permitidos: `image/jpeg`, `image/png`, `image/webp`, `image/gif`
+- Aspect ratio recomendado: 16:9
 
 **Última actualización**: Enero 2025
 

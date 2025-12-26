@@ -30,8 +30,9 @@
 - 💪 **Entrenamientos**: Registro de workouts, ejercicios y estadísticas
 - ✅ **Quests (Misiones)**: Sistema de tareas diarias con dificultades y recompensas EXP
 - 👥 **Party System**: Creación y gestión de grupos con códigos de invitación
-- 📅 **Calendario**: Calendario mensual completo con drag and drop para eventos
+- 📅 **Calendario**: Calendario mensual completo con drag and drop para eventos (desktop) y gestión táctil para mobile/tablet
 - 📊 **Estadísticas**: Dashboard completo con métricas y progreso
+- 🖼️ **Perfil Personalizado**: Avatar y banner personalizables con editor de imágenes
 
 ### 🛠️ Tecnologías
 

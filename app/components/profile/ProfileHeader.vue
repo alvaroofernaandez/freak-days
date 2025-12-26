@@ -45,8 +45,8 @@ onMounted(() => {
       />
       <Avatar class="relative h-28 w-28 border-4 border-background shadow-2xl ring-2 ring-primary/20">
         <AvatarImage
-          v-if="avatarPreview"
-          :src="avatarPreview"
+          v-if="avatarPreview || profile.avatarUrl"
+          :src="avatarPreview || profile.avatarUrl"
           :alt="profile.displayName || profile.username"
           class="object-cover"
         />

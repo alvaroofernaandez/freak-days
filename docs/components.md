@@ -98,6 +98,46 @@ Estado vacío.
 />
 ```
 
+#### Sheet
+
+Panel lateral deslizable (Sheet) basado en Radix Vue.
+
+**Ubicación**: `app/components/ui/sheet/`
+
+**Componentes:**
+- `Sheet`: Contenedor principal
+- `SheetTrigger`: Trigger para abrir el sheet
+- `SheetContent`: Contenido del sheet con overlay
+- `SheetHeader`: Header del sheet
+- `SheetTitle`: Título del sheet
+- `SheetDescription`: Descripción del sheet
+
+**Uso:**
+
+```vue
+<Sheet :open="isOpen" @update:open="isOpen = $event">
+  <SheetTrigger>
+    <Button>Abrir</Button>
+  </SheetTrigger>
+  <SheetContent side="right">
+    <SheetHeader>
+      <SheetTitle>Título</SheetTitle>
+      <SheetDescription>Descripción</SheetDescription>
+    </SheetHeader>
+    <div>Contenido</div>
+  </SheetContent>
+</Sheet>
+```
+
+**Props de SheetContent:**
+- `side`: `'top' | 'right' | 'bottom' | 'left'` (default: 'right')
+
+**Características:**
+- Animaciones de entrada/salida
+- Overlay con blur
+- Cierre con ESC o click fuera
+- Responsive y táctil
+
 #### DatePicker
 
 Selector de fecha.
@@ -709,12 +749,40 @@ Header del perfil con avatar y controles de edición.
 **Props:**
 - `profile`: `UserProfile | null`
 - `isEditing`: `boolean`
+- `avatarPreview`: `string | null`
+- `uploadingAvatar`: `boolean`
+- `saving`: `boolean`
 
 **Events:**
 - `upload-avatar`: Sube un avatar
 - `delete-avatar`: Elimina el avatar
 - `edit`: Activa modo edición
 - `cancel`: Cancela edición
+- `save`: Guarda el perfil
+
+#### BannerCropModal
+
+Modal para recortar y ajustar imágenes de banner antes de subirlas.
+
+**Ubicación**: `app/components/profile/BannerCropModal.vue`
+
+**Props:**
+- `open`: `boolean`
+- `imageFile`: `File | null`
+- `aspectRatio`: `number` (default: 16/9)
+
+**Events:**
+- `update:open`: Actualiza estado de apertura
+- `crop`: Emite el archivo recortado (`File`)
+- `cancel`: Cancela el recorte
+
+**Características:**
+- Permite arrastrar la imagen para posicionarla
+- Zoom in/out (50% - 300%)
+- Recorte automático al aspect ratio especificado
+- Procesa la imagen a 1920x1080px
+- Soporte táctil para mobile/tablet
+- Usa Canvas API para procesamiento
 
 #### ProfileEditForm
 

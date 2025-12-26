@@ -316,7 +316,8 @@ Página de perfil del usuario.
 **Características:**
 - Información del perfil con diseño modular
 - Edición de datos con formulario
-- Subida y eliminación de avatar
+- Subida y eliminación de avatar con preview
+- Subida y eliminación de banner con modal de recorte
 - Estadísticas personales (quests, anime, workouts, manga)
 - Progreso de EXP y nivel con barra visual
 - Tarjetas informativas (bio, ubicación, enlaces sociales)
@@ -328,6 +329,7 @@ Página de perfil del usuario.
 - `ProfileStats`
 - `ProfileProgressCard`
 - `ProfileInfoCards`
+- `BannerCropModal`
 - `Avatar`, `Progress`, `Button`, `Input`
 
 **Funcionalidad:**
@@ -335,9 +337,18 @@ Página de perfil del usuario.
 - Carga perfil del usuario
 - Modo edición con formulario completo
 - Sube/elimina avatar con preview
+- Sube/elimina banner con modal de recorte (aspect ratio 16:9)
 - Muestra estadísticas de todos los módulos
 - Calcula y muestra progreso de EXP hacia siguiente nivel
 - Guarda cambios con validación
+
+**Funcionalidad de Banner:**
+- Banner se muestra en la parte superior del perfil
+- En modo edición, permite subir nuevo banner
+- Modal de recorte permite ajustar posición y zoom
+- Aspect ratio 16:9
+- Procesamiento automático a 1920x1080px
+- Soporte táctil para mobile/tablet
 
 ---
 

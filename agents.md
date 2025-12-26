@@ -207,6 +207,8 @@ SUPABASE_ANON_KEY=your-anon-key
 2. **Image Optimization**: Use Nuxt Image when available
 3. **State Hydration**: Minimize initial payload
 4. **Bundle Size**: Check with `pnpm build --analyze`
+5. **Image Upload**: Crop images before upload to reduce file size
+6. **Canvas Operations**: Use `toBlob()` for image processing
 
 ---
 
@@ -216,3 +218,41 @@ SUPABASE_ANON_KEY=your-anon-key
 - Use semantic HTML (`<button>`, `<nav>`, `<main>`)
 - Include ARIA labels where needed
 - Maintain 4.5:1 contrast ratio minimum
+- Touch targets minimum 44x44px on mobile
+- Support screen readers with proper ARIA attributes
+
+## Mobile/Tablet Patterns
+
+### Responsive Breakpoints
+
+- Mobile: < 640px
+- Tablet: 640px - 1023px
+- Desktop: ≥ 1024px
+
+### Component Patterns
+
+- **Sheets**: Use `Sheet` component for side panels on mobile/tablet
+- **Modals**: Use `Modal` for desktop, `Sheet` for mobile/tablet
+- **Drag and Drop**: Disable on mobile/tablet, use touch alternatives
+- **Navigation**: Bottom navigation on mobile, sidebar on desktop
+
+### Image Handling
+
+- **Banners**: 16:9 aspect ratio, crop before upload
+- **Avatares**: Square format, direct upload
+- **Storage**: Separate buckets for `avatars` and `banners`
+- **Processing**: Use Canvas API for image cropping
+
+## Reactivity Best Practices
+
+When destructuring refs from composables, use `toRef()` to maintain reactivity:
+
+```typescript
+import { toRef } from 'vue'
+
+const profilePage = useProfilePage()
+const uploadingBanner = toRef(profilePage, 'uploadingBanner')
+const bannerPreview = toRef(profilePage, 'bannerPreview')
+```
+
+**Why**: Direct destructuring loses reactivity, `toRef()` creates a reactive reference.

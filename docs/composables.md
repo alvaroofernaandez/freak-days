@@ -123,6 +123,7 @@ interface UserProfile {
   username: string | null
   displayName: string | null
   avatarUrl: string | null
+  bannerUrl: string | null
   totalExp: number
   level: number
   bio: string | null
@@ -175,6 +176,25 @@ Elimina el avatar del usuario.
 await profileApi.deleteAvatar()
 ```
 
+#### `uploadBanner(file: File)`
+
+Sube un banner del usuario con recorte automático.
+
+```typescript
+const file = event.target.files[0]
+const bannerUrl = await profileApi.uploadBanner(file)
+```
+
+**Nota**: La imagen se sube al bucket `banners` de Supabase Storage. Se recomienda usar `BannerCropModal` para recortar la imagen antes de subirla.
+
+#### `deleteBanner()`
+
+Elimina el banner del usuario.
+
+```typescript
+await profileApi.deleteBanner()
+```
+
 #### `expForNextLevel(currentExp: number)`
 
 Calcula el progreso de EXP para el siguiente nivel.
@@ -187,9 +207,11 @@ const progress = profileApi.expForNextLevel(profile.totalExp)
 ### Retorna
 
 - `fetchProfile()`: `Promise<UserProfile | null>`
-- `updateProfile()`: `Promise<UserProfile | null>`
+- `updateProfile()`: `Promise<boolean>`
 - `uploadAvatar()`: `Promise<string | null>`
-- `deleteAvatar()`: `Promise<void>`
+- `deleteAvatar()`: `Promise<boolean>`
+- `uploadBanner()`: `Promise<string | null>`
+- `deleteBanner()`: `Promise<boolean>`
 - `expForNextLevel()`: `{ current: number, needed: number, progress: number }`
 
 ---
@@ -958,11 +980,18 @@ Lógica de la página de calendario.
 **Ubicación**: `app/composables/useCalendarPage.ts`
 
 Retorna:
-- `releases`: Eventos del calendario
-- `currentMonth`: Mes actual
-- `newRelease`: Formulario de nuevo evento
-- Funciones para añadir, actualizar y eliminar eventos
-- `updateEventDate`: Función para drag and drop
+- `releases`: Eventos del calendario (computed)
+- `loading`: Estado de carga
+- `modal`: Modal para añadir eventos
+- `currentMonth`: Mes actual (ref)
+- `newRelease`: Formulario de nuevo evento (ref)
+- `monthName`: Nombre del mes formateado (computed)
+- `formatDate`: Función para formatear fechas
+- `addRelease`: Función para añadir evento
+- `updateEventDate`: Función para actualizar fecha (drag and drop)
+- `deleteReleaseEntry`: Función para eliminar evento
+- `updateReleaseEntry`: Función para actualizar evento completo
+- `handleDaySheetAddEvent`: Función para añadir evento desde DayEventsSheet
 
 ### useProfilePage
 
@@ -971,11 +1000,42 @@ Lógica de la página de perfil.
 **Ubicación**: `app/composables/useProfilePage.ts`
 
 Retorna:
-- `profile`: Perfil del usuario
-- `isEditing`: Modo edición
-- `form`: Formulario de edición
-- `stats`: Estadísticas del perfil
-- Funciones para actualizar perfil y avatar
+- `profile`: Perfil del usuario (computed)
+- `loading`: Estado de carga
+- `saving`: Estado de guardado
+- `savingModules`: Estado de guardado de módulos
+- `modulesSaved`: Confirmación de módulos guardados
+- `uploadingAvatar`: Estado de subida de avatar
+- `uploadingBanner`: Estado de subida de banner
+- `editing`: Modo edición (ref)
+- `confirmDialog`: Modal de confirmación
+- `moduleToDisable`: Módulo a deshabilitar
+- `editForm`: Formulario de edición (ref)
+- `avatarFileInput`: Ref del input de avatar
+- `avatarPreview`: Preview del avatar (ref)
+- `bannerFileInput`: Ref del input de banner
+- `bannerPreview`: Preview del banner (ref)
+- `expProgress`: Progreso de EXP (computed)
+- `favoriteAnime`: Anime favorito (computed)
+- `favoriteManga`: Manga favorito (computed)
+- `modules`: Módulos del usuario (computed)
+- `animeList`: Lista de anime (ref)
+- `mangaList`: Lista de manga (ref)
+- `startEditing`: Función para iniciar edición
+- `cancelEditing`: Función para cancelar edición
+- `saveProfile`: Función para guardar perfil
+- `handleAvatarUpload`: Función para subir avatar
+- `handleDeleteAvatar`: Función para eliminar avatar
+- `triggerAvatarUpload`: Función para abrir selector de avatar
+- `handleBannerUpload`: Función para subir banner
+- `handleDeleteBanner`: Función para eliminar banner
+- `triggerBannerUpload`: Función para abrir selector de banner
+- `handleLogout`: Función para cerrar sesión
+- `handleToggleModule`: Función para toggle de módulo
+- `confirmDisable`: Función para confirmar deshabilitación
+- `cancelDisable`: Función para cancelar deshabilitación
+- `handleDisableAll`: Función para deshabilitar todos los módulos
+- `initialize`: Función para inicializar la página
 
 ### useRegisterPage
 

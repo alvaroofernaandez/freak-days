@@ -45,6 +45,9 @@ export function useProfilePage() {
 
   const avatarFileInput = ref<HTMLInputElement | null>(null)
   const avatarPreview = ref<string | null>(null)
+  const bannerFileInput = ref<HTMLInputElement | null>(null)
+  const bannerPreview = ref<string | null>(null)
+  const uploadingBanner = ref(false)
 
   const expProgress = computed(() => {
     if (!profile.value) return { current: 0, needed: 100, progress: 0 }
@@ -245,6 +248,74 @@ export function useProfilePage() {
     avatarFileInput.value?.click()
   }
 
+  function triggerBannerUpload() {
+    console.log('triggerBannerUpload called, bannerFileInput:', bannerFileInput.value)
+    if (bannerFileInput.value) {
+      bannerFileInput.value.click()
+    } else {
+      console.error('bannerFileInput is not available - input may not be mounted')
+    }
+  }
+
+  async function handleBannerUpload(event: Event) {
+    const target = event.target as HTMLInputElement
+    const file = target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Por favor, selecciona una imagen válida')
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('La imagen no puede ser mayor a 5MB')
+      return
+    }
+
+    uploadingBanner.value = true
+    try {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        bannerPreview.value = e.target?.result as string
+      }
+      reader.readAsDataURL(file)
+
+      const bannerUrl = await profileApi.uploadBanner(file)
+      if (bannerUrl) {
+        await reloadProfile()
+        toast.success('Banner actualizado correctamente')
+      } else {
+        toast.error('Error al subir el banner')
+      }
+    } catch (error) {
+      console.error('Error uploading banner:', error)
+      toast.error('Error al subir el banner')
+    } finally {
+      uploadingBanner.value = false
+      if (bannerFileInput.value) {
+        bannerFileInput.value.value = ''
+      }
+    }
+  }
+
+  async function handleDeleteBanner() {
+    if (!confirm('¿Estás seguro de que quieres eliminar tu banner?')) return
+
+    uploadingBanner.value = true
+    try {
+      const success = await profileApi.deleteBanner()
+      if (success) {
+        bannerPreview.value = null
+        await reloadProfile()
+        toast.success('Banner eliminado correctamente')
+      } else {
+        toast.error('Error al eliminar el banner')
+      }
+    } finally {
+      uploadingBanner.value = false
+    }
+  }
+
   async function handleLogout() {
     await auth.signOut()
   }
@@ -315,12 +386,14 @@ export function useProfilePage() {
     savingModules: readonly(savingModules),
     modulesSaved: readonly(modulesSaved),
     uploadingAvatar: readonly(uploadingAvatar),
+    uploadingBanner,
     editing,
     confirmDialog,
     moduleToDisable: readonly(moduleToDisable),
     editForm,
     avatarFileInput,
     avatarPreview,
+    bannerPreview,
     expProgress,
     favoriteAnime,
     favoriteManga,

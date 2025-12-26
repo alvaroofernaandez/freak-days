@@ -5,6 +5,7 @@ export interface UserProfile {
   username: string;
   displayName: string | null;
   avatarUrl: string | null;
+  bannerUrl: string | null;
   totalExp: number;
   level: number;
   bio: string | null;
@@ -36,6 +37,7 @@ export function useProfile() {
     username?: string;
     display_name?: string;
     avatar_url?: string;
+    banner_url?: string;
     bio?: string;
     favorite_anime_id?: string | null;
     favorite_manga_id?: string | null;
@@ -125,6 +127,75 @@ export function useProfile() {
     }
   }
 
+  async function uploadBanner(file: File): Promise<string | null> {
+    if (!authStore.userId) return null;
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `banner_${Date.now()}.${fileExt}`;
+      const filePath = `${authStore.userId}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('banners')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true,
+        });
+
+      if (uploadError) {
+        console.error('Error uploading banner:', uploadError);
+        return null;
+      }
+
+      const { data } = supabase.storage
+        .from('banners')
+        .getPublicUrl(filePath);
+
+      if (data?.publicUrl) {
+        await updateProfile({ banner_url: data.publicUrl });
+        return data.publicUrl;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error in uploadBanner:', error);
+      return null;
+    }
+  }
+
+  async function deleteBanner(): Promise<boolean> {
+    if (!authStore.userId) return false;
+
+    try {
+      const currentProfile = await fetchProfile();
+      if (!currentProfile?.bannerUrl) return false;
+
+      const bannerUrl = currentProfile.bannerUrl;
+      const urlParts = bannerUrl.split('/banners/');
+      if (urlParts.length < 2) {
+        await updateProfile({ banner_url: null });
+        return true;
+      }
+
+      const filePath = urlParts[1];
+      if (filePath && filePath.startsWith(authStore.userId)) {
+        const { error } = await supabase.storage
+          .from('banners')
+          .remove([filePath]);
+
+        if (error) {
+          console.error('Error deleting banner:', error);
+        }
+      }
+
+      await updateProfile({ banner_url: null });
+      return true;
+    } catch (error) {
+      console.error('Error in deleteBanner:', error);
+      return false;
+    }
+  }
+
   async function addExp(
     amount: number
   ): Promise<{ newTotal: number; newLevel: number } | null> {
@@ -167,6 +238,7 @@ export function useProfile() {
       username: row.username as string,
       displayName: row.display_name as string | null,
       avatarUrl: row.avatar_url as string | null,
+      bannerUrl: row.banner_url as string | null,
       totalExp: row.total_exp as number,
       level: row.level as number,
       bio: row.bio as string | null ?? null,
@@ -186,5 +258,7 @@ export function useProfile() {
     expForNextLevel,
     uploadAvatar,
     deleteAvatar,
+    uploadBanner,
+    deleteBanner,
   };
 }

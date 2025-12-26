@@ -196,6 +196,24 @@ await errorHandler.handleAsyncError(async () => {
 - Usar `computed` para valores derivados
 - Usar `watch` para efectos secundarios
 - Preferir `v-show` sobre `v-if` para elementos que se muestran/ocultan frecuentemente
+- **Importante**: Al desestructurar refs de composables, usar `toRef()` para mantener reactividad:
+
+```typescript
+const profilePage = useProfilePage()
+const uploadingBanner = toRef(profilePage, 'uploadingBanner')
+const bannerPreview = toRef(profilePage, 'bannerPreview')
+```
+
+**NO hacer esto** (pierde reactividad):
+```typescript
+const { uploadingBanner, bannerPreview } = profilePage // ❌
+```
+
+**SÍ hacer esto**:
+```typescript
+const uploadingBanner = toRef(profilePage, 'uploadingBanner') // ✅
+const bannerPreview = toRef(profilePage, 'bannerPreview') // ✅
+```
 
 ## Acceso a Datos
 
@@ -233,6 +251,24 @@ Siempre usar componentes de shadcn-vue desde `@/components/ui/`:
 </Card>
 ```
 
+### Sheet Components
+
+Para paneles laterales (mobile/tablet) usar Sheet:
+
+```vue
+<Sheet :open="isOpen" @update:open="isOpen = $event">
+  <SheetContent side="bottom">
+    <SheetHeader>
+      <SheetTitle>Título</SheetTitle>
+      <SheetDescription>Descripción</SheetDescription>
+    </SheetHeader>
+    <div>Contenido</div>
+  </SheetContent>
+</Sheet>
+```
+
+**Lados disponibles**: `'top' | 'right' | 'bottom' | 'left'`
+
 ## Testing
 
 Al crear nueva funcionalidad:
@@ -259,12 +295,59 @@ Al crear nueva funcionalidad:
 1. **HTML semántico**: Usar `<button>`, `<nav>`, `<main>`, etc.
 2. **ARIA labels**: Para iconos y elementos no descriptivos
 3. **Contraste**: Mínimo 4.5:1 para texto
+4. **Touch targets**: Mínimo 44x44px en mobile
+5. **Keyboard navigation**: Todos los elementos interactivos deben ser accesibles por teclado
 
 ## Imports
 
 - Usar alias `@/` para archivos en `app/`
 - Usar alias `~~/` para archivos en la raíz
 - Agrupar imports: Vue, tipos, composables, componentes, iconos
+- Orden de imports:
+  1. Vue y librerías
+  2. Tipos
+  3. Composables
+  4. Componentes
+  5. Iconos
+  6. Stores (si es necesario)
+
+## Mobile/Tablet Considerations
+
+### Responsive Design
+
+- **Mobile-first**: Diseñar primero para mobile, luego mejorar para desktop
+- **Breakpoints**: 
+  - `sm`: 640px
+  - `md`: 768px
+  - `lg`: 1024px (tablet/desktop)
+- **Touch targets**: Mínimo 44x44px
+- **Sheets para mobile**: Usar `Sheet` en lugar de modales para mobile/tablet
+
+### Drag and Drop
+
+- **Desktop**: Habilitar drag and drop nativo
+- **Mobile/Tablet**: Deshabilitar drag and drop, usar alternativas táctiles
+- Detectar mobile/tablet con `window.innerWidth < 1024`
+
+```typescript
+const isMobile = computed(() => {
+  if (typeof window === 'undefined') return false
+  return window.innerWidth < 1024
+})
+```
+
+### Image Upload
+
+- **Banners**: Usar `BannerCropModal` para recortar antes de subir
+- **Avatares**: Subida directa, pero considerar recorte futuro
+- **Validación**: Verificar tipo de archivo y tamaño (máx 10MB para banners, 5MB para avatares)
+- **Storage**: Usar buckets separados (`avatars` y `banners`)
+
+### Supabase Storage
+
+- **Buckets**: `avatars` y `banners` deben existir en Supabase
+- **RLS Policies**: Configurar políticas para cada bucket
+- **Paths**: Usar formato `{userId}/{filename}` para organización
 
 ## No Hacer
 
@@ -287,6 +370,12 @@ Al crear nueva funcionalidad:
 - ✅ Manejar errores apropiadamente
 - ✅ Usar skeleton loaders durante carga
 - ✅ Seguir la estructura de archivos establecida
+- ✅ Usar `toRef()` al desestructurar refs de composables
+- ✅ Diseñar mobile-first
+- ✅ Probar en diferentes tamaños de pantalla
+- ✅ Usar Sheets para mobile/tablet en lugar de modales
+- ✅ Deshabilitar drag and drop en mobile/tablet
+- ✅ Añadir tests para nuevas funcionalidades
 
 ## Referencias
 
