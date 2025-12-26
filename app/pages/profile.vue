@@ -18,6 +18,8 @@ import { useModulesStore } from '~~/stores/modules'
 
 const modulesStore = useModulesStore()
 
+const profilePage = useProfilePage()
+
 const {
   profile,
   loading,
@@ -30,9 +32,7 @@ const {
   confirmDialog,
   moduleToDisable,
   editForm,
-  avatarFileInput,
   avatarPreview,
-  bannerFileInput,
   bannerPreview,
   expProgress,
   favoriteAnime,
@@ -55,7 +55,10 @@ const {
   cancelDisable,
   handleDisableAll,
   initialize,
-} = useProfilePage()
+} = profilePage
+
+const avatarFileInput = profilePage.avatarFileInput
+const bannerFileInput = profilePage.bannerFileInput
 
 onMounted(() => {
   initialize()
@@ -159,7 +162,7 @@ onMounted(() => {
             </div>
           </div>
           <input
-            :ref="(el) => { if (el) bannerFileInput = el as HTMLInputElement }"
+            ref="bannerFileInput"
             type="file"
             accept="image/*"
             class="hidden"
