@@ -14,9 +14,9 @@ export function useCalendarPage() {
   const newRelease = ref<CreateReleaseDTO>({
     title: '',
     type: 'anime_episode',
-    release_date: new Date().toISOString().split('T')[0],
-    description: '',
-    url: ''
+    release_date: new Date().toISOString().split('T')[0] || new Date().toISOString().slice(0, 10),
+    description: undefined,
+    url: undefined
   })
 
   const monthName = computed(() => 
@@ -37,9 +37,9 @@ export function useCalendarPage() {
         newRelease.value = { 
           title: '', 
           type: 'anime_episode', 
-          release_date: new Date().toISOString().split('T')[0], 
-          description: '',
-          url: ''
+          release_date: new Date().toISOString().split('T')[0] || new Date().toISOString().slice(0, 10), 
+          description: undefined,
+          url: undefined
         }
         modal.close()
         toast.success('Evento añadido al calendario')
