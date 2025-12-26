@@ -135,51 +135,51 @@ function handleKeydown(e: KeyboardEvent) {
 </script>
 
 <template>
-  <div class="space-y-1.5 flex-1 flex flex-col min-h-0" @keydown="handleKeydown" tabindex="0">
-    <div class="flex items-center justify-between gap-2 px-2 sm:px-3 py-1.5 shrink-0">
-      <div class="flex items-center gap-1.5 sm:gap-2 flex-1">
+  <div class="space-y-1 sm:space-y-1.5 flex-1 flex flex-col min-h-0" @keydown="handleKeydown" tabindex="0">
+    <div class="flex items-center justify-between gap-2 px-2 sm:px-3 py-2 sm:py-1.5 shrink-0">
+      <div class="flex items-center gap-1 sm:gap-1.5 sm:gap-2 flex-1">
         <Button
           variant="ghost"
           size="icon"
-          class="h-7 w-7 sm:h-8 sm:w-8 touch-manipulation"
+          class="h-10 w-10 sm:h-8 sm:w-8 touch-manipulation min-h-[44px] min-w-[44px] sm:min-h-[32px] sm:min-w-[32px]"
           @click="previousMonth"
           aria-label="Mes anterior"
         >
-          <ChevronLeft class="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          <ChevronLeft class="h-4 w-4 sm:h-4 sm:w-4" />
         </Button>
-        <h2 class="text-sm sm:text-base font-bold capitalize min-w-0 flex-1 text-center">
+        <h2 class="text-sm sm:text-base font-bold capitalize min-w-0 flex-1 text-center px-1">
           {{ monthName }}
         </h2>
         <Button
           variant="ghost"
           size="icon"
-          class="h-7 w-7 sm:h-8 sm:w-8 touch-manipulation"
+          class="h-10 w-10 sm:h-8 sm:w-8 touch-manipulation min-h-[44px] min-w-[44px] sm:min-h-[32px] sm:min-w-[32px]"
           @click="nextMonth"
           aria-label="Mes siguiente"
         >
-          <ChevronRight class="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          <ChevronRight class="h-4 w-4 sm:h-4 sm:w-4" />
         </Button>
       </div>
       <Button
         variant="outline"
         size="sm"
-        class="h-7 sm:h-8 px-2 sm:px-3 text-xs touch-manipulation shrink-0"
+        class="h-10 sm:h-8 px-3 sm:px-3 text-xs touch-manipulation shrink-0 min-h-[44px] sm:min-h-[32px]"
         @click="goToToday"
         aria-label="Ir a hoy"
       >
-        <CalendarIcon class="h-3 w-3 sm:h-3.5 sm:w-3.5 sm:mr-1.5" />
+        <CalendarIcon class="h-4 w-4 sm:h-3.5 sm:w-3.5 sm:mr-1.5" />
         <span class="hidden sm:inline">Hoy</span>
       </Button>
     </div>
 
     <CalendarGridSkeleton v-if="loading" />
 
-    <div v-else class="space-y-1.5 sm:space-y-2 flex-1 flex flex-col min-h-0">
-      <div class="grid grid-cols-7 gap-1 sm:gap-2 shrink-0">
+    <div v-else class="space-y-1 sm:space-y-1.5 sm:space-y-2 flex-1 flex flex-col min-h-0">
+      <div class="grid grid-cols-7 gap-0.5 sm:gap-1 sm:gap-2 shrink-0">
         <div
           v-for="day in weekDays"
           :key="day"
-          class="text-center text-xs sm:text-sm font-semibold text-muted-foreground py-1.5 sm:py-2 px-1"
+          class="text-center text-[10px] sm:text-xs sm:text-sm font-semibold text-muted-foreground py-1 sm:py-1.5 sm:py-2 px-0.5 sm:px-1"
           role="columnheader"
         >
           <span class="hidden sm:inline">{{ day }}</span>
@@ -187,7 +187,7 @@ function handleKeydown(e: KeyboardEvent) {
         </div>
       </div>
 
-      <div class="grid grid-cols-7 gap-1 sm:gap-2 flex-1 min-h-0 relative overflow-visible" role="grid" style="z-index: 1">
+      <div class="grid grid-cols-7 gap-0.5 sm:gap-1 sm:gap-2 flex-1 min-h-0 relative overflow-visible" role="grid" style="z-index: 1">
         <CalendarDay
           v-for="(day, index) in calendarDays"
           :key="`${day.getTime()}-${index}`"
