@@ -19,6 +19,7 @@ const emit = defineEmits<{
   'update:event': [eventId: string, date: Date]
   'edit': [release: Release]
   'delete': [release: Release]
+  'add': [date: Date]
 }>()
 
 const selectedEvent = ref<Release | null>(null)
@@ -159,9 +160,18 @@ function handleClose() {
         </div>
       </div>
 
-      <div v-else-if="date && events.length === 0" class="mt-6 text-center py-8">
-        <CalendarIcon class="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-        <p class="text-muted-foreground">No hay eventos programados para este día</p>
+      <div v-else-if="date && events.length === 0" class="mt-6 space-y-4">
+        <div class="text-center py-6">
+          <CalendarIcon class="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+          <p class="text-muted-foreground mb-6">No hay eventos programados para este día</p>
+        </div>
+        <Button
+          class="w-full min-h-[44px] touch-manipulation glow-primary"
+          @click="emit('add', date!)"
+        >
+          <CalendarIcon class="h-4 w-4 mr-2" />
+          Añadir evento para este día
+        </Button>
       </div>
     </SheetContent>
   </Sheet>

@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import CalendarGrid from '@/components/calendar/CalendarGrid.vue'
+import DayEventsSheet from '@/components/calendar/DayEventsSheet.vue'
 import DeleteEventConfirmModal from '@/components/calendar/DeleteEventConfirmModal.vue'
 import EditEventSheet from '@/components/calendar/EditEventSheet.vue'
-import DayEventsSheet from '@/components/calendar/DayEventsSheet.vue'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DatePicker } from '@/components/ui/date-picker'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import type { Release, ReleaseType, CreateReleaseDTO } from '@/composables/useCalendar'
+import type { CreateReleaseDTO, Release, ReleaseType } from '@/composables/useCalendar'
 import { useCalendarPage } from '@/composables/useCalendarPage'
 import { BookOpen, Calendar as CalendarIcon, Plus, Ticket, Tv, X } from 'lucide-vue-next'
 
@@ -81,6 +81,12 @@ function handleDayClick(date: Date) {
   dayEventsSheetOpen.value = true
 }
 
+function handleAddFromSheet(date: Date) {
+  dayEventsSheetOpen.value = false
+  newRelease.value.release_date = date.toISOString().split('T')[0] || date.toISOString().slice(0, 10)
+  modal.open()
+}
+
 async function handleMoveEvent(eventId: string, newDate: Date) {
   if (isMovingEvent.value) return
 
@@ -134,7 +140,8 @@ function handleEventUpdate(eventId: string, date: Date) {
 
     <CalendarGrid :current-month="currentMonth" :events="releases" :loading="loading"
       @update:current-month="handleMonthChange" @update:event="handleEventUpdate" @delete="deleteReleaseEntry"
-      @deleteRequest="handleDeleteRequest" @editRequest="handleEditRequest" @dayClick="handleDayClick" @add="modal.open()" />
+      @deleteRequest="handleDeleteRequest" @editRequest="handleEditRequest" @dayClick="handleDayClick"
+      @add="modal.open()" />
 
     <ClientOnly>
       <Teleport to="body">
@@ -201,26 +208,17 @@ function handleEventUpdate(eventId: string, date: Date) {
     <EditEventSheet :open="editSheetOpen" :release="releaseToEdit" :is-submitting="isUpdating"
       @update:open="editSheetOpen = $event" @save="handleEditSave" />
 
-    <DayEventsSheet
-      v-if="selectedDay"
-      :open="dayEventsSheetOpen"
-      :date="selectedDay"
-      :events="(() => {
-        if (!selectedDay) return []
-        const day = selectedDay
-        return releases.filter(r => {
-          const eventDate = new Date(r.releaseDate)
-          return eventDate.getDate() === day.getDate() &&
-                 eventDate.getMonth() === day.getMonth() &&
-                 eventDate.getFullYear() === day.getFullYear()
-        })
-      })()"
-      :is-submitting="isMovingEvent"
-      @update:open="dayEventsSheetOpen = $event"
-      @update:event="handleMoveEvent"
-      @edit="handleDaySheetEdit"
-      @delete="handleDaySheetDelete"
-    />
+    <DayEventsSheet v-if="selectedDay" :open="dayEventsSheetOpen" :date="selectedDay" :events="(() => {
+      if (!selectedDay) return []
+      const day = selectedDay
+      return releases.filter(r => {
+        const eventDate = new Date(r.releaseDate)
+        return eventDate.getDate() === day.getDate() &&
+          eventDate.getMonth() === day.getMonth() &&
+          eventDate.getFullYear() === day.getFullYear()
+      })
+    })()" :is-submitting="isMovingEvent" @update:open="dayEventsSheetOpen = $event" @update:event="handleMoveEvent"
+      @edit="handleDaySheetEdit" @delete="handleDaySheetDelete" @add="handleAddFromSheet" />
   </div>
 </template>
 

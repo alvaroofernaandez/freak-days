@@ -104,9 +104,7 @@ function handleMouseLeave() {
 }
 
 function handleDayClick() {
-  if (props.events.length > 0) {
-    emit('dayClick', props.date)
-  }
+  emit('dayClick', props.date)
 }
 </script>
 
@@ -121,7 +119,7 @@ function handleDayClick() {
       isHovered && isDragging && !isDragOver && 'bg-primary/5 border-primary/20',
       isWeekend && isCurrentMonth && 'bg-muted/10',
       events.length > 0 ? 'overflow-visible lg:overflow-visible' : 'overflow-hidden',
-      events.length > 0 && 'lg:cursor-default cursor-pointer',
+      'lg:cursor-default cursor-pointer',
     ]"
     role="gridcell"
     :aria-label="`${dayNumber} de ${date.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}${events.length > 0 ? `, ${events.length} ${events.length === 1 ? 'evento' : 'eventos'}` : ''}`"
