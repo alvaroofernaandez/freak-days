@@ -21,6 +21,7 @@ const emit = defineEmits<{
   delete: [id: string]
   deleteRequest: [release: Release]
   editRequest: [release: Release]
+  dayClick: [date: Date]
   dragstart: [eventId: string]
   dragend: []
   hover: [date: Date | null]
@@ -101,6 +102,12 @@ function handleMouseLeave() {
     emit('hover', null)
   }
 }
+
+function handleDayClick() {
+  if (props.events.length > 0) {
+    emit('dayClick', props.date)
+  }
+}
 </script>
 
 <template>
@@ -138,12 +145,18 @@ function handleMouseLeave() {
         >
           {{ dayNumber }}
         </span>
+        <button
+          v-if="events.length > 0"
+          class="sm:hidden ml-auto h-2 w-2 rounded-full bg-primary shrink-0 touch-manipulation min-h-[8px] min-w-[8px]"
+          :aria-label="`${events.length} ${events.length === 1 ? 'evento' : 'eventos'} el día ${dayNumber}`"
+          @click.stop="handleDayClick"
+        />
       </div>
       <div
         v-if="events.length > 0"
-        class="flex-1 space-y-0.5 sm:space-y-0 min-w-0 relative z-20 overflow-visible sm:relative"
+        class="hidden sm:flex flex-1 space-y-0 min-w-0 relative z-20 overflow-visible sm:relative"
       >
-        <TransitionGroup name="event" tag="div" class="space-y-0.5 sm:space-y-0">
+        <TransitionGroup name="event" tag="div" class="space-y-0">
             <CalendarEventCard
               v-for="(event, index) in events.slice(0, 3)"
               :key="event.id"

@@ -41,6 +41,11 @@ const config = computed(() => typeConfig[props.release.type])
 const isHovered = ref(false)
 const isDraggingLocal = ref(false)
 
+const isMobile = computed(() => {
+  if (typeof window === 'undefined') return false
+  return window.innerWidth < 640
+})
+
 
 function handleDelete(e: MouseEvent) {
   e.stopPropagation()
@@ -108,7 +113,7 @@ function handleDragStartKeyboard(e: KeyboardEvent) {
     dataTransfer: {
       effectAllowed: 'move',
       dropEffect: 'move',
-      setData: () => {},
+      setData: () => { },
       getData: () => props.release.id,
     } as unknown as DataTransfer,
     currentTarget: e.currentTarget,
@@ -121,8 +126,8 @@ function handleDragStartKeyboard(e: KeyboardEvent) {
 function handleEditKeyboard(e: KeyboardEvent) {
   const fakeEvent = {
     ...e,
-    stopPropagation: () => {},
-    preventDefault: () => {},
+    stopPropagation: () => { },
+    preventDefault: () => { },
   } as unknown as MouseEvent
   handleEdit(fakeEvent)
 }
@@ -130,8 +135,8 @@ function handleEditKeyboard(e: KeyboardEvent) {
 function handleDeleteKeyboard(e: KeyboardEvent) {
   const fakeEvent = {
     ...e,
-    stopPropagation: () => {},
-    preventDefault: () => {},
+    stopPropagation: () => { },
+    preventDefault: () => { },
   } as unknown as MouseEvent
   handleDelete(fakeEvent)
 }
@@ -148,16 +153,18 @@ function handleDeleteKeyboard(e: KeyboardEvent) {
     !isDragging && !isDraggingLocal && 'hover:opacity-90 hover:shadow-md focus-within:opacity-90 focus-within:shadow-md active:opacity-95',
   ]"
     :style="(isDragging || isDraggingLocal) ? { zIndex: 999999, position: 'relative' } : { zIndex: 50, position: 'relative' }"
-    draggable="true" role="button"
+    :draggable="!isMobile" role="button"
     :aria-label="`Evento: ${release.title}, ${config.label}. Arrastra para mover o presiona Enter para arrastrar.`"
     :aria-describedby="`event-${release.id}-description`" tabindex="0" @dragstart="handleDragStart"
     @dragend="handleDragEnd" @touchstart="isHovered = true" @touchend="isHovered = false" @mouseenter="isHovered = true"
-    @mouseleave="isHovered = false" @keydown.enter.prevent="handleDragStartKeyboard" @keydown.space.prevent="handleDragStartKeyboard">
+    @mouseleave="isHovered = false" @keydown.enter.prevent="handleDragStartKeyboard"
+    @keydown.space.prevent="handleDragStartKeyboard">
     <div class="px-2.5 py-2 sm:px-2.5 sm:py-2 relative min-h-[44px] flex items-center">
       <span :id="`event-${release.id}-description`" class="sr-only">
         {{ config.label }} programado para {{ release.releaseDate.toLocaleDateString('es-ES', {
           day: 'numeric', month:
-            'long', year: 'numeric' }) }}
+            'long', year: 'numeric'
+        }) }}
       </span>
       <div class="flex items-center gap-1.5 sm:gap-1 flex-1 min-w-0">
         <p :class="[

@@ -2,12 +2,13 @@
 import CalendarGrid from '@/components/calendar/CalendarGrid.vue'
 import DeleteEventConfirmModal from '@/components/calendar/DeleteEventConfirmModal.vue'
 import EditEventSheet from '@/components/calendar/EditEventSheet.vue'
+import DayEventsSheet from '@/components/calendar/DayEventsSheet.vue'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DatePicker } from '@/components/ui/date-picker'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import type { Release, ReleaseType } from '@/composables/useCalendar'
+import type { Release, ReleaseType, CreateReleaseDTO } from '@/composables/useCalendar'
 import { useCalendarPage } from '@/composables/useCalendarPage'
 import { BookOpen, Calendar as CalendarIcon, Plus, Ticket, Tv, X } from 'lucide-vue-next'
 
@@ -32,6 +33,10 @@ const isDeleting = ref(false)
 const editSheetOpen = ref(false)
 const releaseToEdit = ref<Release | null>(null)
 const isUpdating = ref(false)
+
+const dayEventsSheetOpen = ref(false)
+const selectedDay = ref<Date | null>(null)
+const isMovingEvent = ref(false)
 
 function handleDeleteRequest(release: Release) {
   releaseToDelete.value = release
@@ -71,6 +76,32 @@ async function handleEditSave(id: string, dto: Partial<CreateReleaseDTO>) {
   }
 }
 
+function handleDayClick(date: Date) {
+  selectedDay.value = date
+  dayEventsSheetOpen.value = true
+}
+
+async function handleMoveEvent(eventId: string, newDate: Date) {
+  if (isMovingEvent.value) return
+
+  isMovingEvent.value = true
+  try {
+    await updateEventDate(eventId, newDate)
+  } finally {
+    isMovingEvent.value = false
+  }
+}
+
+function handleDaySheetEdit(release: Release) {
+  dayEventsSheetOpen.value = false
+  handleEditRequest(release)
+}
+
+function handleDaySheetDelete(release: Release) {
+  dayEventsSheetOpen.value = false
+  handleDeleteRequest(release)
+}
+
 const typeConfig: Record<ReleaseType, { icon: any; color: string; label: string }> = {
   anime_episode: { icon: Tv, color: 'text-primary', label: 'Episodio Anime' },
   manga_volume: { icon: BookOpen, color: 'text-exp-easy', label: 'Tomo Manga' },
@@ -103,7 +134,7 @@ function handleEventUpdate(eventId: string, date: Date) {
 
     <CalendarGrid :current-month="currentMonth" :events="releases" :loading="loading"
       @update:current-month="handleMonthChange" @update:event="handleEventUpdate" @delete="deleteReleaseEntry"
-      @deleteRequest="handleDeleteRequest" @editRequest="handleEditRequest" @add="modal.open()" />
+      @deleteRequest="handleDeleteRequest" @editRequest="handleEditRequest" @dayClick="handleDayClick" @add="modal.open()" />
 
     <ClientOnly>
       <Teleport to="body">
@@ -169,6 +200,27 @@ function handleEventUpdate(eventId: string, date: Date) {
 
     <EditEventSheet :open="editSheetOpen" :release="releaseToEdit" :is-submitting="isUpdating"
       @update:open="editSheetOpen = $event" @save="handleEditSave" />
+
+    <DayEventsSheet
+      v-if="selectedDay"
+      :open="dayEventsSheetOpen"
+      :date="selectedDay"
+      :events="(() => {
+        if (!selectedDay) return []
+        const day = selectedDay
+        return releases.filter(r => {
+          const eventDate = new Date(r.releaseDate)
+          return eventDate.getDate() === day.getDate() &&
+                 eventDate.getMonth() === day.getMonth() &&
+                 eventDate.getFullYear() === day.getFullYear()
+        })
+      })()"
+      :is-submitting="isMovingEvent"
+      @update:open="dayEventsSheetOpen = $event"
+      @update:event="handleMoveEvent"
+      @edit="handleDaySheetEdit"
+      @delete="handleDaySheetDelete"
+    />
   </div>
 </template>
 
