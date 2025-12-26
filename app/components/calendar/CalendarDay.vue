@@ -111,7 +111,7 @@ function handleMouseLeave() {
       isDragOver && 'bg-primary/20 ring-2 ring-primary border-primary scale-[1.02] shadow-lg z-10',
       isHovered && isDragging && !isDragOver && 'bg-primary/5 border-primary/20',
       isWeekend && isCurrentMonth && 'bg-muted/10',
-      isDragging ? 'overflow-visible' : 'overflow-hidden',
+      events.length > 0 ? 'overflow-visible' : 'overflow-hidden',
     ]"
     role="gridcell"
     :aria-label="`${dayNumber} de ${date.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}${events.length > 0 ? `, ${events.length} ${events.length === 1 ? 'evento' : 'eventos'}` : ''}`"
@@ -122,8 +122,8 @@ function handleMouseLeave() {
     @mouseenter="handleMouseEnter"
     @mouseleave="handleMouseLeave"
   >
-    <div class="p-1.5 sm:p-2 h-full flex flex-col" :class="isDragging ? 'overflow-visible' : 'overflow-hidden'">
-      <div class="flex items-start justify-between gap-1.5 mb-1 shrink-0">
+    <div class="p-1.5 sm:p-2 h-full flex flex-col" :class="events.length > 0 ? 'overflow-visible' : 'overflow-hidden'">
+      <div class="flex items-start gap-2 mb-1 shrink-0 relative z-10">
         <span
           :class="[
             'text-xs sm:text-sm md:text-base font-bold transition-colors shrink-0',
@@ -136,28 +136,27 @@ function handleMouseLeave() {
         >
           {{ dayNumber }}
         </span>
+      </div>
+      <div
+        v-if="events.length > 0"
+        class="flex-1 space-y-1 min-w-0 relative z-20"
+      >
+        <TransitionGroup name="event" tag="div" class="space-y-1">
+          <CalendarEventCard
+            v-for="event in events.slice(0, 3)"
+            :key="event.id"
+            :release="event"
+            :is-dragging="isDragging"
+            @delete.stop="emit('delete', $event)"
+            @dragstart="emit('dragstart', $event)"
+            @dragend="emit('dragend')"
+          />
+        </TransitionGroup>
         <div
-          v-if="events.length > 0"
-          class="flex-1 space-y-0.5 sm:space-y-1 min-w-0"
-          :class="isDragging ? 'overflow-visible' : 'overflow-hidden'"
+          v-if="events.length > 3"
+          class="text-[9px] sm:text-[10px] text-muted-foreground text-center py-0.5 font-medium relative z-10"
         >
-          <TransitionGroup name="event" tag="div" class="space-y-0.5 sm:space-y-1">
-            <CalendarEventCard
-              v-for="event in events.slice(0, 3)"
-              :key="event.id"
-              :release="event"
-              :is-dragging="isDragging"
-              @delete.stop="emit('delete', $event)"
-              @dragstart="emit('dragstart', $event)"
-              @dragend="emit('dragend')"
-            />
-          </TransitionGroup>
-          <div
-            v-if="events.length > 3"
-            class="text-[9px] sm:text-[10px] text-muted-foreground text-center py-0.5 font-medium"
-          >
-            +{{ events.length - 3 }} más
-          </div>
+          +{{ events.length - 3 }} más
         </div>
       </div>
       <div
