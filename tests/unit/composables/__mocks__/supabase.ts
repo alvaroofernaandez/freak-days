@@ -1,3 +1,5 @@
+import { vi } from 'vitest'
+
 export function createMockSupabase() {
   const mockChain = {
     from: vi.fn(() => mockChain),
