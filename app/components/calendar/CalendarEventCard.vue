@@ -13,6 +13,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   delete: [id: string]
+  deleteRequest: [release: Release]
   dragstart: [id: string]
   dragend: []
 }>()
@@ -43,9 +44,7 @@ const isDraggingLocal = ref(false)
 function handleDelete(e: MouseEvent) {
   e.stopPropagation()
   e.preventDefault()
-  if (confirm(`¿Eliminar "${props.release.title}"?`)) {
-    emit('delete', props.release.id)
-  }
+  emit('deleteRequest', props.release)
 }
 
 function handleDragStart(e: DragEvent) {
