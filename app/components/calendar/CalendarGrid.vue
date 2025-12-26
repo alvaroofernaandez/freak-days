@@ -7,7 +7,7 @@ import CalendarGridSkeleton from './CalendarGridSkeleton.vue'
 
 interface Props {
   currentMonth: Date
-  events: Release[]
+  events: readonly Release[]
   loading?: boolean
 }
 
