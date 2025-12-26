@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useWorkouts } from '~/app/composables/useWorkouts'
-import { useAuthStore } from '~~/stores/auth'
+import { useWorkouts } from '../../../app/composables/useWorkouts'
+import { useAuthStore } from '../../../stores/auth'
 
 const mockSupabase = {
   from: vi.fn(() => mockSupabase),
@@ -15,7 +15,7 @@ const mockSupabase = {
   single: vi.fn(() => mockSupabase),
 }
 
-vi.mock('~/app/composables/useSupabase', () => ({
+vi.mock('../../../app/composables/useSupabase', () => ({
   useSupabase: () => mockSupabase,
 }))
 
@@ -28,7 +28,7 @@ describe('useWorkouts', () => {
   describe('fetchWorkouts', () => {
     it('should return empty array when user is not authenticated', async () => {
       const authStore = useAuthStore()
-      authStore.userId = null
+      authStore.setSession(null)
 
       const workoutsApi = useWorkouts()
       const workouts = await workoutsApi.fetchWorkouts()
@@ -38,7 +38,7 @@ describe('useWorkouts', () => {
 
     it('should fetch workouts when user is authenticated', async () => {
       const authStore = useAuthStore()
-      authStore.userId = 'user-1'
+      authStore.setSession({ user: { id: 'user-1' }, access_token: '', refresh_token: '', expires_in: 3600, expires_at: 0, token_type: 'bearer' } as any)
 
       const mockData = [
         {
@@ -55,11 +55,15 @@ describe('useWorkouts', () => {
         },
       ]
 
+      const queryChain = {
+        eq: vi.fn(() => ({
+          order: vi.fn(() => ({
+            limit: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+          })),
+        })),
+      }
       mockSupabase.from.mockReturnValue(mockSupabase)
-      mockSupabase.select.mockReturnValue(mockSupabase)
-      mockSupabase.eq.mockReturnValue(mockSupabase)
-      mockSupabase.order.mockReturnValue(mockSupabase)
-      mockSupabase.limit.mockResolvedValue({ data: mockData, error: null })
+      mockSupabase.select.mockReturnValue(queryChain as any)
 
       const workoutsApi = useWorkouts()
       const workouts = await workoutsApi.fetchWorkouts()
@@ -72,7 +76,7 @@ describe('useWorkouts', () => {
   describe('createWorkout', () => {
     it('should return null when user is not authenticated', async () => {
       const authStore = useAuthStore()
-      authStore.userId = null
+      authStore.setSession(null)
 
       const workoutsApi = useWorkouts()
       const result = await workoutsApi.createWorkout({
@@ -85,20 +89,38 @@ describe('useWorkouts', () => {
 
     it('should create workout when valid data is provided', async () => {
       const authStore = useAuthStore()
-      authStore.userId = 'user-1'
+      authStore.setSession({ user: { id: 'user-1' }, access_token: '', refresh_token: '', expires_in: 3600, expires_at: 0, token_type: 'bearer' } as any)
 
       const mockData = {
         id: '1',
         name: 'Test Workout',
         workout_date: new Date().toISOString(),
         status: 'in_progress',
+        description: null,
+        duration_minutes: null,
+        notes: null,
+        started_at: new Date().toISOString(),
+        completed_at: null,
         workout_exercises: [],
       }
 
-      mockSupabase.from.mockReturnValue(mockSupabase)
-      mockSupabase.insert.mockReturnValue(mockSupabase)
-      mockSupabase.select.mockReturnValue(mockSupabase)
-      mockSupabase.single.mockResolvedValue({ data: mockData, error: null })
+      const insertChain = {
+        select: vi.fn(() => ({
+          single: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+        })),
+      }
+      const getWorkoutChain = {
+        eq: vi.fn(() => ({
+          single: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+        })),
+      }
+      mockSupabase.from
+        .mockReturnValueOnce({
+          insert: vi.fn(() => insertChain),
+        } as any)
+        .mockReturnValueOnce({
+          select: vi.fn(() => getWorkoutChain),
+        } as any)
 
       const workoutsApi = useWorkouts()
       const result = await workoutsApi.createWorkout({
@@ -114,7 +136,7 @@ describe('useWorkouts', () => {
   describe('getInProgressWorkout', () => {
     it('should return null when user is not authenticated', async () => {
       const authStore = useAuthStore()
-      authStore.userId = null
+      authStore.setSession(null)
 
       const workoutsApi = useWorkouts()
       const result = await workoutsApi.getInProgressWorkout()
@@ -124,7 +146,7 @@ describe('useWorkouts', () => {
 
     it('should return workout when in progress workout exists', async () => {
       const authStore = useAuthStore()
-      authStore.userId = 'user-1'
+      authStore.setSession({ user: { id: 'user-1' }, access_token: '', refresh_token: '', expires_in: 3600, expires_at: 0, token_type: 'bearer' } as any)
 
       const mockData = {
         id: '1',
@@ -133,10 +155,20 @@ describe('useWorkouts', () => {
         workout_exercises: [],
       }
 
+      const queryChain = {
+        eq: vi.fn()
+          .mockReturnValueOnce({
+            eq: vi.fn(() => ({
+              order: vi.fn(() => ({
+                limit: vi.fn(() => ({
+                  maybeSingle: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+                })),
+              })),
+            })),
+          }),
+      }
       mockSupabase.from.mockReturnValue(mockSupabase)
-      mockSupabase.select.mockReturnValue(mockSupabase)
-      mockSupabase.eq.mockReturnValue(mockSupabase)
-      mockSupabase.single.mockResolvedValue({ data: mockData, error: null })
+      mockSupabase.select.mockReturnValue(queryChain as any)
 
       const workoutsApi = useWorkouts()
       const result = await workoutsApi.getInProgressWorkout()

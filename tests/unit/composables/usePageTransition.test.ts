@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { defineComponent } from 'vue'
-import { usePageTransition } from '~/app/composables/usePageTransition'
+import { usePageTransition } from '../../../app/composables/usePageTransition'
 
 const mockRoute = {
   path: '/test',
@@ -45,10 +45,14 @@ describe('usePageTransition', () => {
 
     const wrapper = mount(component)
     
-    expect(() => {
+    const originalValue = wrapper.vm.isTransitioning
+    try {
       // @ts-expect-error - testing readonly
       wrapper.vm.isTransitioning = true
-    }).toThrow()
+    } catch {
+      // readonly refs may not throw in runtime, only TypeScript prevents assignment
+    }
+    expect(wrapper.vm.isTransitioning).toBe(originalValue)
   })
 })
 

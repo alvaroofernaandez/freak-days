@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { useAnimeSearch } from '~/app/composables/useAnimeSearch'
+import { useAnimeSearch } from '../../../app/composables/useAnimeSearch'
 
 global.fetch = vi.fn()
 
@@ -78,13 +78,16 @@ describe('useAnimeSearch', () => {
     })
 
     it('should cancel previous search when new search starts', async () => {
+      vi.useRealTimers()
       const abortSpy = vi.fn()
-      const mockAbortController = {
-        abort: abortSpy,
-        signal: {} as AbortSignal,
+      
+      class MockAbortController {
+        abort = abortSpy
+        signal = { aborted: false } as AbortSignal
       }
 
-      vi.spyOn(global, 'AbortController').mockImplementation(() => mockAbortController as any)
+      const originalAbortController = global.AbortController
+      global.AbortController = MockAbortController as any
 
       vi.mocked(global.fetch).mockImplementation(() => 
         new Promise(() => {}) // Never resolves
@@ -92,11 +95,14 @@ describe('useAnimeSearch', () => {
 
       const { searchAnime } = useAnimeSearch()
       const promise1 = searchAnime('test1')
+      await new Promise(resolve => setTimeout(resolve, 10))
       const promise2 = searchAnime('test2')
-
-      await new Promise(resolve => setTimeout(resolve, 100))
+      await new Promise(resolve => setTimeout(resolve, 10))
       
       expect(abortSpy).toHaveBeenCalled()
+      
+      global.AbortController = originalAbortController
+      vi.useFakeTimers()
     })
   })
 
@@ -136,20 +142,32 @@ describe('useAnimeSearch', () => {
           json: async () => mockResponse,
         } as Response)
 
-      const { searchAnime, loadMore } = useAnimeSearch()
+      const { searchAnime, loadMoreResults } = useAnimeSearch()
       await searchAnime('test')
-      await loadMore()
+      await loadMoreResults()
 
       expect(global.fetch).toHaveBeenCalledTimes(2)
     })
   })
 
-  describe('clearResults', () => {
-    it('should clear search results', () => {
-      const { searchResults, clearResults } = useAnimeSearch()
-      searchResults.value = [{ mal_id: 1, title: 'Test' } as any]
+  describe('clearSearch', () => {
+    it('should clear search results', async () => {
+      const mockResponse = {
+        data: [{ mal_id: 1, title: 'Test' }],
+        pagination: { has_next_page: false },
+      }
+
+      vi.mocked(global.fetch).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      } as Response)
+
+      const { searchAnime, searchResults, clearSearch } = useAnimeSearch()
+      await searchAnime('test')
       
-      clearResults()
+      expect(searchResults.value.length).toBeGreaterThan(0)
+      
+      clearSearch()
       
       expect(searchResults.value).toEqual([])
     })

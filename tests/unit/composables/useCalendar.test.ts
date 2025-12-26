@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useCalendar } from '~/app/composables/useCalendar'
-import { useAuthStore } from '~~/stores/auth'
+import { useCalendar } from '../../../app/composables/useCalendar'
+import { useAuthStore } from '../../../stores/auth'
 
 const mockSupabase = {
   from: vi.fn(() => mockSupabase),
@@ -16,7 +16,7 @@ const mockSupabase = {
   single: vi.fn(() => mockSupabase),
 }
 
-vi.mock('~/app/composables/useSupabase', () => ({
+vi.mock('../../../app/composables/useSupabase', () => ({
   useSupabase: () => mockSupabase,
 }))
 
@@ -29,7 +29,7 @@ describe('useCalendar', () => {
   describe('fetchReleases', () => {
     it('should return empty array when user is not authenticated', async () => {
       const authStore = useAuthStore()
-      authStore.userId = null
+      authStore.setSession(null)
 
       const calendar = useCalendar()
       const releases = await calendar.fetchReleases()
@@ -40,7 +40,7 @@ describe('useCalendar', () => {
 
     it('should fetch releases when user is authenticated', async () => {
       const authStore = useAuthStore()
-      authStore.userId = 'test-user-id'
+      authStore.setSession({ user: { id: 'test-user-id' }, access_token: '', refresh_token: '', expires_in: 3600, expires_at: 0, token_type: 'bearer' } as any)
 
       const mockData = [
         {
@@ -53,10 +53,13 @@ describe('useCalendar', () => {
         },
       ]
 
+      const queryChain = {
+        eq: vi.fn(() => ({
+          order: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+        })),
+      }
       mockSupabase.from.mockReturnValue(mockSupabase)
-      mockSupabase.select.mockReturnValue(mockSupabase)
-      mockSupabase.eq.mockReturnValue(mockSupabase)
-      mockSupabase.order.mockResolvedValue({ data: mockData, error: null })
+      mockSupabase.select.mockReturnValue(queryChain as any)
 
       const calendar = useCalendar()
       const releases = await calendar.fetchReleases()
@@ -68,13 +71,16 @@ describe('useCalendar', () => {
 
     it('should throw error when fetch fails', async () => {
       const authStore = useAuthStore()
-      authStore.userId = 'test-user-id'
+      authStore.setSession({ user: { id: 'test-user-id' }, access_token: '', refresh_token: '', expires_in: 3600, expires_at: 0, token_type: 'bearer' } as any)
 
       const testError = new Error('Database error')
+      const queryChain = {
+        eq: vi.fn(() => ({
+          order: vi.fn().mockResolvedValue({ data: null, error: testError }),
+        })),
+      }
       mockSupabase.from.mockReturnValue(mockSupabase)
-      mockSupabase.select.mockReturnValue(mockSupabase)
-      mockSupabase.eq.mockReturnValue(mockSupabase)
-      mockSupabase.order.mockResolvedValue({ data: null, error: testError })
+      mockSupabase.select.mockReturnValue(queryChain as any)
 
       const calendar = useCalendar()
 
@@ -85,7 +91,7 @@ describe('useCalendar', () => {
   describe('addRelease', () => {
     it('should return null when user is not authenticated', async () => {
       const authStore = useAuthStore()
-      authStore.userId = null
+      authStore.setSession(null)
 
       const calendar = useCalendar()
       const result = await calendar.addRelease({
@@ -99,7 +105,7 @@ describe('useCalendar', () => {
 
     it('should add release when user is authenticated', async () => {
       const authStore = useAuthStore()
-      authStore.userId = 'test-user-id'
+      authStore.setSession({ user: { id: 'test-user-id' }, access_token: '', refresh_token: '', expires_in: 3600, expires_at: 0, token_type: 'bearer' } as any)
 
       const mockData = {
         id: '1',
@@ -110,10 +116,13 @@ describe('useCalendar', () => {
         url: null,
       }
 
+      const insertChain = {
+        select: vi.fn(() => ({
+          single: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+        })),
+      }
       mockSupabase.from.mockReturnValue(mockSupabase)
-      mockSupabase.insert.mockReturnValue(mockSupabase)
-      mockSupabase.select.mockReturnValue(mockSupabase)
-      mockSupabase.single.mockResolvedValue({ data: mockData, error: null })
+      mockSupabase.insert.mockReturnValue(insertChain as any)
 
       const calendar = useCalendar()
       const result = await calendar.addRelease({
@@ -131,7 +140,7 @@ describe('useCalendar', () => {
   describe('updateRelease', () => {
     it('should return null when user is not authenticated', async () => {
       const authStore = useAuthStore()
-      authStore.userId = null
+      authStore.setSession(null)
 
       const calendar = useCalendar()
       const result = await calendar.updateRelease('1', { title: 'Updated' })
@@ -141,7 +150,7 @@ describe('useCalendar', () => {
 
     it('should update release when user is authenticated', async () => {
       const authStore = useAuthStore()
-      authStore.userId = 'test-user-id'
+      authStore.setSession({ user: { id: 'test-user-id' }, access_token: '', refresh_token: '', expires_in: 3600, expires_at: 0, token_type: 'bearer' } as any)
 
       const mockData = {
         id: '1',
@@ -152,11 +161,18 @@ describe('useCalendar', () => {
         url: null,
       }
 
+      const updateChain = {
+        eq: vi.fn()
+          .mockReturnValueOnce({
+            eq: vi.fn(() => ({
+              select: vi.fn(() => ({
+                single: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+              })),
+            })),
+          }),
+      }
       mockSupabase.from.mockReturnValue(mockSupabase)
-      mockSupabase.update.mockReturnValue(mockSupabase)
-      mockSupabase.eq.mockReturnValue(mockSupabase)
-      mockSupabase.select.mockReturnValue(mockSupabase)
-      mockSupabase.single.mockResolvedValue({ data: mockData, error: null })
+      mockSupabase.update.mockReturnValue(updateChain as any)
 
       const calendar = useCalendar()
       const result = await calendar.updateRelease('1', { title: 'Updated Release' })

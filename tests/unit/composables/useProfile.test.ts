@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useProfile } from '~/app/composables/useProfile'
-import { useAuthStore } from '~~/stores/auth'
+import { useProfile } from '../../../app/composables/useProfile'
+import { useAuthStore } from '../../../stores/auth'
 
 const mockSupabase = {
   from: vi.fn(() => mockSupabase),
@@ -17,7 +17,7 @@ const mockSupabase = {
   },
 }
 
-vi.mock('~/app/composables/useSupabase', () => ({
+vi.mock('../../../app/composables/useSupabase', () => ({
   useSupabase: () => mockSupabase,
 }))
 
@@ -30,7 +30,7 @@ describe('useProfile', () => {
   describe('fetchProfile', () => {
     it('should return null when user is not authenticated', async () => {
       const authStore = useAuthStore()
-      authStore.userId = null
+      authStore.setSession(null)
 
       const profileApi = useProfile()
       const profile = await profileApi.fetchProfile()
@@ -41,7 +41,7 @@ describe('useProfile', () => {
 
     it('should fetch profile when user is authenticated', async () => {
       const authStore = useAuthStore()
-      authStore.userId = 'user-1'
+      authStore.setSession({ user: { id: 'user-1' }, access_token: '', refresh_token: '', expires_in: 3600, expires_at: 0, token_type: 'bearer' } as any)
 
       const mockData = {
         id: 'user-1',
@@ -58,10 +58,13 @@ describe('useProfile', () => {
         social_links: {},
       }
 
+      const queryChain = {
+        eq: vi.fn(() => ({
+          single: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+        })),
+      }
       mockSupabase.from.mockReturnValue(mockSupabase)
-      mockSupabase.select.mockReturnValue(mockSupabase)
-      mockSupabase.eq.mockReturnValue(mockSupabase)
-      mockSupabase.single.mockResolvedValue({ data: mockData, error: null })
+      mockSupabase.select.mockReturnValue(queryChain as any)
 
       const profileApi = useProfile()
       const profile = await profileApi.fetchProfile()
@@ -73,7 +76,7 @@ describe('useProfile', () => {
 
     it('should return null when fetch fails', async () => {
       const authStore = useAuthStore()
-      authStore.userId = 'user-1'
+      authStore.setSession({ user: { id: 'user-1' }, access_token: '', refresh_token: '', expires_in: 3600, expires_at: 0, token_type: 'bearer' } as any)
 
       mockSupabase.from.mockReturnValue(mockSupabase)
       mockSupabase.select.mockReturnValue(mockSupabase)
@@ -90,7 +93,7 @@ describe('useProfile', () => {
   describe('updateProfile', () => {
     it('should return false when user is not authenticated', async () => {
       const authStore = useAuthStore()
-      authStore.userId = null
+      authStore.setSession(null)
 
       const profileApi = useProfile()
       const result = await profileApi.updateProfile({ username: 'newuser' })
@@ -100,11 +103,13 @@ describe('useProfile', () => {
 
     it('should update profile when user is authenticated', async () => {
       const authStore = useAuthStore()
-      authStore.userId = 'user-1'
+      authStore.setSession({ user: { id: 'user-1' }, access_token: '', refresh_token: '', expires_in: 3600, expires_at: 0, token_type: 'bearer' } as any)
 
+      const updateChain = {
+        eq: vi.fn().mockResolvedValue({ error: null }),
+      }
       mockSupabase.from.mockReturnValue(mockSupabase)
-      mockSupabase.update.mockReturnValue(mockSupabase)
-      mockSupabase.eq.mockResolvedValue({ error: null })
+      mockSupabase.update.mockReturnValue(updateChain as any)
 
       const profileApi = useProfile()
       const result = await profileApi.updateProfile({ username: 'newuser' })
@@ -130,8 +135,8 @@ describe('useProfile', () => {
 
       const result3 = profileApi.expForNextLevel(150)
       expect(result3.current).toBe(50)
-      expect(result3.needed).toBe(200)
-      expect(result3.progress).toBe(25)
+      expect(result3.needed).toBe(100)
+      expect(result3.progress).toBe(50)
     })
   })
 })

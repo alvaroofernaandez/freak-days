@@ -2,35 +2,35 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { mount } from '@vue/test-utils'
 import { defineComponent } from 'vue'
-import { useIndexPage } from '~/app/composables/useIndexPage'
+import { useIndexPage } from '../../../app/composables/useIndexPage'
 
-vi.mock('~/app/composables/useProfile', () => ({
+vi.mock('../../../app/composables/useProfile', () => ({
   useProfile: () => ({
     fetchProfile: vi.fn().mockResolvedValue(null),
     expForNextLevel: vi.fn(() => ({ current: 0, needed: 100, progress: 0 })),
   }),
 }))
 
-vi.mock('~/app/composables/useQuests', () => ({
+vi.mock('../../../app/composables/useQuests', () => ({
   useQuests: () => ({
     fetchQuests: vi.fn().mockResolvedValue([]),
     fetchTodayCompletions: vi.fn().mockResolvedValue([]),
   }),
 }))
 
-vi.mock('~/app/composables/useAnime', () => ({
+vi.mock('../../../app/composables/useAnime', () => ({
   useAnime: () => ({
     fetchAnimeList: vi.fn().mockResolvedValue([]),
   }),
 }))
 
-vi.mock('~/app/composables/useWorkouts', () => ({
+vi.mock('../../../app/composables/useWorkouts', () => ({
   useWorkouts: () => ({
     fetchWorkouts: vi.fn().mockResolvedValue([]),
   }),
 }))
 
-vi.mock('~/app/composables/useSupabase', () => ({
+vi.mock('../../../app/composables/useSupabase', () => ({
   useSupabase: () => ({
     from: vi.fn(() => ({
       select: vi.fn(() => ({
@@ -40,7 +40,7 @@ vi.mock('~/app/composables/useSupabase', () => ({
   }),
 }))
 
-vi.mock('~/utils/greeting', () => ({
+vi.mock('../../../app/utils/greeting', () => ({
   getGreeting: () => 'Buenos días',
 }))
 

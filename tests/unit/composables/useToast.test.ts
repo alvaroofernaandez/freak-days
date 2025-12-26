@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { useToast } from '~/app/composables/useToast'
+import { useToast } from '../../../app/composables/useToast'
 
 describe('useToast', () => {
   beforeEach(() => {
@@ -153,10 +153,14 @@ describe('useToast', () => {
       const { toasts, show } = useToast()
       show('Test', 'info')
       
-      expect(() => {
+      const originalLength = toasts.value.length
+      try {
         // @ts-expect-error - testing readonly
         toasts.value = []
-      }).toThrow()
+      } catch {
+        // readonly refs may not throw in runtime, only TypeScript prevents assignment
+      }
+      expect(toasts.value.length).toBe(originalLength)
     })
   })
 })

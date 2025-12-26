@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { defineComponent, nextTick } from 'vue'
-import { usePageData } from '~/app/composables/usePageData'
+import { usePageData } from '../../../app/composables/usePageData'
 
 describe('usePageData', () => {
   beforeEach(() => {
@@ -235,10 +235,14 @@ describe('usePageData', () => {
 
       const wrapper = mount(component)
       
-      expect(() => {
+      const originalValue = wrapper.vm.data
+      try {
         // @ts-expect-error - testing readonly
         wrapper.vm.data = 'new-value'
-      }).toThrow()
+      } catch {
+        // readonly refs may not throw in runtime, only TypeScript prevents assignment
+      }
+      expect(wrapper.vm.data).toBe(originalValue)
     })
 
     it('should return readonly error', () => {
@@ -255,10 +259,14 @@ describe('usePageData', () => {
 
       const wrapper = mount(component)
       
-      expect(() => {
+      const originalValue = wrapper.vm.error
+      try {
         // @ts-expect-error - testing readonly
         wrapper.vm.error = new Error('test')
-      }).toThrow()
+      } catch {
+        // readonly refs may not throw in runtime, only TypeScript prevents assignment
+      }
+      expect(wrapper.vm.error).toBe(originalValue)
     })
   })
 })

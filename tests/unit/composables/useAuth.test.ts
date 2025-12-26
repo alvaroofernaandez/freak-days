@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useAuth } from '~/app/composables/useAuth'
-import { useAuthStore } from '~~/stores/auth'
+import { useAuth } from '../../../app/composables/useAuth'
+import { useAuthStore } from '../../../stores/auth'
 
 const mockSupabase = {
   auth: {
@@ -18,7 +18,7 @@ const mockSupabase = {
   single: vi.fn(() => mockSupabase),
 }
 
-vi.mock('~/app/composables/useSupabase', () => ({
+vi.mock('../../../app/composables/useSupabase', () => ({
   useSupabase: () => mockSupabase,
 }))
 
@@ -32,6 +32,10 @@ describe('useAuth', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
+    mockSupabase.from.mockImplementation(() => mockSupabase)
+    mockSupabase.select.mockImplementation(() => mockSupabase)
+    mockSupabase.eq.mockImplementation(() => mockSupabase)
+    mockSupabase.single.mockImplementation(() => mockSupabase)
   })
 
   describe('initialize', () => {
@@ -56,12 +60,19 @@ describe('useAuth', () => {
       mockSupabase.auth.getSession.mockResolvedValue({
         data: { session: mockSession },
       })
-      mockSupabase.from.mockResolvedValue({ data: null, error: null })
+      const profileChain = {
+        eq: vi.fn(() => ({
+          single: vi.fn().mockResolvedValue({ data: null, error: null }),
+        })),
+      }
+      mockSupabase.from.mockReturnValue({
+        select: vi.fn(() => profileChain),
+      } as any)
 
       const auth = useAuth()
       await auth.initialize()
 
-      expect(authStore.session).toBe(mockSession)
+      expect(authStore.session).toStrictEqual(mockSession)
     })
   })
 
@@ -72,7 +83,10 @@ describe('useAuth', () => {
         data: { user: { id: 'user-1' }, session: null },
         error: null,
       })
-      mockSupabase.from.mockResolvedValue({ data: null, error: null })
+      // signUp llama a createProfile directamente, que hace un insert
+      mockSupabase.from.mockReturnValueOnce({
+        insert: vi.fn().mockResolvedValue({ error: null }),
+      } as any)
 
       const auth = useAuth()
       const result = await auth.signUp('test@test.com', 'password123')
@@ -106,7 +120,23 @@ describe('useAuth', () => {
         data: { user: mockSession.user, session: mockSession },
         error: null,
       })
-      mockSupabase.from.mockResolvedValue({ data: null, error: null })
+      const profileChain = {
+        eq: vi.fn(() => ({
+          single: vi.fn().mockResolvedValue({ data: { id: 'user-1' }, error: null }),
+        })),
+      }
+      const modulesChain = {
+        eq: vi.fn().mockResolvedValue({ data: [], error: null }),
+      }
+      mockSupabase.from
+        .mockReturnValueOnce({
+          select: vi.fn(() => profileChain),
+        } as any)
+        .mockReturnValueOnce({
+          select: vi.fn(() => ({
+            eq: vi.fn().mockResolvedValue({ data: [], error: null }),
+          })),
+        } as any)
 
       const auth = useAuth()
       const result = await auth.signIn('test@test.com', 'password123')

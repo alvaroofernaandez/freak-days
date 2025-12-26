@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useParties } from '~/app/composables/useParties'
-import { useAuthStore } from '~~/stores/auth'
+import { useParties } from '../../../app/composables/useParties'
+import { useAuthStore } from '../../../stores/auth'
 
 const mockSupabase = {
   from: vi.fn(() => mockSupabase),
@@ -15,11 +15,11 @@ const mockSupabase = {
   single: vi.fn(() => mockSupabase),
 }
 
-vi.mock('~/app/composables/useSupabase', () => ({
+vi.mock('../../../app/composables/useSupabase', () => ({
   useSupabase: () => mockSupabase,
 }))
 
-vi.mock('~/app/composables/useToast', () => ({
+vi.mock('../../../app/composables/useToast', () => ({
   useToast: () => ({
     success: vi.fn(),
     error: vi.fn(),
@@ -35,7 +35,7 @@ describe('useParties', () => {
   describe('fetchUserParties', () => {
     it('should return empty array when user is not authenticated', async () => {
       const authStore = useAuthStore()
-      authStore.userId = null
+      authStore.setSession(null)
 
       const partiesApi = useParties()
       const parties = await partiesApi.fetchUserParties()
@@ -45,7 +45,7 @@ describe('useParties', () => {
 
     it('should fetch parties when user is authenticated', async () => {
       const authStore = useAuthStore()
-      authStore.userId = 'user-1'
+      authStore.setSession({ user: { id: 'user-1' }, access_token: '', refresh_token: '', expires_in: 3600, expires_at: 0, token_type: 'bearer' } as any)
 
       const mockMemberships = [{ party_id: 'party-1' }]
       const mockParties = [
@@ -59,29 +59,30 @@ describe('useParties', () => {
           created_at: new Date().toISOString(),
         },
       ]
-      const mockMembers = []
+      const mockMembers: any[] = []
+
+      const membershipsChain = {
+        eq: vi.fn(() => ({
+          order: vi.fn().mockResolvedValue({ data: mockMemberships, error: null }),
+        })),
+      }
+      const partiesChain = {
+        in: vi.fn().mockResolvedValue({ data: mockParties, error: null }),
+      }
+      const membersChain = {
+        eq: vi.fn().mockResolvedValue({ data: mockMembers, error: null }),
+      }
 
       mockSupabase.from
-        .mockReturnValueOnce(mockSupabase)
-        .mockReturnValueOnce(mockSupabase)
-        .mockReturnValueOnce(mockSupabase)
-
-      mockSupabase.select
-        .mockReturnValueOnce(mockSupabase)
-        .mockReturnValueOnce(mockSupabase)
-        .mockReturnValueOnce(mockSupabase)
-
-      mockSupabase.eq
-        .mockReturnValueOnce(mockSupabase)
-        .mockReturnValueOnce(mockSupabase)
-        .mockReturnValueOnce(mockSupabase)
-
-      mockSupabase.order.mockReturnValueOnce(mockSupabase)
-      mockSupabase.in.mockResolvedValueOnce({ data: mockParties, error: null })
-
-      mockSupabase.select
-        .mockResolvedValueOnce({ data: mockMemberships, error: null })
-        .mockResolvedValueOnce({ data: mockMembers, error: null })
+        .mockReturnValueOnce({
+          select: vi.fn(() => membershipsChain),
+        } as any)
+        .mockReturnValueOnce({
+          select: vi.fn(() => partiesChain),
+        } as any)
+        .mockReturnValueOnce({
+          select: vi.fn(() => membersChain),
+        } as any)
 
       const partiesApi = useParties()
       const parties = await partiesApi.fetchUserParties()
@@ -94,7 +95,7 @@ describe('useParties', () => {
   describe('createParty', () => {
     it('should return null when user is not authenticated', async () => {
       const authStore = useAuthStore()
-      authStore.userId = null
+      authStore.setSession(null)
 
       const partiesApi = useParties()
       const result = await partiesApi.createParty('Test Party')
@@ -104,7 +105,7 @@ describe('useParties', () => {
 
     it('should create party when valid data is provided', async () => {
       const authStore = useAuthStore()
-      authStore.userId = 'user-1'
+      authStore.setSession({ user: { id: 'user-1' }, access_token: '', refresh_token: '', expires_in: 3600, expires_at: 0, token_type: 'bearer' } as any)
 
       const mockData = {
         id: 'party-1',
@@ -116,10 +117,44 @@ describe('useParties', () => {
         created_at: new Date().toISOString(),
       }
 
-      mockSupabase.from.mockReturnValue(mockSupabase)
-      mockSupabase.insert.mockReturnValue(mockSupabase)
-      mockSupabase.select.mockReturnValue(mockSupabase)
-      mockSupabase.single.mockResolvedValue({ data: mockData, error: null })
+      const checkCodeChain = {
+        eq: vi.fn(() => ({
+          single: vi.fn().mockResolvedValue({ data: null, error: null }),
+        })),
+      }
+      const insertPartyChain = {
+        select: vi.fn(() => ({
+          single: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+        })),
+      }
+      const insertMemberChain = {
+        then: vi.fn((callback) => {
+          callback({ error: null })
+          return Promise.resolve({ error: null })
+        }),
+      }
+      const fetchPartyChain = {
+        eq: vi.fn(() => ({
+          single: vi.fn().mockResolvedValue({ 
+            data: { ...mockData, party_members: [] }, 
+            error: null 
+          }),
+        })),
+      }
+
+      mockSupabase.from
+        .mockReturnValueOnce({
+          select: vi.fn(() => checkCodeChain),
+        } as any)
+        .mockReturnValueOnce({
+          insert: vi.fn(() => insertPartyChain),
+        } as any)
+        .mockReturnValueOnce({
+          insert: vi.fn(() => insertMemberChain),
+        } as any)
+        .mockReturnValueOnce({
+          select: vi.fn(() => fetchPartyChain),
+        } as any)
 
       const partiesApi = useParties()
       const result = await partiesApi.createParty('Test Party')
@@ -132,7 +167,7 @@ describe('useParties', () => {
   describe('joinByCode', () => {
     it('should return null when user is not authenticated', async () => {
       const authStore = useAuthStore()
-      authStore.userId = null
+      authStore.setSession(null)
 
       const partiesApi = useParties()
       const result = await partiesApi.joinByCode('ABC123')
@@ -142,7 +177,7 @@ describe('useParties', () => {
 
     it('should join party when valid code is provided', async () => {
       const authStore = useAuthStore()
-      authStore.userId = 'user-1'
+      authStore.setSession({ user: { id: 'user-1' }, access_token: '', refresh_token: '', expires_in: 3600, expires_at: 0, token_type: 'bearer' } as any)
 
       const mockParty = {
         id: 'party-1',
@@ -150,23 +185,60 @@ describe('useParties', () => {
         invite_code: 'ABC123',
       }
 
+      const fullMockParty = {
+        ...mockParty,
+        description: null,
+        owner_id: 'user-1',
+        max_members: 10,
+        created_at: new Date().toISOString(),
+      }
+
+      const findPartyChain = {
+        eq: vi.fn(() => ({
+          single: vi.fn().mockResolvedValue({ data: fullMockParty, error: null }),
+        })),
+      }
+      const checkExistingMemberChain = {
+        eq: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            single: vi.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } }),
+          })),
+        })),
+      }
+      const countMembersChain = {
+        eq: vi.fn().mockResolvedValue({ data: [], error: null }),
+      }
+      const insertMemberChain = {
+        then: vi.fn((callback) => {
+          callback({ error: null })
+          return Promise.resolve({ error: null })
+        }),
+      }
+      const fetchPartyChain = {
+        eq: vi.fn(() => ({
+          single: vi.fn().mockResolvedValue({ 
+            data: { ...fullMockParty, party_members: [] }, 
+            error: null 
+          }),
+        })),
+      }
+
       mockSupabase.from
-        .mockReturnValueOnce(mockSupabase)
-        .mockReturnValueOnce(mockSupabase)
-
-      mockSupabase.select
-        .mockReturnValueOnce(mockSupabase)
-        .mockReturnValueOnce(mockSupabase)
-
-      mockSupabase.eq
-        .mockReturnValueOnce(mockSupabase)
-        .mockReturnValueOnce(mockSupabase)
-
-      mockSupabase.single
-        .mockResolvedValueOnce({ data: mockParty, error: null })
-        .mockResolvedValueOnce({ data: { id: 'member-1' }, error: null })
-
-      mockSupabase.insert.mockResolvedValue({ error: null })
+        .mockReturnValueOnce({
+          select: vi.fn(() => findPartyChain),
+        } as any)
+        .mockReturnValueOnce({
+          select: vi.fn(() => checkExistingMemberChain),
+        } as any)
+        .mockReturnValueOnce({
+          select: vi.fn(() => countMembersChain),
+        } as any)
+        .mockReturnValueOnce({
+          insert: vi.fn(() => insertMemberChain),
+        } as any)
+        .mockReturnValueOnce({
+          select: vi.fn(() => fetchPartyChain),
+        } as any)
 
       const partiesApi = useParties()
       const result = await partiesApi.joinByCode('ABC123')

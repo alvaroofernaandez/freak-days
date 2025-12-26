@@ -2,9 +2,9 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { mount } from '@vue/test-utils'
 import { defineComponent } from 'vue'
-import { useCalendarPage } from '~/app/composables/useCalendarPage'
+import { useCalendarPage } from '../../../app/composables/useCalendarPage'
 
-vi.mock('~/app/composables/useCalendar', () => ({
+vi.mock('../../../app/composables/useCalendar', () => ({
   useCalendar: () => ({
     fetchReleases: vi.fn().mockResolvedValue([]),
     addRelease: vi.fn().mockResolvedValue(null),
@@ -13,7 +13,7 @@ vi.mock('~/app/composables/useCalendar', () => ({
   }),
 }))
 
-vi.mock('~/app/composables/useModal', () => ({
+vi.mock('../../../app/composables/useModal', () => ({
   useModal: () => ({
     isOpen: { value: false },
     open: vi.fn(),
@@ -21,14 +21,14 @@ vi.mock('~/app/composables/useModal', () => ({
   }),
 }))
 
-vi.mock('~/app/composables/useToast', () => ({
+vi.mock('../../../app/composables/useToast', () => ({
   useToast: () => ({
     success: vi.fn(),
     error: vi.fn(),
   }),
 }))
 
-vi.mock('~/app/composables/usePageData', () => ({
+vi.mock('../../../app/composables/usePageData', () => ({
   usePageData: () => ({
     data: { value: [] },
     loading: { value: false },
@@ -54,7 +54,7 @@ describe('useCalendarPage', () => {
     const wrapper = mount(component)
     
     expect(wrapper.vm.releases).toEqual([])
-    expect(wrapper.vm.loading).toBe(false)
+    expect(wrapper.vm.loading.value).toBe(false)
     expect(wrapper.vm.currentMonth).toBeInstanceOf(Date)
     expect(wrapper.vm.newRelease.title).toBe('')
   })

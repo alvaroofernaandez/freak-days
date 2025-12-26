@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useQuests } from '~/app/composables/useQuests'
-import { useAuthStore } from '~~/stores/auth'
+import { useQuests } from '../../../app/composables/useQuests'
+import { useAuthStore } from '../../../stores/auth'
 
 const mockSupabase = {
   from: vi.fn(() => mockSupabase),
@@ -16,7 +16,7 @@ const mockSupabase = {
   rpc: vi.fn(() => mockSupabase),
 }
 
-vi.mock('~/app/composables/useSupabase', () => ({
+vi.mock('../../../app/composables/useSupabase', () => ({
   useSupabase: () => mockSupabase,
 }))
 
@@ -29,7 +29,7 @@ describe('useQuests', () => {
   describe('fetchQuests', () => {
     it('should return empty array when user is not authenticated', async () => {
       const authStore = useAuthStore()
-      authStore.userId = null
+      authStore.setSession(null)
 
       const questsApi = useQuests()
       const quests = await questsApi.fetchQuests()
@@ -39,7 +39,7 @@ describe('useQuests', () => {
 
     it('should fetch quests when user is authenticated', async () => {
       const authStore = useAuthStore()
-      authStore.userId = 'user-1'
+      authStore.setSession({ user: { id: 'user-1' }, access_token: '', refresh_token: '', expires_in: 3600, expires_at: 0, token_type: 'bearer' } as any)
 
       const mockData = [
         {
@@ -58,10 +58,16 @@ describe('useQuests', () => {
         },
       ]
 
+      const queryChain = {
+        eq: vi.fn()
+          .mockReturnValueOnce({
+            eq: vi.fn(() => ({
+              order: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+            })),
+          }),
+      }
       mockSupabase.from.mockReturnValue(mockSupabase)
-      mockSupabase.select.mockReturnValue(mockSupabase)
-      mockSupabase.eq.mockReturnValue(mockSupabase)
-      mockSupabase.order.mockResolvedValue({ data: mockData, error: null })
+      mockSupabase.select.mockReturnValue(queryChain as any)
 
       const questsApi = useQuests()
       const quests = await questsApi.fetchQuests()
@@ -74,7 +80,7 @@ describe('useQuests', () => {
   describe('createQuest', () => {
     it('should return null when user is not authenticated', async () => {
       const authStore = useAuthStore()
-      authStore.userId = null
+      authStore.setSession(null)
 
       const questsApi = useQuests()
       const result = await questsApi.createQuest({
@@ -88,7 +94,7 @@ describe('useQuests', () => {
 
     it('should create quest when valid data is provided', async () => {
       const authStore = useAuthStore()
-      authStore.userId = 'user-1'
+      authStore.setSession({ user: { id: 'user-1' }, access_token: '', refresh_token: '', expires_in: 3600, expires_at: 0, token_type: 'bearer' } as any)
 
       const mockData = {
         id: '1',
@@ -97,10 +103,13 @@ describe('useQuests', () => {
         exp_reward: 10,
       }
 
+      const insertChain = {
+        select: vi.fn(() => ({
+          single: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+        })),
+      }
       mockSupabase.from.mockReturnValue(mockSupabase)
-      mockSupabase.insert.mockReturnValue(mockSupabase)
-      mockSupabase.select.mockReturnValue(mockSupabase)
-      mockSupabase.single.mockResolvedValue({ data: mockData, error: null })
+      mockSupabase.insert.mockReturnValue(insertChain as any)
 
       const questsApi = useQuests()
       const result = await questsApi.createQuest({
@@ -117,7 +126,7 @@ describe('useQuests', () => {
   describe('completeQuest', () => {
     it('should return 0 when user is not authenticated', async () => {
       const authStore = useAuthStore()
-      authStore.userId = null
+      authStore.setSession(null)
 
       const questsApi = useQuests()
       const exp = await questsApi.completeQuest('1')
@@ -127,11 +136,43 @@ describe('useQuests', () => {
 
     it('should complete quest and return exp reward', async () => {
       const authStore = useAuthStore()
-      authStore.userId = 'user-1'
+      authStore.setSession({ user: { id: 'user-1' }, access_token: '', refresh_token: '', expires_in: 3600, expires_at: 0, token_type: 'bearer' } as any)
 
-      mockSupabase.from.mockReturnValue(mockSupabase)
-      mockSupabase.insert.mockResolvedValue({ error: null })
-      mockSupabase.rpc.mockResolvedValue({ data: 10, error: null })
+      const mockQuest = {
+        id: '1',
+        title: 'Test Quest',
+        difficulty: 'easy',
+        exp_reward: 10,
+        description: null,
+        is_recurring: false,
+        recurrence_pattern: null,
+        due_date: null,
+        due_time: null,
+        reminder_minutes_before: null,
+        active: true,
+        created_at: new Date().toISOString(),
+      }
+
+      const getQuestChain = {
+        eq: vi.fn(() => ({
+          single: vi.fn().mockResolvedValue({ data: mockQuest, error: null }),
+        })),
+      }
+
+      mockSupabase.from
+        .mockReturnValueOnce({
+          select: vi.fn(() => getQuestChain),
+        } as any)
+        .mockReturnValueOnce({
+          insert: vi.fn().mockResolvedValue({ error: null }),
+        } as any)
+        .mockReturnValueOnce({
+          update: vi.fn(() => ({
+            eq: vi.fn().mockResolvedValue({ error: null }),
+          })),
+        } as any)
+
+      mockSupabase.rpc = vi.fn().mockResolvedValue({ data: 10, error: null })
 
       const questsApi = useQuests()
       const exp = await questsApi.completeQuest('1', 1)

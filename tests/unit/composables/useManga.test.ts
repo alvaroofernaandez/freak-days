@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useManga } from '~/app/composables/useManga'
-import { useAuthStore } from '~~/stores/auth'
+import { useManga } from '../../../app/composables/useManga'
+import { useAuthStore } from '../../../stores/auth'
 
 const mockSupabase = {
   from: vi.fn(() => mockSupabase),
@@ -14,7 +14,7 @@ const mockSupabase = {
   single: vi.fn(() => mockSupabase),
 }
 
-vi.mock('~/app/composables/useSupabase', () => ({
+vi.mock('../../../app/composables/useSupabase', () => ({
   useSupabase: () => mockSupabase,
 }))
 
@@ -27,7 +27,7 @@ describe('useManga', () => {
   describe('fetchCollection', () => {
     it('should return empty array when user is not authenticated', async () => {
       const authStore = useAuthStore()
-      authStore.userId = null
+      authStore.setSession(null)
 
       const mangaApi = useManga()
       const collection = await mangaApi.fetchCollection()
@@ -37,7 +37,7 @@ describe('useManga', () => {
 
     it('should fetch collection when user is authenticated', async () => {
       const authStore = useAuthStore()
-      authStore.userId = 'user-1'
+      authStore.setSession({ user: { id: 'user-1' }, access_token: '', refresh_token: '', expires_in: 3600, expires_at: 0, token_type: 'bearer' } as any)
 
       const mockData = [
         {
@@ -55,10 +55,13 @@ describe('useManga', () => {
         },
       ]
 
+      const queryChain = {
+        eq: vi.fn(() => ({
+          order: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+        })),
+      }
       mockSupabase.from.mockReturnValue(mockSupabase)
-      mockSupabase.select.mockReturnValue(mockSupabase)
-      mockSupabase.eq.mockReturnValue(mockSupabase)
-      mockSupabase.order.mockResolvedValue({ data: mockData, error: null })
+      mockSupabase.select.mockReturnValue(queryChain as any)
 
       const mangaApi = useManga()
       const collection = await mangaApi.fetchCollection()
@@ -71,7 +74,7 @@ describe('useManga', () => {
   describe('addManga', () => {
     it('should return null when user is not authenticated', async () => {
       const authStore = useAuthStore()
-      authStore.userId = null
+      authStore.setSession(null)
 
       const mangaApi = useManga()
       const result = await mangaApi.addManga({ title: 'Test' })
@@ -81,7 +84,7 @@ describe('useManga', () => {
 
     it('should add manga when valid data is provided', async () => {
       const authStore = useAuthStore()
-      authStore.userId = 'user-1'
+      authStore.setSession({ user: { id: 'user-1' }, access_token: '', refresh_token: '', expires_in: 3600, expires_at: 0, token_type: 'bearer' } as any)
 
       const mockData = {
         id: '1',
@@ -97,10 +100,13 @@ describe('useManga', () => {
         total_cost: 0,
       }
 
+      const insertChain = {
+        select: vi.fn(() => ({
+          single: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+        })),
+      }
       mockSupabase.from.mockReturnValue(mockSupabase)
-      mockSupabase.insert.mockReturnValue(mockSupabase)
-      mockSupabase.select.mockReturnValue(mockSupabase)
-      mockSupabase.single.mockResolvedValue({ data: mockData, error: null })
+      mockSupabase.insert.mockReturnValue(insertChain as any)
 
       const mangaApi = useManga()
       const result = await mangaApi.addManga({
@@ -116,7 +122,7 @@ describe('useManga', () => {
   describe('addVolume', () => {
     it('should return false when manga does not exist', async () => {
       const authStore = useAuthStore()
-      authStore.userId = 'user-1'
+      authStore.setSession({ user: { id: 'user-1' }, access_token: '', refresh_token: '', expires_in: 3600, expires_at: 0, token_type: 'bearer' } as any)
 
       mockSupabase.from.mockReturnValue(mockSupabase)
       mockSupabase.select.mockReturnValue(mockSupabase)
@@ -131,7 +137,7 @@ describe('useManga', () => {
 
     it('should add volume when manga exists', async () => {
       const authStore = useAuthStore()
-      authStore.userId = 'user-1'
+      authStore.setSession({ user: { id: 'user-1' }, access_token: '', refresh_token: '', expires_in: 3600, expires_at: 0, token_type: 'bearer' } as any)
 
       const mockManga = {
         id: '1',
