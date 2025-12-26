@@ -19,6 +19,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   drop: [date: Date, eventId: string]
   delete: [id: string]
+  deleteRequest: [release: Release]
   dragstart: [eventId: string]
   dragend: []
   hover: [date: Date | null]
@@ -142,15 +143,16 @@ function handleMouseLeave() {
         class="flex-1 space-y-1 min-w-0 relative z-20"
       >
         <TransitionGroup name="event" tag="div" class="space-y-1">
-          <CalendarEventCard
-            v-for="event in events.slice(0, 3)"
-            :key="event.id"
-            :release="event"
-            :is-dragging="isDragging"
-            @delete.stop="emit('delete', $event)"
-            @dragstart="emit('dragstart', $event)"
-            @dragend="emit('dragend')"
-          />
+            <CalendarEventCard
+              v-for="event in events.slice(0, 3)"
+              :key="event.id"
+              :release="event"
+              :is-dragging="isDragging"
+              @delete.stop="emit('delete', $event)"
+              @deleteRequest="emit('deleteRequest', $event)"
+              @dragstart="emit('dragstart', $event)"
+              @dragend="emit('dragend')"
+            />
         </TransitionGroup>
         <div
           v-if="events.length > 3"

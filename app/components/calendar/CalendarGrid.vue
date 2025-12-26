@@ -21,6 +21,7 @@ const emit = defineEmits<{
   'update:currentMonth': [date: Date]
   'update:event': [eventId: string, date: Date]
   'delete': [id: string]
+  'deleteRequest': [release: Release]
   'add': []
 }>()
 
@@ -203,6 +204,7 @@ function handleKeydown(e: KeyboardEvent) {
           :is-hovered="hoveredDate?.getTime() === day.getTime()"
           @drop="handleDrop"
           @delete="emit('delete', $event)"
+          @deleteRequest="emit('deleteRequest', $event)"
           @dragstart="handleDragStart"
           @dragend="handleDragEnd"
           @hover="handleDateHover"
