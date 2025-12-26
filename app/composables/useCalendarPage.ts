@@ -1,95 +1,111 @@
-import type { Release, ReleaseType, CreateReleaseDTO } from '@/composables/useCalendar'
-import { useToast } from './useToast'
+import type { CreateReleaseDTO } from "@/composables/useCalendar";
+import { useToast } from "./useToast";
 
 export function useCalendarPage() {
-  const calendarApi = useCalendar()
-  const modal = useModal()
-  const toast = useToast()
+  const calendarApi = useCalendar();
+  const modal = useModal();
+  const toast = useToast();
 
-  const { data: releases, loading, reload: reloadReleases } = usePageData({
+  const {
+    data: releases,
+    loading,
+    reload: reloadReleases,
+  } = usePageData({
     fetcher: () => calendarApi.fetchReleases(),
-  })
+  });
 
-  const currentMonth = ref(new Date())
+  const currentMonth = ref(new Date());
   const newRelease = ref<CreateReleaseDTO>({
-    title: '',
-    type: 'anime_episode',
-    release_date: new Date().toISOString().split('T')[0] || new Date().toISOString().slice(0, 10),
+    title: "",
+    type: "anime_episode",
+    release_date:
+      new Date().toISOString().split("T")[0] ||
+      new Date().toISOString().slice(0, 10),
     description: undefined,
-    url: undefined
-  })
+    url: undefined,
+  });
 
-  const monthName = computed(() => 
-    currentMonth.value.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
-  )
+  const monthName = computed(() =>
+    currentMonth.value.toLocaleDateString("es-ES", {
+      month: "long",
+      year: "numeric",
+    })
+  );
 
   function formatDate(date: Date) {
-    return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
+    return date.toLocaleDateString("es-ES", { day: "numeric", month: "short" });
   }
 
   async function addRelease() {
-    if (!newRelease.value.title.trim()) return
+    if (!newRelease.value.title.trim()) return;
 
     try {
-      const created = await calendarApi.addRelease(newRelease.value)
+      const created = await calendarApi.addRelease(newRelease.value);
       if (created) {
-        await reloadReleases()
-        newRelease.value = { 
-          title: '', 
-          type: 'anime_episode', 
-          release_date: new Date().toISOString().split('T')[0] || new Date().toISOString().slice(0, 10), 
+        await reloadReleases();
+        newRelease.value = {
+          title: "",
+          type: "anime_episode",
+          release_date:
+            new Date().toISOString().split("T")[0] ||
+            new Date().toISOString().slice(0, 10),
           description: undefined,
-          url: undefined
-        }
-        modal.close()
-        toast.success('Evento añadido al calendario')
+          url: undefined,
+        };
+        modal.close();
+        toast.success("Evento añadido al calendario");
       }
     } catch (error) {
-      toast.error('Error al añadir evento')
+      toast.error("Error al añadir evento");
     }
   }
 
   async function updateEventDate(eventId: string, newDate: Date) {
     try {
-      const year = newDate.getFullYear()
-      const month = String(newDate.getMonth() + 1).padStart(2, '0')
-      const day = String(newDate.getDate()).padStart(2, '0')
-      const dateString = `${year}-${month}-${day}`
-      
-      const updated = await calendarApi.updateRelease(eventId, { release_date: dateString })
+      const year = newDate.getFullYear();
+      const month = String(newDate.getMonth() + 1).padStart(2, "0");
+      const day = String(newDate.getDate()).padStart(2, "0");
+      const dateString = `${year}-${month}-${day}`;
+
+      const updated = await calendarApi.updateRelease(eventId, {
+        release_date: dateString,
+      });
       if (updated) {
-        await reloadReleases()
-        toast.success('Evento movido')
+        await reloadReleases();
+        toast.success("Evento movido");
       }
     } catch (error) {
-      toast.error('Error al mover evento')
+      toast.error("Error al mover evento");
     }
   }
 
   async function deleteReleaseEntry(id: string) {
     try {
-      const success = await calendarApi.deleteRelease(id)
+      const success = await calendarApi.deleteRelease(id);
       if (success) {
-        await reloadReleases()
-        toast.success('Evento eliminado')
+        await reloadReleases();
+        toast.success("Evento eliminado");
       }
     } catch (error) {
-      toast.error('Error al eliminar evento')
+      toast.error("Error al eliminar evento");
     }
   }
 
-  async function updateReleaseEntry(id: string, dto: Partial<CreateReleaseDTO>) {
+  async function updateReleaseEntry(
+    id: string,
+    dto: Partial<CreateReleaseDTO>
+  ) {
     try {
-      const updated = await calendarApi.updateRelease(id, dto)
+      const updated = await calendarApi.updateRelease(id, dto);
       if (updated) {
-        await reloadReleases()
-        toast.success('Evento actualizado')
-        return true
+        await reloadReleases();
+        toast.success("Evento actualizado");
+        return true;
       }
-      return false
+      return false;
     } catch (error) {
-      toast.error('Error al actualizar evento')
-      return false
+      toast.error("Error al actualizar evento");
+      return false;
     }
   }
 
@@ -105,6 +121,5 @@ export function useCalendarPage() {
     updateEventDate,
     deleteReleaseEntry,
     updateReleaseEntry,
-  }
+  };
 }
-
