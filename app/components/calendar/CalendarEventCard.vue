@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Trash2 } from 'lucide-vue-next'
+import { Trash2, MoreVertical } from 'lucide-vue-next'
 import type { Release, ReleaseType } from '@/composables/useCalendar'
 
 interface Props {
@@ -14,6 +14,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   delete: [id: string]
   deleteRequest: [release: Release]
+  editRequest: [release: Release]
   dragstart: [id: string]
   dragend: []
 }>()
@@ -45,6 +46,12 @@ function handleDelete(e: MouseEvent) {
   e.stopPropagation()
   e.preventDefault()
   emit('deleteRequest', props.release)
+}
+
+function handleEdit(e: MouseEvent) {
+  e.stopPropagation()
+  e.preventDefault()
+  emit('editRequest', props.release)
 }
 
 function handleDragStart(e: DragEvent) {
@@ -123,7 +130,7 @@ function handleDragEnd() {
       <span :id="`event-${release.id}-description`" class="sr-only">
         {{ config.label }} programado para {{ release.releaseDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) }}
       </span>
-      <div class="flex items-center gap-1.5 flex-1 min-w-0">
+      <div class="flex items-center gap-1 flex-1 min-w-0">
         <p
           :class="[
             'text-[10px] sm:text-xs font-medium truncate leading-tight flex-1 min-w-0',
@@ -134,19 +141,34 @@ function handleDragEnd() {
         >
           {{ release.title }}
         </p>
-        <button
-          class="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all p-1 hover:bg-white/20 active:bg-white/30 rounded shrink-0 touch-manipulation min-h-[28px] min-w-[28px] sm:min-h-[32px] sm:min-w-[32px] flex items-center justify-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-transparent focus:opacity-100"
-          :class="config.color"
-          @click.stop="handleDelete"
-          @keydown.enter.stop="handleDelete"
-          @keydown.space.stop.prevent="handleDelete"
-          :aria-label="`Eliminar evento: ${release.title}`"
-          :aria-describedby="`event-${release.id}-description`"
-          title="Eliminar evento"
-        >
-          <Trash2 class="h-3 w-3 sm:h-3.5 sm:w-3.5" aria-hidden="true" />
-          <span class="sr-only">Eliminar evento {{ release.title }}</span>
-        </button>
+        <div class="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
+          <button
+            class="transition-all p-1 hover:bg-white/20 active:bg-white/30 rounded shrink-0 touch-manipulation min-h-[28px] min-w-[28px] sm:min-h-[32px] sm:min-w-[32px] flex items-center justify-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-transparent focus:opacity-100"
+            :class="config.color"
+            @click.stop="handleEdit"
+            @keydown.enter.stop="handleEdit"
+            @keydown.space.stop.prevent="handleEdit"
+            :aria-label="`Editar evento: ${release.title}`"
+            :aria-describedby="`event-${release.id}-description`"
+            title="Editar evento"
+          >
+            <MoreVertical class="h-3 w-3 sm:h-3.5 sm:w-3.5" aria-hidden="true" />
+            <span class="sr-only">Editar evento {{ release.title }}</span>
+          </button>
+          <button
+            class="transition-all p-1 hover:bg-white/20 active:bg-white/30 rounded shrink-0 touch-manipulation min-h-[28px] min-w-[28px] sm:min-h-[32px] sm:min-w-[32px] flex items-center justify-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-transparent focus:opacity-100"
+            :class="config.color"
+            @click.stop="handleDelete"
+            @keydown.enter.stop="handleDelete"
+            @keydown.space.stop.prevent="handleDelete"
+            :aria-label="`Eliminar evento: ${release.title}`"
+            :aria-describedby="`event-${release.id}-description`"
+            title="Eliminar evento"
+          >
+            <Trash2 class="h-3 w-3 sm:h-3.5 sm:w-3.5" aria-hidden="true" />
+            <span class="sr-only">Eliminar evento {{ release.title }}</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
