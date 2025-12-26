@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { DialogTrigger } from 'radix-vue'
+import { DialogTrigger } from 'radix-vue';
 </script>
 
 <template>
@@ -7,4 +7,3 @@ import { DialogTrigger } from 'radix-vue'
     <slot />
   </DialogTrigger>
 </template>
-

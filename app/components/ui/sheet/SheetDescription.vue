@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { DialogDescription } from 'radix-vue'
+import { DialogDescription } from 'radix-vue';
 </script>
 
 <template>
@@ -7,4 +7,3 @@ import { DialogDescription } from 'radix-vue'
     <slot />
   </DialogDescription>
 </template>
-

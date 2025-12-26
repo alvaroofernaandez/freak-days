@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { DialogRoot } from 'radix-vue'
+import { DialogRoot } from 'radix-vue';
 
 interface Props {
   open?: boolean
@@ -16,12 +16,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <DialogRoot
-    :open="open"
-    :default-open="defaultOpen"
-    @update:open="emit('update:open', $event)"
-  >
+  <DialogRoot :open="open" :default-open="defaultOpen" @update:open="emit('update:open', $event)">
     <slot />
   </DialogRoot>
 </template>
-
