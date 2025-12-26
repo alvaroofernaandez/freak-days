@@ -109,9 +109,10 @@ function handleDragEnd() {
     :class="[
       'group relative cursor-grab active:cursor-grabbing touch-manipulation w-full',
       'rounded-lg transition-all duration-200 select-none',
+      'active:scale-[0.98] sm:active:scale-100',
       config.bgColor,
-      (isDragging || isDraggingLocal) && 'opacity-40 cursor-grabbing',
-      !isDragging && !isDraggingLocal && 'hover:opacity-90 hover:shadow-md focus-within:opacity-90 focus-within:shadow-md',
+      (isDragging || isDraggingLocal) && 'opacity-40 cursor-grabbing scale-95',
+      !isDragging && !isDraggingLocal && 'hover:opacity-90 hover:shadow-md focus-within:opacity-90 focus-within:shadow-md active:opacity-95',
     ]"
     :style="(isDragging || isDraggingLocal) ? { zIndex: 999999, position: 'relative' } : { zIndex: 50, position: 'relative' }"
     draggable="true"
@@ -121,19 +122,21 @@ function handleDragEnd() {
     tabindex="0"
     @dragstart="handleDragStart"
     @dragend="handleDragEnd"
+    @touchstart="isHovered = true"
+    @touchend="isHovered = false"
     @mouseenter="isHovered = true"
     @mouseleave="isHovered = false"
     @keydown.enter.prevent="handleDragStart"
     @keydown.space.prevent="handleDragStart"
   >
-    <div class="px-2 py-1.5 sm:px-2.5 sm:py-2 relative">
+    <div class="px-2.5 py-2 sm:px-2.5 sm:py-2 relative min-h-[44px] flex items-center">
       <span :id="`event-${release.id}-description`" class="sr-only">
         {{ config.label }} programado para {{ release.releaseDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) }}
       </span>
-      <div class="flex items-center gap-1 flex-1 min-w-0">
+      <div class="flex items-center gap-1.5 sm:gap-1 flex-1 min-w-0">
         <p
           :class="[
-            'text-[10px] sm:text-xs font-medium truncate leading-tight flex-1 min-w-0',
+            'text-xs sm:text-xs font-medium truncate leading-snug flex-1 min-w-0',
             config.color
           ]"
           :title="release.title"
@@ -141,9 +144,9 @@ function handleDragEnd() {
         >
           {{ release.title }}
         </p>
-        <div class="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
+        <div class="flex items-center gap-1 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity">
           <button
-            class="transition-all p-1 hover:bg-white/20 active:bg-white/30 rounded shrink-0 touch-manipulation min-h-[28px] min-w-[28px] sm:min-h-[32px] sm:min-w-[32px] flex items-center justify-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-transparent focus:opacity-100"
+            class="transition-all p-1.5 hover:bg-white/20 active:bg-white/30 rounded shrink-0 touch-manipulation min-h-[44px] min-w-[44px] sm:min-h-[32px] sm:min-w-[32px] flex items-center justify-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-transparent"
             :class="config.color"
             @click.stop="handleEdit"
             @keydown.enter.stop="handleEdit"
@@ -152,11 +155,11 @@ function handleDragEnd() {
             :aria-describedby="`event-${release.id}-description`"
             title="Editar evento"
           >
-            <MoreVertical class="h-3 w-3 sm:h-3.5 sm:w-3.5" aria-hidden="true" />
+            <MoreVertical class="h-4 w-4 sm:h-3.5 sm:w-3.5" aria-hidden="true" />
             <span class="sr-only">Editar evento {{ release.title }}</span>
           </button>
           <button
-            class="transition-all p-1 hover:bg-white/20 active:bg-white/30 rounded shrink-0 touch-manipulation min-h-[28px] min-w-[28px] sm:min-h-[32px] sm:min-w-[32px] flex items-center justify-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-transparent focus:opacity-100"
+            class="transition-all p-1.5 hover:bg-white/20 active:bg-white/30 rounded shrink-0 touch-manipulation min-h-[44px] min-w-[44px] sm:min-h-[32px] sm:min-w-[32px] flex items-center justify-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-transparent"
             :class="config.color"
             @click.stop="handleDelete"
             @keydown.enter.stop="handleDelete"
@@ -165,7 +168,7 @@ function handleDragEnd() {
             :aria-describedby="`event-${release.id}-description`"
             title="Eliminar evento"
           >
-            <Trash2 class="h-3 w-3 sm:h-3.5 sm:w-3.5" aria-hidden="true" />
+            <Trash2 class="h-4 w-4 sm:h-3.5 sm:w-3.5" aria-hidden="true" />
             <span class="sr-only">Eliminar evento {{ release.title }}</span>
           </button>
         </div>
