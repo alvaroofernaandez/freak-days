@@ -43,7 +43,7 @@ const isDraggingLocal = ref(false)
 
 const isMobile = computed(() => {
   if (typeof window === 'undefined') return false
-  return window.innerWidth < 640
+  return window.innerWidth < 1024
 })
 
 

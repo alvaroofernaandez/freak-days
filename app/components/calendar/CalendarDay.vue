@@ -120,7 +120,8 @@ function handleDayClick() {
       isDragOver && 'bg-primary/20 ring-2 ring-primary border-primary scale-[1.02] shadow-lg z-10',
       isHovered && isDragging && !isDragOver && 'bg-primary/5 border-primary/20',
       isWeekend && isCurrentMonth && 'bg-muted/10',
-      events.length > 0 ? 'overflow-visible sm:overflow-visible' : 'overflow-hidden',
+      events.length > 0 ? 'overflow-visible lg:overflow-visible' : 'overflow-hidden',
+      events.length > 0 && 'lg:cursor-default cursor-pointer',
     ]"
     role="gridcell"
     :aria-label="`${dayNumber} de ${date.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}${events.length > 0 ? `, ${events.length} ${events.length === 1 ? 'evento' : 'eventos'}` : ''}`"
@@ -130,6 +131,7 @@ function handleDayClick() {
     @dragleave="handleDragLeave"
     @mouseenter="handleMouseEnter"
     @mouseleave="handleMouseLeave"
+    @click="handleDayClick"
   >
     <div class="p-1 sm:p-2 h-full flex flex-col relative" :class="events.length > 0 ? 'overflow-visible sm:overflow-visible' : 'overflow-hidden'">
       <div class="flex items-start gap-1 sm:gap-2 mb-0.5 sm:mb-1.5 shrink-0 relative z-10">
@@ -145,16 +147,15 @@ function handleDayClick() {
         >
           {{ dayNumber }}
         </span>
-        <button
+        <div
           v-if="events.length > 0"
-          class="sm:hidden ml-auto h-2 w-2 rounded-full bg-primary shrink-0 touch-manipulation min-h-[8px] min-w-[8px]"
+          class="lg:hidden ml-auto h-2 w-2 rounded-full bg-primary shrink-0 min-h-[8px] min-w-[8px] pointer-events-none"
           :aria-label="`${events.length} ${events.length === 1 ? 'evento' : 'eventos'} el día ${dayNumber}`"
-          @click.stop="handleDayClick"
         />
       </div>
       <div
         v-if="events.length > 0"
-        class="hidden sm:flex flex-1 space-y-0 min-w-0 relative z-20 overflow-visible sm:relative"
+        class="hidden lg:flex flex-1 space-y-0 min-w-0 relative z-20 overflow-visible lg:relative"
       >
         <TransitionGroup name="event" tag="div" class="space-y-0">
             <CalendarEventCard
