@@ -85,7 +85,7 @@ function handleClose() {
         <div
           v-for="event in events"
           :key="event.id"
-          class="p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+          class="p-4 rounded-lg border bg-card hover:bg-muted/30 transition-colors"
         >
           <div v-if="selectedEvent?.id !== event.id" class="space-y-3">
             <div class="flex items-start justify-between gap-2">
