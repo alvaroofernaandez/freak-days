@@ -31,25 +31,38 @@ const emit = defineEmits<{
           role="dialog"
           aria-modal="true"
           aria-labelledby="delete-confirm-title"
+          aria-describedby="delete-confirm-description"
         >
-          <Card class="w-full max-w-md shadow-xl border-2 border-destructive/20 my-auto" @click.stop>
+          <Card class="w-full max-w-md shadow-xl border-2 border-destructive/20 my-auto" @click.stop role="document">
             <CardHeader class="p-4 sm:p-6 pb-3 sm:pb-4">
-              <CardTitle id="delete-confirm-title" class="text-destructive text-lg sm:text-xl">
+              <CardTitle id="delete-confirm-title" class="text-destructive text-lg sm:text-xl flex items-center gap-2">
+                <Trash2 class="h-5 w-5" aria-hidden="true" />
                 Eliminar Evento
               </CardTitle>
-              <CardDescription class="text-sm sm:text-base mt-2">
-                ¿Estás seguro de que quieres eliminar "{{ release.title }}"? Esta acción no se puede deshacer.
+              <CardDescription class="text-sm sm:text-base mt-2" id="delete-confirm-description">
+                ¿Estás seguro de que quieres eliminar <strong>"{{ release.title }}"</strong>? Esta acción no se puede deshacer.
               </CardDescription>
             </CardHeader>
             <CardContent class="flex flex-col sm:flex-row gap-2 p-4 sm:p-6 pt-0">
-              <Button variant="outline" class="flex-1 min-h-[44px]" @click="emit('close')" :disabled="isSubmitting">
+              <Button 
+                variant="outline" 
+                class="flex-1 min-h-[44px] touch-manipulation" 
+                @click="emit('close')" 
+                :disabled="isSubmitting"
+                aria-label="Cancelar eliminación"
+              >
                 Cancelar
               </Button>
-              <Button variant="destructive" class="flex-1 min-h-[44px]" @click="emit('confirm', release.id)"
-                :disabled="isSubmitting">
-                <Trash2 v-if="!isSubmitting" class="h-4 w-4 mr-2" />
-                <span v-else class="animate-spin mr-2">⏳</span>
-                {{ isSubmitting ? 'Eliminando...' : 'Eliminar' }}
+              <Button 
+                variant="destructive" 
+                class="flex-1 min-h-[44px] touch-manipulation cursor-pointer" 
+                @click="emit('confirm', release.id)"
+                :disabled="isSubmitting"
+                :aria-label="isSubmitting ? 'Eliminando evento...' : `Confirmar eliminación de ${release.title}`"
+              >
+                <Trash2 v-if="!isSubmitting" class="h-4 w-4 mr-2" aria-hidden="true" />
+                <span v-else class="animate-spin mr-2" aria-hidden="true">⏳</span>
+                <span>{{ isSubmitting ? 'Eliminando...' : 'Eliminar' }}</span>
               </Button>
             </CardContent>
           </Card>

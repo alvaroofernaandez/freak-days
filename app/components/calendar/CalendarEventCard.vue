@@ -98,17 +98,19 @@ function handleDragEnd() {
 
 <template>
   <div
+    :id="`event-${release.id}`"
     :class="[
       'group relative cursor-grab active:cursor-grabbing touch-manipulation w-full',
       'rounded-lg transition-all duration-200 select-none',
       config.bgColor,
       (isDragging || isDraggingLocal) && 'opacity-40 cursor-grabbing',
-      !isDragging && !isDraggingLocal && 'hover:opacity-90 hover:shadow-md',
+      !isDragging && !isDraggingLocal && 'hover:opacity-90 hover:shadow-md focus-within:opacity-90 focus-within:shadow-md',
     ]"
     :style="(isDragging || isDraggingLocal) ? { zIndex: 999999, position: 'relative' } : { zIndex: 50, position: 'relative' }"
     draggable="true"
     role="button"
-    :aria-label="`Evento: ${release.title}, ${config.label}. Arrastra para mover.`"
+    :aria-label="`Evento: ${release.title}, ${config.label}. Arrastra para mover o presiona Enter para arrastrar.`"
+    :aria-describedby="`event-${release.id}-description`"
     tabindex="0"
     @dragstart="handleDragStart"
     @dragend="handleDragEnd"
@@ -118,6 +120,9 @@ function handleDragEnd() {
     @keydown.space.prevent="handleDragStart"
   >
     <div class="px-2 py-1.5 sm:px-2.5 sm:py-2 relative">
+      <span :id="`event-${release.id}-description`" class="sr-only">
+        {{ config.label }} programado para {{ release.releaseDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) }}
+      </span>
       <div class="flex items-center gap-1.5 flex-1 min-w-0">
         <p
           :class="[
@@ -125,17 +130,22 @@ function handleDragEnd() {
             config.color
           ]"
           :title="release.title"
+          :aria-label="release.title"
         >
           {{ release.title }}
         </p>
         <button
-          class="opacity-0 group-hover:opacity-100 transition-all p-0.5 hover:bg-white/20 rounded shrink-0 touch-manipulation min-h-[24px] min-w-[24px] flex items-center justify-center"
+          class="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all p-1 hover:bg-white/20 active:bg-white/30 rounded shrink-0 touch-manipulation min-h-[28px] min-w-[28px] sm:min-h-[32px] sm:min-w-[32px] flex items-center justify-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-transparent focus:opacity-100"
           :class="config.color"
           @click.stop="handleDelete"
-          aria-label="Eliminar evento"
+          @keydown.enter.stop="handleDelete"
+          @keydown.space.stop.prevent="handleDelete"
+          :aria-label="`Eliminar evento: ${release.title}`"
+          :aria-describedby="`event-${release.id}-description`"
           title="Eliminar evento"
         >
-          <Trash2 class="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+          <Trash2 class="h-3 w-3 sm:h-3.5 sm:w-3.5" aria-hidden="true" />
+          <span class="sr-only">Eliminar evento {{ release.title }}</span>
         </button>
       </div>
     </div>
