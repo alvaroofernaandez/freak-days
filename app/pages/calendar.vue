@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import CalendarGrid from '@/components/calendar/CalendarGrid.vue'
 import DeleteEventConfirmModal from '@/components/calendar/DeleteEventConfirmModal.vue'
+import EditEventSheet from '@/components/calendar/EditEventSheet.vue'
 import { useCalendarPage } from '@/composables/useCalendarPage'
 
 const {
@@ -21,11 +22,16 @@ const {
   addRelease,
   updateEventDate,
   deleteReleaseEntry,
+  updateReleaseEntry,
 } = useCalendarPage()
 
 const deleteModal = useModal()
 const releaseToDelete = ref<Release | null>(null)
 const isDeleting = ref(false)
+
+const editSheetOpen = ref(false)
+const releaseToEdit = ref<Release | null>(null)
+const isUpdating = ref(false)
 
 function handleDeleteRequest(release: Release) {
   releaseToDelete.value = release
@@ -42,6 +48,26 @@ async function handleDeleteConfirm(releaseId: string) {
     releaseToDelete.value = null
   } finally {
     isDeleting.value = false
+  }
+}
+
+function handleEditRequest(release: Release) {
+  releaseToEdit.value = release
+  editSheetOpen.value = true
+}
+
+async function handleEditSave(id: string, dto: Partial<CreateReleaseDTO>) {
+  if (isUpdating.value) return
+
+  isUpdating.value = true
+  try {
+    const success = await updateReleaseEntry(id, dto)
+    if (success) {
+      editSheetOpen.value = false
+      releaseToEdit.value = null
+    }
+  } finally {
+    isUpdating.value = false
   }
 }
 
@@ -86,6 +112,7 @@ function handleEventUpdate(eventId: string, date: Date) {
       @update:event="handleEventUpdate"
       @delete="deleteReleaseEntry"
       @deleteRequest="handleDeleteRequest"
+      @editRequest="handleEditRequest"
       @add="modal.open()"
     />
 
@@ -189,6 +216,14 @@ function handleEventUpdate(eventId: string, date: Date) {
       :is-submitting="isDeleting"
       @close="deleteModal.close()"
       @confirm="handleDeleteConfirm"
+    />
+
+    <EditEventSheet
+      :open="editSheetOpen"
+      :release="releaseToEdit"
+      :is-submitting="isUpdating"
+      @update:open="editSheetOpen = $event"
+      @save="handleEditSave"
     />
   </div>
 </template>
