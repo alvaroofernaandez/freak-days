@@ -22,6 +22,7 @@ const emit = defineEmits<{
   'update:event': [eventId: string, date: Date]
   'delete': [id: string]
   'deleteRequest': [release: Release]
+  'editRequest': [release: Release]
   'add': []
 }>()
 
@@ -205,6 +206,7 @@ function handleKeydown(e: KeyboardEvent) {
           @drop="handleDrop"
           @delete="emit('delete', $event)"
           @deleteRequest="emit('deleteRequest', $event)"
+          @editRequest="emit('editRequest', $event)"
           @dragstart="handleDragStart"
           @dragend="handleDragEnd"
           @hover="handleDateHover"

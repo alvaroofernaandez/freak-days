@@ -20,6 +20,7 @@ const emit = defineEmits<{
   drop: [date: Date, eventId: string]
   delete: [id: string]
   deleteRequest: [release: Release]
+  editRequest: [release: Release]
   dragstart: [eventId: string]
   dragend: []
   hover: [date: Date | null]
@@ -150,6 +151,7 @@ function handleMouseLeave() {
               :is-dragging="isDragging"
               @delete.stop="emit('delete', $event)"
               @deleteRequest="emit('deleteRequest', $event)"
+              @editRequest="emit('editRequest', $event)"
               @dragstart="emit('dragstart', $event)"
               @dragend="emit('dragend')"
             />
