@@ -113,7 +113,7 @@ function handleMouseLeave() {
       isDragOver && 'bg-primary/20 ring-2 ring-primary border-primary scale-[1.02] shadow-lg z-10',
       isHovered && isDragging && !isDragOver && 'bg-primary/5 border-primary/20',
       isWeekend && isCurrentMonth && 'bg-muted/10',
-      events.length > 0 ? 'overflow-visible' : 'overflow-hidden',
+      events.length > 0 ? 'overflow-visible sm:overflow-visible' : 'overflow-hidden',
     ]"
     role="gridcell"
     :aria-label="`${dayNumber} de ${date.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}${events.length > 0 ? `, ${events.length} ${events.length === 1 ? 'evento' : 'eventos'}` : ''}`"
@@ -124,11 +124,11 @@ function handleMouseLeave() {
     @mouseenter="handleMouseEnter"
     @mouseleave="handleMouseLeave"
   >
-    <div class="p-1.5 sm:p-2 h-full flex flex-col" :class="events.length > 0 ? 'overflow-visible' : 'overflow-hidden'">
-      <div class="flex items-start gap-1.5 sm:gap-2 mb-1 sm:mb-1.5 shrink-0 relative z-10">
+    <div class="p-1 sm:p-2 h-full flex flex-col relative" :class="events.length > 0 ? 'overflow-visible sm:overflow-visible' : 'overflow-hidden'">
+      <div class="flex items-start gap-1 sm:gap-2 mb-0.5 sm:mb-1.5 shrink-0 relative z-10">
         <span
           :class="[
-            'text-sm sm:text-sm md:text-base font-bold transition-colors shrink-0 leading-none',
+            'text-xs sm:text-sm md:text-base font-bold transition-colors shrink-0 leading-none',
             isToday
               ? 'text-primary'
               : isCurrentMonth
@@ -141,14 +141,19 @@ function handleMouseLeave() {
       </div>
       <div
         v-if="events.length > 0"
-        class="flex-1 space-y-1 sm:space-y-1 min-w-0 relative z-20 overflow-y-auto"
+        class="flex-1 space-y-0.5 sm:space-y-1 min-w-0 relative z-20 overflow-visible"
       >
-        <TransitionGroup name="event" tag="div" class="space-y-1">
+        <TransitionGroup name="event" tag="div" class="space-y-0.5 sm:space-y-0 sm:relative">
             <CalendarEventCard
-              v-for="event in events.slice(0, 2)"
+              v-for="(event, index) in events.slice(0, 3)"
               :key="event.id"
               :release="event"
               :is-dragging="isDragging"
+              :class="[
+                index === 0 ? 'sm:top-0' : '',
+                index === 1 ? 'sm:top-[2.5rem]' : '',
+                index === 2 ? 'sm:top-[5rem]' : ''
+              ]"
               @delete.stop="emit('delete', $event)"
               @deleteRequest="emit('deleteRequest', $event)"
               @editRequest="emit('editRequest', $event)"
@@ -157,10 +162,10 @@ function handleMouseLeave() {
             />
         </TransitionGroup>
         <div
-          v-if="events.length > 2"
-          class="text-[10px] sm:text-[10px] text-muted-foreground text-center py-0.5 font-medium relative z-10"
+          v-if="events.length > 3"
+          class="text-[9px] sm:text-[10px] text-muted-foreground text-center py-0.5 font-medium relative z-10"
         >
-          +{{ events.length - 2 }} más
+          +{{ events.length - 3 }} más
         </div>
       </div>
       <div
