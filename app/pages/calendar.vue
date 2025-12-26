@@ -87,19 +87,19 @@ function handleEventUpdate(eventId: string, date: Date) {
 </script>
 
 <template>
-  <div class="space-y-2 px-1 sm:px-0 pb-2 h-full flex flex-col overflow-visible">
-    <header class="flex items-center justify-between gap-2 sm:gap-3 shrink-0">
+  <div class="space-y-2 px-2 sm:px-0 pb-2 h-full flex flex-col overflow-visible">
+    <header class="flex items-center justify-between gap-2 sm:gap-3 shrink-0 py-1 sm:py-0">
       <h1 class="text-base sm:text-lg font-bold flex items-center gap-2">
         <CalendarIcon class="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" aria-hidden="true" />
         <span>Calendario</span>
       </h1>
       <Button
         size="sm"
-        class="h-8 sm:h-9 px-3 glow-primary touch-manipulation shrink-0"
+        class="h-10 sm:h-9 px-3 sm:px-3 glow-primary touch-manipulation shrink-0 min-h-[44px] sm:min-h-[36px]"
         @click="modal.open()"
         aria-label="Añadir nuevo evento"
       >
-        <Plus class="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5" />
+        <Plus class="h-4 w-4 sm:h-4 sm:w-4 sm:mr-1.5" />
         <span class="hidden sm:inline">Añadir</span>
       </Button>
     </header>
