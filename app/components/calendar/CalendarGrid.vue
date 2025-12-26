@@ -191,7 +191,7 @@ function handleKeydown(e: KeyboardEvent) {
       <div v-if="totalEvents === 0" class="pt-4 flex-1">
         <CalendarEmptyState @add="emit('add')" />
       </div>
-      <div v-else class="grid grid-cols-7 gap-1 sm:gap-2 flex-1 min-h-0 relative" :class="draggingEventId ? 'overflow-visible' : 'overflow-hidden'" role="grid" style="z-index: 1">
+      <div v-else class="grid grid-cols-7 gap-1 sm:gap-2 flex-1 min-h-0 relative overflow-visible" role="grid" style="z-index: 1">
         <CalendarDay
           v-for="(day, index) in calendarDays"
           :key="`${day.getTime()}-${index}`"
