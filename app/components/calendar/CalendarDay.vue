@@ -141,9 +141,9 @@ function handleMouseLeave() {
       </div>
       <div
         v-if="events.length > 0"
-        class="flex-1 space-y-0.5 sm:space-y-1 min-w-0 relative z-20 overflow-visible"
+        class="flex-1 space-y-0.5 sm:space-y-0 min-w-0 relative z-20 overflow-visible sm:relative"
       >
-        <TransitionGroup name="event" tag="div" class="space-y-0.5 sm:space-y-0 sm:relative">
+        <TransitionGroup name="event" tag="div" class="space-y-0.5 sm:space-y-0">
             <CalendarEventCard
               v-for="(event, index) in events.slice(0, 3)"
               :key="event.id"
