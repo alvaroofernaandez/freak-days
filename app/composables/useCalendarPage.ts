@@ -78,6 +78,21 @@ export function useCalendarPage() {
     }
   }
 
+  async function updateReleaseEntry(id: string, dto: Partial<CreateReleaseDTO>) {
+    try {
+      const updated = await calendarApi.updateRelease(id, dto)
+      if (updated) {
+        await reloadReleases()
+        toast.success('Evento actualizado')
+        return true
+      }
+      return false
+    } catch (error) {
+      toast.error('Error al actualizar evento')
+      return false
+    }
+  }
+
   return {
     releases: computed(() => releases.value || []),
     loading,
@@ -89,6 +104,7 @@ export function useCalendarPage() {
     addRelease,
     updateEventDate,
     deleteReleaseEntry,
+    updateReleaseEntry,
   }
 }
 
