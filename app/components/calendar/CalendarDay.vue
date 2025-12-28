@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed, onMounted, ref } from 'vue'
 import { Card } from '@/components/ui/card'
 import CalendarEventCard from './CalendarEventCard.vue'
 import type { Release } from '@/composables/useCalendar'
@@ -34,10 +35,10 @@ const isWeekend = computed(() => {
 })
 
 const isDragOver = ref(false)
+const isMobileOrTablet = ref(false)
 
-const isMobileOrTablet = computed(() => {
-  if (typeof window === 'undefined') return false
-  return window.innerWidth < 1024
+onMounted(() => {
+  isMobileOrTablet.value = window.innerWidth < 1024
 })
 
 function handleDrop(e: DragEvent) {

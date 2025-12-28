@@ -1,10 +1,17 @@
 <script setup lang="ts">
+import type { HTMLAttributes } from 'vue'
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-vue-next';
 import { DialogClose, DialogContent, DialogOverlay, DialogPortal } from 'radix-vue';
+import { cn } from '@/lib/utils'
+
+defineOptions({
+  inheritAttrs: false,
+})
 
 interface Props {
   side?: 'top' | 'right' | 'bottom' | 'left'
+  class?: HTMLAttributes['class']
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -23,10 +30,11 @@ const sideClasses = {
   <DialogPortal>
     <DialogOverlay
       class="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-    <DialogContent :class="[
+    <DialogContent :class="cn(
       'fixed z-50 gap-4 bg-background p-6 shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500',
       sideClasses[side],
-    ]">
+      props.class,
+    )">
       <slot />
       <DialogClose as-child>
         <Button variant="ghost" size="icon"
