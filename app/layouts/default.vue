@@ -15,6 +15,7 @@ const profileApi = useProfile()
 const auth = useAuth()
 
 const profile = ref<UserProfile | null>(null)
+const loadingProfile = ref(true)
 const mobileMenuOpen = ref(false)
 
 watch(() => route.path, () => {
@@ -63,7 +64,12 @@ async function handleLogout() {
 }
 
 onMounted(async () => {
-  profile.value = await profileApi.fetchProfile()
+  loadingProfile.value = true
+  try {
+    profile.value = await profileApi.fetchProfile()
+  } finally {
+    loadingProfile.value = false
+  }
 })
 
 onBeforeUnmount(() => {
@@ -102,14 +108,14 @@ onBeforeUnmount(() => {
     </div>
 
     <div class="relative z-0">
-      <AppHeader :profile="profile" :exp-progress="expProgress" :is-active="isActive" @logout="handleLogout">
+      <AppHeader :profile="profile" :loading="loadingProfile" :exp-progress="expProgress" :is-active="isActive" @logout="handleLogout">
         <template #nav>
           <DesktopNav :items="desktopNavItems" :is-active="isActive" />
           <DesktopNavSecondary :items="desktopSecondaryNavItems" :is-active="isActive" />
         </template>
       </AppHeader>
 
-      <MobileHeader :profile="profile" />
+      <MobileHeader :profile="profile" :loading="loadingProfile" />
 
       <MobileNav :items="mobilePreviewItems" :is-active="isActive" v-model:menu-open="mobileMenuOpen" />
 

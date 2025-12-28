@@ -2,16 +2,20 @@
 import { Trophy } from 'lucide-vue-next'
 import type { UserProfile } from '@/composables/useProfile'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { Skeleton } from '@/components/ui/skeleton'
 
 interface Props {
   profile: UserProfile | null
+  loading?: boolean
 }
 
-defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  loading: false,
+})
 </script>
 
 <template>
-  <header class="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-xl lg:hidden">
+  <header class="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-xl md:hidden">
     <div class="flex h-14 items-center justify-between px-4">
       <NuxtLink to="/" class="flex items-center gap-2 font-bold text-lg group">
         <div class="relative flex items-center justify-center">
@@ -28,8 +32,15 @@ defineProps<Props>()
         </div>
       </NuxtLink>
       
+      <template v-if="loading">
+        <div class="flex items-center gap-2">
+          <Skeleton class="h-4 w-4 rounded" />
+          <Skeleton class="h-4 w-10 rounded" />
+          <Skeleton class="h-8 w-8 rounded-full" />
+        </div>
+      </template>
       <NuxtLink 
-        v-if="profile" 
+        v-else-if="profile" 
         to="/profile"
         class="flex items-center gap-2"
       >
