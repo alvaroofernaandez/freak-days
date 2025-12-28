@@ -96,6 +96,18 @@ freak-days/
 │       ├── 002_manga_pricing_migration.sql
 │       └── 003_profile_enhancement.sql
 │
+├── prisma/                         # Prisma ORM
+│   └── schema.prisma              # Schema de Prisma
+│
+├── server/                         # Server-side code (Nuxt)
+│   ├── api/                       # API Routes
+│   │   ├── anime/                 # Rutas de anime
+│   │   ├── manga/                 # Rutas de manga
+│   │   ├── quests/                # Rutas de quests
+│   │   └── profile/               # Rutas de perfil
+│   └── utils/                     # Utilidades del servidor
+│       └── prisma.ts              # Helper de Prisma
+│
 ├── supabase/                       # Configuración de Supabase
 │   └── functions/                 # Edge Functions
 │       └── quest-notifications/   # Función de notificaciones
@@ -125,9 +137,13 @@ Componente Vue
     ↓
 Composable (useAnime, useQuests, etc.)
     ↓
-Supabase Client (useSupabase)
+Nuxt API Route ($fetch)
     ↓
-PostgreSQL Database
+Server Utils (getPrisma)
+    ↓
+Prisma Client
+    ↓
+PostgreSQL Database (Supabase)
 ```
 
 ### 2. Escritura de Datos
@@ -139,13 +155,40 @@ Componente llama a Composable
     ↓
 Composable valida y transforma datos
     ↓
-Composable llama a Supabase
+Composable llama a API Route ($fetch)
     ↓
-Supabase ejecuta operación
+API Route usa Prisma en el servidor
+    ↓
+Prisma ejecuta operación
+    ↓
+API Route retorna resultado
     ↓
 Composable actualiza estado local
     ↓
 Componente se actualiza reactivamente
+```
+
+### 3. Arquitectura de API Routes
+
+Las operaciones de base de datos se ejecutan exclusivamente en el servidor a través de API routes:
+
+```
+server/api/
+├── anime/
+│   ├── index.get.ts      # GET /api/anime
+│   ├── index.post.ts     # POST /api/anime
+│   └── [id].patch.ts     # PATCH /api/anime/:id
+├── manga/
+│   ├── index.get.ts      # GET /api/manga
+│   ├── index.post.ts     # POST /api/manga
+│   └── [id].patch.ts     # PATCH /api/manga/:id
+├── quests/
+│   ├── index.get.ts      # GET /api/quests
+│   ├── index.post.ts     # POST /api/quests
+│   └── [id]/complete.post.ts  # POST /api/quests/:id/complete
+└── profile/
+    ├── [id].get.ts       # GET /api/profile/:id
+    └── [id].put.ts       # PUT /api/profile/:id
 ```
 
 ### 3. Gestión de Estado
@@ -162,15 +205,26 @@ Componentes Vue (usan composables)
 
 ### 1. Repository Pattern
 
-Los composables actúan como repositorios, abstraen el acceso a datos:
+Los composables actúan como repositorios, abstraen el acceso a datos a través de API routes:
 
 ```typescript
 // app/composables/useAnime.ts
 export function useAnime() {
   async function fetchAnimeList(): Promise<AnimeEntry[]> {
-    // Abstrae el acceso a Supabase
+    // Llama a API route que usa Prisma en el servidor
+    const data = await $fetch(`/api/anime?userId=${userId}`)
+    return data.map(mapDbToAnime)
   }
 }
+
+// server/api/anime/index.get.ts
+export default defineEventHandler(async (event) => {
+  const prisma = await getPrisma()
+  const data = await prisma.animeEntry.findMany({
+    where: { userId }
+  })
+  return data
+})
 ```
 
 ### 2. Composable Pattern
@@ -214,13 +268,20 @@ Todas las tablas tienen RLS habilitado en Supabase:
 
 - Los usuarios solo pueden acceder a sus propios datos
 - Las políticas están definidas en `database/schema.sql`
-- Validación adicional en los composables
+- Validación adicional en los composables y API routes
+
+### Separación Cliente/Servidor
+
+- **Cliente**: Los composables usan `$fetch` para llamar a API routes
+- **Servidor**: Las API routes ejecutan Prisma exclusivamente en el servidor
+- **Beneficio**: Prisma nunca se expone al cliente, mejor seguridad y bundle size
 
 ### Autenticación
 
 - Supabase Auth para autenticación
 - JWT tokens gestionados automáticamente
 - Middleware global para proteger rutas
+- API routes verifican autenticación antes de ejecutar operaciones
 
 ## 📦 Módulos de la Aplicación
 
@@ -242,8 +303,10 @@ Módulo (ej: anime)
 1. **Lazy Loading**: Componentes pesados cargados bajo demanda
 2. **Code Splitting**: Nuxt divide automáticamente el código
 3. **Image Optimization**: Uso de imágenes optimizadas
-4. **Caching**: Supabase cachea queries frecuentes
-5. **Debouncing**: Búsquedas con debounce para reducir requests
+4. **Connection Pooling**: Prisma usa Supabase connection pooler (PgBouncer)
+5. **Server-Side Only**: Prisma solo se ejecuta en el servidor, no se incluye en el bundle del cliente
+6. **Debouncing**: Búsquedas con debounce para reducir requests
+7. **Skeleton Loaders**: Estados de carga con skeletons para mejor UX
 
 ### Bundle Size
 
@@ -301,6 +364,18 @@ Las migraciones están numeradas secuencialmente:
 - [Vue.js Documentation](https://vuejs.org/)
 - [Supabase Documentation](https://supabase.com/docs)
 - [Pinia Documentation](https://pinia.vuejs.org/)
+
+## 🔄 Cambios Recientes
+
+### Migración a Prisma + API Routes (Enero 2025)
+
+- **Arquitectura**: Migración de Supabase directo a Prisma como intermediario
+- **API Routes**: Todas las operaciones de BD ahora pasan por API routes en el servidor
+- **Seguridad**: Prisma nunca se expone al cliente, mejorando seguridad y bundle size
+- **Responsive**: Headers completamente responsive con skeletons para carga
+- **UX**: Skeletons añadidos en headers y páginas para mejor experiencia de usuario
+
+Ver `docs/PRISMA_MIGRATION.md` y `docs/prisma-setup.md` para más detalles.
 
 ---
 

@@ -156,11 +156,23 @@ Calendario para selección de fechas.
 
 #### Skeleton
 
-Loader skeleton.
+Componente de skeleton loader para estados de carga. Usado extensivamente en la aplicación para mejorar la UX durante la carga de datos.
+
+**Ubicación**: `app/components/ui/skeleton/Skeleton.vue`
 
 ```vue
 <Skeleton class="h-4 w-full" />
 ```
+
+**Uso:**
+- Headers: Skeletons para perfil, nivel y barra de progreso
+- Cards: Skeletons para contenido dinámico (anime, manga, quests)
+- Páginas: Skeletons para saludos y cards de nivel en la página de inicio
+
+**Características:**
+- Animación de pulso automática
+- Clases de Tailwind para personalización
+- Mantiene el layout durante la carga
 
 ---
 
@@ -170,36 +182,56 @@ Componentes para la estructura general de la aplicación.
 
 ### AppHeader
 
-Header principal para desktop.
+Header principal para desktop (visible desde `md` breakpoint, ≥768px). Completamente responsive con diseño adaptativo.
 
 **Ubicación**: `app/components/layout/AppHeader.vue`
 
 **Props:**
 - `profile`: `UserProfile | null`
+- `loading`: `boolean` (opcional) - Muestra skeletons mientras carga el perfil
 - `expProgress`: `{ current: number, needed: number, progress: number }`
 - `isActive`: `(to: string) => boolean`
 
 **Slots:**
 - `nav`: Navegación principal
 
+**Características:**
+- **Responsive**: Se adapta a diferentes tamaños de pantalla
+- **Skeletons**: Muestra skeletons mientras carga el perfil
+- **Breakpoints**: 
+  - Logo y texto se ajustan en pantallas medianas
+  - Barra de progreso de EXP solo visible en `lg` (≥1024px)
+  - Navegación con scroll horizontal en pantallas pequeñas
+
 ### MobileHeader
 
-Header para dispositivos móviles.
+Header para dispositivos móviles (visible hasta `md` breakpoint, <768px).
 
 **Ubicación**: `app/components/layout/MobileHeader.vue`
 
 **Props:**
 - `profile`: `UserProfile | null`
+- `loading`: `boolean` (opcional) - Muestra skeletons mientras carga el perfil
+
+**Características:**
+- **Skeletons**: Muestra skeletons mientras carga el perfil
+- **Diseño compacto**: Optimizado para pantallas pequeñas
 
 ### DesktopNav
 
-Navegación principal para desktop.
+Navegación principal para desktop. Completamente responsive con scroll horizontal en pantallas pequeñas.
 
 **Ubicación**: `app/components/layout/DesktopNav.vue`
 
 **Props:**
 - `items`: `NavItem[]`
 - `isActive`: `(to: string) => boolean`
+
+**Características:**
+- **Responsive**: 
+  - Texto de etiquetas oculto en pantallas pequeñas (`hidden sm:inline`)
+  - Iconos y padding se ajustan según breakpoint
+  - Scroll horizontal con `scrollbar-hide` en pantallas pequeñas
 
 ### MobileNav
 

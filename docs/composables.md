@@ -36,7 +36,12 @@ Documentación completa de todos los composables Vue utilizados en FreakDays. Lo
 
 ## useSupabase
 
-Proporciona el cliente de Supabase configurado.
+Proporciona el cliente de Supabase configurado. Se usa principalmente para:
+- Autenticación (Supabase Auth)
+- Storage (avatares, banners)
+- Funciones RPC específicas de Supabase
+
+**Nota**: Las operaciones CRUD de base de datos ahora usan Prisma a través de API routes. Ver `useAnime`, `useManga`, `useQuests`, `useProfile` para más detalles.
 
 **Ubicación**: `app/composables/useSupabase.ts`
 
@@ -53,8 +58,14 @@ const supabase = useSupabase()
 ### Ejemplo
 
 ```typescript
+// Storage
 const supabase = useSupabase()
-const { data, error } = await supabase.from('anime_list').select('*')
+const { data, error } = await supabase.storage
+  .from('avatars')
+  .upload('path/to/file', file)
+
+// RPC Functions
+const { data } = await supabase.rpc('check_overdue_quests')
 ```
 
 ---
@@ -111,9 +122,11 @@ await auth.signOut()
 
 ## useProfile
 
-Gestiona el perfil del usuario.
+Gestiona el perfil del usuario. Las operaciones CRUD se ejecutan a través de API routes en el servidor usando Prisma. Las operaciones de Storage (avatar/banner) usan Supabase directamente.
 
 **Ubicación**: `app/composables/useProfile.ts`
+
+**API Routes**: `server/api/profile/`
 
 ### Tipos
 
@@ -141,7 +154,7 @@ interface UserProfile {
 
 #### `fetchProfile()`
 
-Obtiene el perfil del usuario actual.
+Obtiene el perfil del usuario actual. Llama a `GET /api/profile/:id`.
 
 ```typescript
 const profileApi = useProfile()
@@ -150,7 +163,7 @@ const profile = await profileApi.fetchProfile()
 
 #### `updateProfile(data: Partial<UserProfile>)`
 
-Actualiza el perfil del usuario.
+Actualiza el perfil del usuario. Llama a `PUT /api/profile/:id`.
 
 ```typescript
 await profileApi.updateProfile({
@@ -218,9 +231,11 @@ const progress = profileApi.expForNextLevel(profile.totalExp)
 
 ## useAnime
 
-Gestiona la lista de anime del usuario.
+Gestiona la lista de anime del usuario. Todas las operaciones se ejecutan a través de API routes en el servidor usando Prisma.
 
 **Ubicación**: `app/composables/useAnime.ts`
+
+**API Routes**: `server/api/anime/`
 
 ### Tipos
 
@@ -255,7 +270,7 @@ interface CreateAnimeDTO {
 
 #### `fetchAnimeList()`
 
-Obtiene toda la lista de anime del usuario.
+Obtiene toda la lista de anime del usuario. Llama a `GET /api/anime`.
 
 ```typescript
 const animeApi = useAnime()
@@ -264,7 +279,7 @@ const animeList = await animeApi.fetchAnimeList()
 
 #### `fetchByStatus(status: AnimeStatus)`
 
-Obtiene anime filtrado por estado.
+Obtiene anime filtrado por estado. Llama a `GET /api/anime?status=...`.
 
 ```typescript
 const watching = await animeApi.fetchByStatus('watching')
@@ -272,7 +287,7 @@ const watching = await animeApi.fetchByStatus('watching')
 
 #### `addAnime(dto: CreateAnimeDTO)`
 
-Añade un nuevo anime a la lista.
+Añade un nuevo anime a la lista. Llama a `POST /api/anime`.
 
 ```typescript
 await animeApi.addAnime({
@@ -284,7 +299,7 @@ await animeApi.addAnime({
 
 #### `updateProgress(id: string, episode: number)`
 
-Actualiza el progreso de episodios.
+Actualiza el progreso de episodios. Llama a `PATCH /api/anime/:id`.
 
 ```typescript
 await animeApi.updateProgress(animeId, 50)
@@ -292,7 +307,7 @@ await animeApi.updateProgress(animeId, 50)
 
 #### `updateStatus(id: string, status: AnimeStatus)`
 
-Actualiza el estado del anime.
+Actualiza el estado del anime. Llama a `PATCH /api/anime/:id`.
 
 ```typescript
 await animeApi.updateStatus(animeId, 'completed')
@@ -300,11 +315,17 @@ await animeApi.updateStatus(animeId, 'completed')
 
 #### `deleteAnime(id: string)`
 
-Elimina un anime de la lista.
+Elimina un anime de la lista. Llama a `DELETE /api/anime/:id`.
 
 ```typescript
 await animeApi.deleteAnime(animeId)
 ```
+
+### Notas
+
+- Todas las operaciones usan `$fetch` para llamar a API routes
+- Las API routes ejecutan Prisma exclusivamente en el servidor
+- Prisma nunca se expone al cliente, mejorando seguridad y bundle size
 
 ---
 
@@ -388,9 +409,11 @@ const details = await animeSearch.getAnimeDetails(12345)
 
 ## useManga
 
-Gestiona la colección de manga del usuario.
+Gestiona la colección de manga del usuario. Todas las operaciones se ejecutan a través de API routes en el servidor usando Prisma.
 
 **Ubicación**: `app/composables/useManga.ts`
+
+**API Routes**: `server/api/manga/`
 
 ### Tipos
 
@@ -424,7 +447,7 @@ interface CreateMangaDTO {
 
 #### `fetchCollection()`
 
-Obtiene toda la colección de manga.
+Obtiene toda la colección de manga. Llama a `GET /api/manga`.
 
 ```typescript
 const mangaApi = useManga()
@@ -433,7 +456,7 @@ const collection = await mangaApi.fetchCollection()
 
 #### `addManga(dto: CreateMangaDTO)`
 
-Añade un nuevo manga a la colección.
+Añade un nuevo manga a la colección. Llama a `POST /api/manga`.
 
 ```typescript
 await mangaApi.addManga({
@@ -446,7 +469,7 @@ await mangaApi.addManga({
 
 #### `addVolume(id: string, volume: number)`
 
-Añade un volumen a la colección.
+Añade un volumen a la colección. Llama a `PATCH /api/manga/:id`.
 
 ```typescript
 await mangaApi.addVolume(mangaId, 5)
@@ -454,7 +477,7 @@ await mangaApi.addVolume(mangaId, 5)
 
 #### `removeVolume(id: string, volume: number)`
 
-Elimina un volumen de la colección.
+Elimina un volumen de la colección. Llama a `PATCH /api/manga/:id`.
 
 ```typescript
 await mangaApi.removeVolume(mangaId, 5)
@@ -462,7 +485,7 @@ await mangaApi.removeVolume(mangaId, 5)
 
 #### `updatePricePerVolume(id: string, price: number)`
 
-Actualiza el precio por volumen.
+Actualiza el precio por volumen. Llama a `PATCH /api/manga/:id`.
 
 ```typescript
 await mangaApi.updatePricePerVolume(mangaId, 9.99)
@@ -470,7 +493,7 @@ await mangaApi.updatePricePerVolume(mangaId, 9.99)
 
 #### `updateStatus(id: string, status: MangaStatus)`
 
-Actualiza el estado del manga. Si se marca como 'completed', añade automáticamente todos los volúmenes faltantes.
+Actualiza el estado del manga. Si se marca como 'completed', añade automáticamente todos los volúmenes faltantes. Llama a `PATCH /api/manga/:id`.
 
 ```typescript
 await mangaApi.updateStatus(mangaId, 'completed')
@@ -478,19 +501,27 @@ await mangaApi.updateStatus(mangaId, 'completed')
 
 #### `deleteManga(id: string)`
 
-Elimina un manga de la colección.
+Elimina un manga de la colección. Llama a `DELETE /api/manga/:id`.
 
 ```typescript
 await mangaApi.deleteManga(mangaId)
 ```
 
+### Notas
+
+- Todas las operaciones usan `$fetch` para llamar a API routes
+- Las API routes ejecutan Prisma exclusivamente en el servidor
+- Soporte completo para tipos Decimal de Prisma (precios)
+
 ---
 
 ## useQuests
 
-Gestiona las misiones diarias (quests) del usuario.
+Gestiona las misiones diarias (quests) del usuario. Las operaciones CRUD se ejecutan a través de API routes en el servidor usando Prisma. Las funciones RPC (`check_overdue_quests`, `check_quests_due_soon`) mantienen Supabase directamente.
 
 **Ubicación**: `app/composables/useQuests.ts`
+
+**API Routes**: `server/api/quests/`
 
 ### Tipos
 
@@ -531,7 +562,7 @@ interface CreateQuestDTO {
 
 #### `fetchQuests()`
 
-Obtiene todas las quests activas del usuario.
+Obtiene todas las quests activas del usuario. Llama a `GET /api/quests`.
 
 ```typescript
 const questsApi = useQuests()
@@ -548,7 +579,7 @@ const completedIds = await questsApi.fetchTodayCompletions()
 
 #### `createQuest(dto: CreateQuestDTO)`
 
-Crea una nueva quest.
+Crea una nueva quest. Llama a `POST /api/quests`.
 
 ```typescript
 await questsApi.createQuest({
@@ -561,7 +592,7 @@ await questsApi.createQuest({
 
 #### `completeQuest(questId: string, streakCount?: number)`
 
-Completa una quest y otorga EXP.
+Completa una quest y otorga EXP usando transacciones de Prisma. Llama a `POST /api/quests/:id/complete`.
 
 ```typescript
 const expEarned = await questsApi.completeQuest(questId, 1)
@@ -569,11 +600,17 @@ const expEarned = await questsApi.completeQuest(questId, 1)
 
 #### `deleteQuest(questId: string)`
 
-Elimina una quest.
+Elimina una quest (soft delete). Llama a `PATCH /api/quests/:id`.
 
 ```typescript
 await questsApi.deleteQuest(questId)
 ```
+
+### Notas
+
+- Las operaciones CRUD usan `$fetch` para llamar a API routes
+- `completeQuest` usa transacciones de Prisma en el servidor para incrementar EXP
+- Las funciones RPC (`check_overdue_quests`, `check_quests_due_soon`) mantienen Supabase directamente
 
 ---
 

@@ -33,6 +33,7 @@
 - 📅 **Calendario**: Calendario mensual completo con drag and drop para eventos (desktop) y gestión táctil para mobile/tablet
 - 📊 **Estadísticas**: Dashboard completo con métricas y progreso
 - 🖼️ **Perfil Personalizado**: Avatar y banner personalizables con editor de imágenes
+- 🎨 **UI Responsive**: Headers y navegación completamente responsive con skeletons para carga
 
 ### 🛠️ Tecnologías
 
@@ -40,6 +41,7 @@
 - **UI**: Tailwind CSS, Shadcn-vue, Radix Vue
 - **Estado**: Pinia
 - **Backend**: Supabase (PostgreSQL, Auth, Storage)
+- **ORM**: Prisma (intermediario entre app y Supabase)
 - **Iconos**: Lucide Icons
 - **Fuentes**: Inter (textos), Outfit (títulos), Righteous (logos), Inconsolata (códigos) - Google Fonts
 
@@ -75,9 +77,21 @@
    ```env
    SUPABASE_URL=tu_supabase_url
    SUPABASE_ANON_KEY=tu_supabase_anon_key
+   DATABASE_URL=postgres://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1
    ```
 
-4. **Ejecuta las migraciones de base de datos**
+   Para obtener `DATABASE_URL`:
+   - Ve a Supabase Dashboard → Settings → Database
+   - Copia la "Connection string" bajo "Connection pooling" (modo Transaction)
+   - Añade `&pgbouncer=true&connection_limit=1` al final
+
+4. **Genera el cliente de Prisma**
+
+   ```bash
+   pnpm prisma:generate
+   ```
+
+5. **Ejecuta las migraciones de base de datos**
 
    Aplica las migraciones SQL desde el directorio `database/migrations/` en tu proyecto de Supabase.
 
@@ -105,8 +119,11 @@ freak-days/
 │   ├── types/              # Tipos TypeScript
 │   └── modules/            # Módulos del dominio
 ├── stores/                 # Stores de Pinia
-├── services/                # Capa de servicios
-│   └── repositories/       # Repositorios Supabase
+├── server/                 # Código del servidor (Nuxt)
+│   ├── api/                # API Routes
+│   └── utils/              # Utilidades del servidor
+├── prisma/                 # Prisma ORM
+│   └── schema.prisma      # Schema de Prisma
 ├── database/               # Migraciones SQL
 │   └── migrations/         # Scripts de migración
 ├── tests/                  # Tests

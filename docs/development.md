@@ -44,9 +44,21 @@ Crea un archivo `.env` en la raíz:
 ```env
 SUPABASE_URL=tu_proyecto_url
 SUPABASE_ANON_KEY=tu_anon_key
+DATABASE_URL=postgres://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1
 ```
 
-4. **Configurar Supabase**
+Para obtener `DATABASE_URL`:
+- Ve a Supabase Dashboard → Settings → Database
+- Copia la "Connection string" bajo "Connection pooling" (modo Transaction)
+- Añade `&pgbouncer=true&connection_limit=1` al final
+
+4. **Generar cliente de Prisma**
+
+```bash
+pnpm prisma:generate
+```
+
+5. **Configurar Supabase**
 
 - Crea un proyecto en [Supabase](https://supabase.com)
 - Ejecuta las migraciones desde `database/migrations/`
@@ -77,6 +89,11 @@ freak-days/
 │   ├── layouts/            # Layouts de página
 │   ├── middleware/         # Middleware de rutas
 │   └── utils/              # Utilidades
+├── server/                 # Código del servidor (Nuxt)
+│   ├── api/                # API Routes
+│   └── utils/              # Utilidades del servidor
+├── prisma/                 # Prisma ORM
+│   └── schema.prisma      # Schema de Prisma
 ├── domain/                 # Lógica de negocio
 │   ├── types/              # Tipos TypeScript
 │   └── constants/          # Constantes
