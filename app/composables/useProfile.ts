@@ -1,4 +1,5 @@
 import { useAuthStore } from "~~/stores/auth";
+import { useSupabase } from "./useSupabase";
 
 export interface UserProfile {
   id: string;
@@ -23,22 +24,21 @@ export function useProfile() {
   async function fetchProfile(): Promise<UserProfile | null> {
     if (!authStore.userId) return null;
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", authStore.userId)
-      .single();
-
-    if (error) return null;
-    return data ? mapDbToProfile(data) : null;
+    try {
+      const data = await $fetch(`/api/profile/${authStore.userId}`);
+      return mapDbToProfile(data as any);
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+      return null;
+    }
   }
 
   async function updateProfile(updates: {
     username?: string;
-    display_name?: string;
-    avatar_url?: string;
-    banner_url?: string;
-    bio?: string;
+    display_name?: string | null;
+    avatar_url?: string | null;
+    banner_url?: string | null;
+    bio?: string | null;
     favorite_anime_id?: string | null;
     favorite_manga_id?: string | null;
     location?: string | null;
@@ -47,40 +47,39 @@ export function useProfile() {
   }): Promise<boolean> {
     if (!authStore.userId) return false;
 
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", authStore.userId);
-
-    return !error;
+    try {
+      await $fetch(`/api/profile/${authStore.userId}`, {
+        method: "PUT" as any,
+        body: updates,
+      });
+      return true;
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      return false;
+    }
   }
 
   async function uploadAvatar(file: File): Promise<string | null> {
     if (!authStore.userId) return null;
 
     try {
-      const fileExt = file.name.split('.').pop();
+      const fileExt = file.name.split(".").pop();
       const fileName = `${Date.now()}.${fileExt}`;
       const filePath = `${authStore.userId}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('avatars')
+        .from("avatars")
         .upload(filePath, file, {
-          cacheControl: '3600',
+          cacheControl: "3600",
           upsert: true,
         });
 
       if (uploadError) {
-        console.error('Error uploading avatar:', uploadError);
+        console.error("Error uploading avatar:", uploadError);
         return null;
       }
 
-      const { data } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
+      const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
 
       if (data?.publicUrl) {
         await updateProfile({ avatar_url: data.publicUrl });
@@ -89,7 +88,7 @@ export function useProfile() {
 
       return null;
     } catch (error) {
-      console.error('Error in uploadAvatar:', error);
+      console.error("Error in uploadAvatar:", error);
       return null;
     }
   }
@@ -102,7 +101,7 @@ export function useProfile() {
       if (!currentProfile?.avatarUrl) return false;
 
       const avatarUrl = currentProfile.avatarUrl;
-      const urlParts = avatarUrl.split('/avatars/');
+      const urlParts = avatarUrl.split("/avatars/");
       if (urlParts.length < 2) {
         await updateProfile({ avatar_url: null });
         return true;
@@ -111,18 +110,18 @@ export function useProfile() {
       const filePath = urlParts[1];
       if (filePath && filePath.startsWith(authStore.userId)) {
         const { error } = await supabase.storage
-          .from('avatars')
+          .from("avatars")
           .remove([filePath]);
 
         if (error) {
-          console.error('Error deleting avatar:', error);
+          console.error("Error deleting avatar:", error);
         }
       }
 
       await updateProfile({ avatar_url: null });
       return true;
     } catch (error) {
-      console.error('Error in deleteAvatar:', error);
+      console.error("Error in deleteAvatar:", error);
       return false;
     }
   }
@@ -131,25 +130,23 @@ export function useProfile() {
     if (!authStore.userId) return null;
 
     try {
-      const fileExt = file.name.split('.').pop();
+      const fileExt = file.name.split(".").pop();
       const fileName = `banner_${Date.now()}.${fileExt}`;
       const filePath = `${authStore.userId}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('banners')
+        .from("banners")
         .upload(filePath, file, {
-          cacheControl: '3600',
+          cacheControl: "3600",
           upsert: true,
         });
 
       if (uploadError) {
-        console.error('Error uploading banner:', uploadError);
+        console.error("Error uploading banner:", uploadError);
         return null;
       }
 
-      const { data } = supabase.storage
-        .from('banners')
-        .getPublicUrl(filePath);
+      const { data } = supabase.storage.from("banners").getPublicUrl(filePath);
 
       if (data?.publicUrl) {
         await updateProfile({ banner_url: data.publicUrl });
@@ -158,7 +155,7 @@ export function useProfile() {
 
       return null;
     } catch (error) {
-      console.error('Error in uploadBanner:', error);
+      console.error("Error in uploadBanner:", error);
       return null;
     }
   }
@@ -171,7 +168,7 @@ export function useProfile() {
       if (!currentProfile?.bannerUrl) return false;
 
       const bannerUrl = currentProfile.bannerUrl;
-      const urlParts = bannerUrl.split('/banners/');
+      const urlParts = bannerUrl.split("/banners/");
       if (urlParts.length < 2) {
         await updateProfile({ banner_url: null });
         return true;
@@ -180,18 +177,18 @@ export function useProfile() {
       const filePath = urlParts[1];
       if (filePath && filePath.startsWith(authStore.userId)) {
         const { error } = await supabase.storage
-          .from('banners')
+          .from("banners")
           .remove([filePath]);
 
         if (error) {
-          console.error('Error deleting banner:', error);
+          console.error("Error deleting banner:", error);
         }
       }
 
       await updateProfile({ banner_url: null });
       return true;
     } catch (error) {
-      console.error('Error in deleteBanner:', error);
+      console.error("Error in deleteBanner:", error);
       return false;
     }
   }
@@ -199,18 +196,18 @@ export function useProfile() {
   async function addExp(
     amount: number
   ): Promise<{ newTotal: number; newLevel: number } | null> {
-    const profile = await fetchProfile();
-    if (!profile) return null;
+    if (!authStore.userId) return null;
 
-    const newTotal = profile.totalExp + amount;
-    const newLevel = calculateLevel(newTotal);
-
-    await supabase
-      .from("profiles")
-      .update({ total_exp: newTotal, level: newLevel })
-      .eq("id", authStore.userId!);
-
-    return { newTotal, newLevel };
+    try {
+      const result = await $fetch(`/api/profile/${authStore.userId}/exp`, {
+        method: "POST",
+        body: { amount },
+      });
+      return result as { newTotal: number; newLevel: number };
+    } catch (error) {
+      console.error("Error adding exp:", error);
+      return null;
+    }
   }
 
   function calculateLevel(exp: number): number {
@@ -232,21 +229,35 @@ export function useProfile() {
     return { current, needed, progress };
   }
 
-  function mapDbToProfile(row: Record<string, unknown>): UserProfile {
+  function mapDbToProfile(row: {
+    id: string;
+    username: string | null;
+    displayName: string | null;
+    avatarUrl: string | null;
+    bannerUrl: string | null;
+    totalExp: number;
+    level: number;
+    bio: string | null;
+    favoriteAnimeId: string | null;
+    favoriteMangaId: string | null;
+    location: string | null;
+    website: string | null;
+    socialLinks: any;
+  }): UserProfile {
     return {
-      id: row.id as string,
-      username: row.username as string,
-      displayName: row.display_name as string | null,
-      avatarUrl: row.avatar_url as string | null,
-      bannerUrl: row.banner_url as string | null,
-      totalExp: row.total_exp as number,
-      level: row.level as number,
-      bio: row.bio as string | null ?? null,
-      favoriteAnimeId: row.favorite_anime_id as string | null ?? null,
-      favoriteMangaId: row.favorite_manga_id as string | null ?? null,
-      location: row.location as string | null ?? null,
-      website: row.website as string | null ?? null,
-      socialLinks: (row.social_links as Record<string, string>) ?? {},
+      id: row.id,
+      username: row.username ?? "",
+      displayName: row.displayName,
+      avatarUrl: row.avatarUrl,
+      bannerUrl: row.bannerUrl,
+      totalExp: row.totalExp,
+      level: row.level,
+      bio: row.bio,
+      favoriteAnimeId: row.favoriteAnimeId,
+      favoriteMangaId: row.favoriteMangaId,
+      location: row.location,
+      website: row.website,
+      socialLinks: (row.socialLinks as Record<string, string>) ?? {},
     };
   }
 

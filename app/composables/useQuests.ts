@@ -1,5 +1,6 @@
-import { useAuthStore } from "~~/stores/auth";
 import type { Quest, QuestDifficulty } from "~~/domain/types";
+import { useAuthStore } from "~~/stores/auth";
+import { useSupabase } from "./useSupabase";
 
 export interface CreateQuestDTO {
   title: string;
@@ -20,58 +21,53 @@ export function useQuests() {
   async function fetchQuests(): Promise<Quest[]> {
     if (!authStore.userId) return [];
 
-    const { data, error } = await supabase
-      .from("quests")
-      .select("*")
-      .eq("user_id", authStore.userId)
-      .eq("active", true)
-      .order("created_at", { ascending: false });
-
-    if (error) throw error;
-
-    return (data ?? []).map(mapDbToQuest);
+    try {
+      const data = await $fetch(`/api/quests?userId=${authStore.userId}`);
+      return (data as any[]).map(mapDbToQuest);
+    } catch (error) {
+      console.error("Error fetching quests:", error);
+      return [];
+    }
   }
 
   async function fetchTodayCompletions(): Promise<string[]> {
     if (!authStore.userId) return [];
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const { data, error } = await supabase
-      .from("quest_completions")
-      .select("quest_id")
-      .eq("user_id", authStore.userId)
-      .gte("completed_at", today.toISOString());
-
-    if (error) throw error;
-
-    return (data ?? []).map((c) => c.quest_id);
+    try {
+      const data = await $fetch(
+        `/api/quests/completions?userId=${authStore.userId}`
+      );
+      return data as string[];
+    } catch (error) {
+      console.error("Error fetching today completions:", error);
+      return [];
+    }
   }
 
   async function createQuest(dto: CreateQuestDTO): Promise<Quest | null> {
-    if (!authStore.userId) return null;
+    if (!authStore.userId) {
+      console.error("No user ID available");
+      return null;
+    }
 
-    const { data, error } = await supabase
-      .from("quests")
-      .insert({
-        user_id: authStore.userId,
-        title: dto.title,
-        description: dto.description,
-        difficulty: dto.difficulty,
-        exp_reward: dto.exp_reward,
-        is_recurring: dto.is_recurring ?? false,
-        recurrence_pattern: dto.recurrence_pattern,
-        due_date: dto.due_date || null,
-        due_time: dto.due_time || null,
-        reminder_minutes_before: dto.reminder_minutes_before || null,
-      })
-      .select()
-      .single();
+    if (!dto.title || !dto.title.trim()) {
+      console.error("Title is required");
+      return null;
+    }
 
-    if (error) throw error;
-
-    return data ? mapDbToQuest(data) : null;
+    try {
+      const data = await $fetch("/api/quests", {
+        method: "POST",
+        body: {
+          userId: authStore.userId,
+          ...dto,
+        },
+      });
+      return mapDbToQuest(data as any);
+    } catch (error) {
+      console.error("Error in createQuest:", error);
+      throw error;
+    }
   }
 
   async function completeQuest(
@@ -80,115 +76,129 @@ export function useQuests() {
   ): Promise<number> {
     if (!authStore.userId) return 0;
 
-    const quest = await getQuestById(questId);
-    if (!quest) return 0;
+    try {
+      const quest = await getQuestById(questId);
+      if (!quest) return 0;
 
-    const expEarned = quest.exp;
-
-    const { error: completionError } = await supabase
-      .from("quest_completions")
-      .insert({
-        quest_id: questId,
-        user_id: authStore.userId,
-        exp_earned: expEarned,
-        streak_count: streakCount,
+      const result = await $fetch(`/api/quests/${questId}/complete`, {
+        method: "POST",
+        body: {
+          userId: authStore.userId,
+          streakCount,
+        },
       });
 
-    if (completionError) throw completionError;
-
-    await supabase
-      .from("profiles")
-      .update({
-        total_exp: supabase.rpc ? undefined : undefined,
-      })
-      .eq("id", authStore.userId);
-
-    await supabase.rpc("increment_exp", {
-      user_id: authStore.userId,
-      amount: expEarned,
-    });
-
-    return expEarned;
+      return (result as any).expEarned || 0;
+    } catch (error) {
+      console.error("Error completing quest:", error);
+      return 0;
+    }
   }
 
   async function getQuestById(id: string): Promise<Quest | null> {
-    const { data, error } = await supabase
-      .from("quests")
-      .select("*")
-      .eq("id", id)
-      .single();
-
-    if (error) return null;
-    return data ? mapDbToQuest(data) : null;
+    try {
+      const quests = await fetchQuests();
+      return quests.find((q) => q.id === id) || null;
+    } catch (error) {
+      console.error("Error fetching quest:", error);
+      return null;
+    }
   }
 
   async function deleteQuest(id: string): Promise<boolean> {
-    const { error } = await supabase
-      .from("quests")
-      .update({ active: false })
-      .eq("id", id);
-
-    return !error;
+    try {
+      await $fetch(`/api/quests/${id}`, {
+        method: "PATCH",
+        body: { active: false },
+      });
+      return true;
+    } catch (error) {
+      console.error("Error deleting quest:", error);
+      return false;
+    }
   }
 
-  function mapDbToQuest(row: Record<string, unknown>): Quest {
-    const dueDate = row.due_date ? new Date(row.due_date as string) : null;
+  function mapDbToQuest(row: {
+    id: string;
+    title: string;
+    description: string | null;
+    difficulty: string;
+    expReward: number;
+    dueDate: Date | null;
+    dueTime: string | null;
+    reminderMinutesBefore: number | null;
+    createdAt: Date;
+  }): Quest {
+    const dueDate = row.dueDate;
     const now = new Date();
-    const isOverdue = dueDate ? (dueDate < now || (dueDate.toDateString() === now.toDateString() && row.due_time && new Date(`${row.due_date}T${row.due_time}`) < now)) : false;
-    
+    const isOverdue = dueDate
+      ? dueDate < now ||
+        (dueDate.toDateString() === now.toDateString() &&
+          row.dueTime &&
+          new Date(`${dueDate.toISOString().split("T")[0]}T${row.dueTime}`) <
+            now)
+      : false;
+
     return {
-      id: row.id as string,
-      title: row.title as string,
-      description: row.description as string | null,
+      id: row.id,
+      title: row.title,
+      description: row.description || "",
       difficulty: row.difficulty as QuestDifficulty,
-      exp: row.exp_reward as number,
+      exp: row.expReward,
       status: "pending",
       streak: 0,
       dueDate: dueDate,
-      dueTime: row.due_time as string | null,
-      reminderMinutesBefore: row.reminder_minutes_before as number | null,
-      createdAt: new Date(row.created_at as string),
+      dueTime: row.dueTime,
+      reminderMinutesBefore: row.reminderMinutesBefore,
+      createdAt: row.createdAt,
       completedAt: null,
-      isOverdue,
+      isOverdue: Boolean(isOverdue),
       isDueSoon: false,
     };
   }
 
-  async function fetchNotifications(): Promise<Array<{
-    id: string;
-    quest_id: string;
-    notification_type: 'overdue' | 'reminder' | 'due_soon';
-    message: string;
-    sent_at: Date;
-    read_at: Date | null;
-  }>> {
+  async function fetchNotifications(): Promise<
+    Array<{
+      id: string;
+      quest_id: string;
+      notification_type: "overdue" | "reminder" | "due_soon";
+      message: string;
+      sent_at: Date;
+      read_at: Date | null;
+    }>
+  > {
     if (!authStore.userId) return [];
 
-    const { data, error } = await supabase
-      .from("quest_notifications")
-      .select("*")
-      .eq("user_id", authStore.userId)
-      .order("sent_at", { ascending: false })
-      .limit(50);
-
-    if (error) throw error;
-
-    return (data ?? []).map((n) => ({
-      id: n.id as string,
-      quest_id: n.quest_id as string,
-      notification_type: n.notification_type as 'overdue' | 'reminder' | 'due_soon',
-      message: n.message as string,
-      sent_at: new Date(n.sent_at as string),
-      read_at: n.read_at ? new Date(n.read_at as string) : null,
-    }));
+    try {
+      const data = await $fetch(
+        `/api/quests/notifications?userId=${authStore.userId}`
+      );
+      return (data as any[]).map((n) => ({
+        id: n.id,
+        quest_id: n.quest_id,
+        notification_type: n.notification_type,
+        message: n.message,
+        sent_at: new Date(n.sent_at),
+        read_at: n.read_at ? new Date(n.read_at) : null,
+      }));
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      return [];
+    }
   }
 
-  async function markNotificationRead(notificationId: string): Promise<boolean> {
-    const { error } = await supabase.rpc("mark_notification_read", {
-      notification_id: notificationId,
-    });
-
-    return !error;
+  async function markNotificationRead(
+    notificationId: string
+  ): Promise<boolean> {
+    try {
+      await $fetch(`/api/quests/notifications/${notificationId}`, {
+        method: "PATCH",
+      });
+      return true;
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      return false;
+    }
   }
 
   async function checkOverdueQuests(): Promise<void> {

@@ -23,196 +23,270 @@ export interface CreateMangaDTO {
 }
 
 export function useManga() {
-  const supabase = useSupabase();
   const authStore = useAuthStore();
 
   async function fetchCollection(): Promise<MangaEntry[]> {
     if (!authStore.userId) return [];
 
-    const { data, error } = await supabase
-      .from("manga_collection")
-      .select("*")
-      .eq("user_id", authStore.userId)
-      .order("title");
-
-    if (error) throw error;
-
-    return (data ?? []).map(mapDbToManga);
+    try {
+      const data = await $fetch(`/api/manga?userId=${authStore.userId}`);
+      return (data as any[]).map(mapDbToManga);
+    } catch (error) {
+      console.error("Error fetching manga collection:", error);
+      return [];
+    }
   }
 
   async function addManga(dto: CreateMangaDTO): Promise<MangaEntry | null> {
-    if (!authStore.userId) return null;
+    if (!authStore.userId) {
+      console.error("No user ID available");
+      return null;
+    }
 
-    const { data, error } = await supabase
-      .from("manga_collection")
-      .insert({
-        user_id: authStore.userId,
-        title: dto.title,
-        author: dto.author,
-        total_volumes: dto.total_volumes,
-        status: dto.status ?? "collecting",
-        owned_volumes: [],
-        price_per_volume: dto.price_per_volume,
-        total_cost: 0,
-      })
-      .select()
-      .single();
+    if (!dto.title || !dto.title.trim()) {
+      console.error("Title is required");
+      return null;
+    }
 
-    if (error) throw error;
-
-    return data ? mapDbToManga(data) : null;
+    try {
+      const data = await $fetch("/api/manga", {
+        method: "POST",
+        body: {
+          userId: authStore.userId,
+          ...dto,
+        },
+      });
+      return mapDbToManga(data as any);
+    } catch (error) {
+      console.error("Error in addManga:", error);
+      throw error;
+    }
   }
 
   async function addVolume(id: string, volume: number): Promise<boolean> {
-    const manga = await getMangaById(id);
-    if (!manga) return false;
+    try {
+      const manga = await getMangaById(id);
+      if (!manga) return false;
 
-    const volumes = [...manga.ownedVolumes];
-    if (!volumes.includes(volume)) {
-      volumes.push(volume);
-      volumes.sort((a, b) => a - b);
+      const volumes = [...manga.ownedVolumes];
+      if (!volumes.includes(volume)) {
+        volumes.push(volume);
+        volumes.sort((a, b) => a - b);
+      }
+
+      const pricePerVolume = manga.pricePerVolume
+        ? Number(manga.pricePerVolume)
+        : null;
+      const totalCost = pricePerVolume
+        ? Math.round(volumes.length * pricePerVolume * 100) / 100
+        : manga.totalCost
+        ? Number(manga.totalCost)
+        : 0;
+
+      const updateData: {
+        ownedVolumes: number[];
+        totalCost: number;
+        status?: string;
+      } = {
+        ownedVolumes: volumes,
+        totalCost,
+      };
+
+      if (manga.status === "wishlist" && volumes.length > 0) {
+        updateData.status = "collecting";
+      }
+
+      if (manga.totalVolumes && volumes.length === manga.totalVolumes) {
+        updateData.status = "completed";
+      }
+
+      await $fetch(`/api/manga/${id}`, {
+        method: "PATCH",
+        body: updateData,
+      });
+
+      return true;
+    } catch (error) {
+      console.error("Error adding volume:", error);
+      return false;
     }
-
-    const totalCost = manga.pricePerVolume 
-      ? Math.round(volumes.length * manga.pricePerVolume * 100) / 100
-      : manga.totalCost ?? 0;
-
-    const updateData: Record<string, unknown> = { 
-      owned_volumes: volumes,
-      total_cost: totalCost,
-    };
-
-    if (manga.status === 'wishlist' && volumes.length > 0) {
-      updateData.status = 'collecting';
-    }
-
-    if (manga.totalVolumes && volumes.length === manga.totalVolumes) {
-      updateData.status = 'completed';
-    }
-
-    const { error } = await supabase
-      .from("manga_collection")
-      .update(updateData)
-      .eq("id", id);
-
-    return !error;
   }
 
   async function removeVolume(id: string, volume: number): Promise<boolean> {
-    const manga = await getMangaById(id);
-    if (!manga) return false;
+    try {
+      const manga = await getMangaById(id);
+      if (!manga) return false;
 
-    const volumes = manga.ownedVolumes.filter((v) => v !== volume);
+      const volumes = manga.ownedVolumes.filter((v) => v !== volume);
 
-    const totalCost = manga.pricePerVolume 
-      ? Math.round(volumes.length * manga.pricePerVolume * 100) / 100
-      : 0;
+      const pricePerVolume = manga.pricePerVolume
+        ? Number(manga.pricePerVolume)
+        : null;
+      const totalCost = pricePerVolume
+        ? Math.round(volumes.length * pricePerVolume * 100) / 100
+        : 0;
 
-    const updateData: Record<string, unknown> = { 
-      owned_volumes: volumes,
-      total_cost: totalCost,
-    };
+      const updateData: {
+        ownedVolumes: number[];
+        totalCost: number;
+        status?: string;
+      } = {
+        ownedVolumes: volumes,
+        totalCost,
+      };
 
-    if (manga.status === 'completed' && volumes.length < (manga.totalVolumes ?? Infinity)) {
-      updateData.status = 'collecting';
+      if (
+        manga.status === "completed" &&
+        volumes.length < (manga.totalVolumes ?? Infinity)
+      ) {
+        updateData.status = "collecting";
+      }
+
+      await $fetch(`/api/manga/${id}`, {
+        method: "PATCH",
+        body: updateData,
+      });
+
+      return true;
+    } catch (error) {
+      console.error("Error removing volume:", error);
+      return false;
     }
-
-    const { error } = await supabase
-      .from("manga_collection")
-      .update(updateData)
-      .eq("id", id);
-
-    return !error;
   }
 
   async function updateScore(id: string, score: number): Promise<boolean> {
-    const { error } = await supabase
-      .from("manga_collection")
-      .update({ score })
-      .eq("id", id);
-
-    return !error;
-  }
-
-  async function updatePricePerVolume(id: string, price: number | null): Promise<boolean> {
-    const manga = await getMangaById(id);
-    if (!manga) return false;
-
-    const totalCost = price && manga.ownedVolumes.length > 0
-      ? Math.round(manga.ownedVolumes.length * price * 100) / 100
-      : 0;
-
-    const { error } = await supabase
-      .from("manga_collection")
-      .update({ 
-        price_per_volume: price,
-        total_cost: totalCost,
-      })
-      .eq("id", id);
-
-    return !error;
-  }
-
-  async function updateStatus(id: string, status: MangaEntry["status"]): Promise<boolean> {
-    const manga = await getMangaById(id);
-    if (!manga) return false;
-
-    const updateData: Record<string, unknown> = { status };
-
-    if (status === 'completed' && manga.totalVolumes) {
-      const allVolumes = Array.from({ length: manga.totalVolumes }, (_, i) => i + 1);
-      const totalCost = manga.pricePerVolume 
-        ? Math.round(manga.totalVolumes * manga.pricePerVolume * 100) / 100
-        : manga.totalCost ?? 0;
-
-      updateData.owned_volumes = allVolumes;
-      updateData.total_cost = totalCost;
+    try {
+      await $fetch(`/api/manga/${id}`, {
+        method: "PATCH",
+        body: { score },
+      });
+      return true;
+    } catch (error) {
+      console.error("Error updating score:", error);
+      return false;
     }
+  }
 
-    const { error } = await supabase
-      .from("manga_collection")
-      .update(updateData)
-      .eq("id", id);
+  async function updatePricePerVolume(
+    id: string,
+    price: number | null
+  ): Promise<boolean> {
+    try {
+      const manga = await getMangaById(id);
+      if (!manga) return false;
 
-    return !error;
+      const totalCost =
+        price && manga.ownedVolumes.length > 0
+          ? Math.round(manga.ownedVolumes.length * price * 100) / 100
+          : 0;
+
+      await $fetch(`/api/manga/${id}`, {
+        method: "PATCH",
+        body: {
+          pricePerVolume: price,
+          totalCost,
+        },
+      });
+
+      return true;
+    } catch (error) {
+      console.error("Error updating price:", error);
+      return false;
+    }
+  }
+
+  async function updateStatus(
+    id: string,
+    status: MangaEntry["status"]
+  ): Promise<boolean> {
+    try {
+      const manga = await getMangaById(id);
+      if (!manga) return false;
+
+      const updateData: {
+        status: string;
+        ownedVolumes?: number[];
+        totalCost?: number;
+      } = { status };
+
+      if (status === "completed" && manga.totalVolumes) {
+        const allVolumes = Array.from(
+          { length: manga.totalVolumes },
+          (_, i) => i + 1
+        );
+        const pricePerVolume = manga.pricePerVolume
+          ? Number(manga.pricePerVolume)
+          : null;
+        const totalCost = pricePerVolume
+          ? Math.round(manga.totalVolumes * pricePerVolume * 100) / 100
+          : manga.totalCost
+          ? Number(manga.totalCost)
+          : 0;
+
+        updateData.ownedVolumes = allVolumes;
+        updateData.totalCost = totalCost;
+      }
+
+      await $fetch(`/api/manga/${id}`, {
+        method: "PATCH",
+        body: updateData,
+      });
+
+      return true;
+    } catch (error) {
+      console.error("Error updating status:", error);
+      return false;
+    }
   }
 
   async function getMangaById(id: string): Promise<MangaEntry | null> {
-    const { data, error } = await supabase
-      .from("manga_collection")
-      .select("*")
-      .eq("id", id)
-      .single();
-
-    if (error) return null;
-    return data ? mapDbToManga(data) : null;
+    try {
+      const collection = await fetchCollection();
+      return collection.find((m) => m.id === id) || null;
+    } catch (error) {
+      console.error("Error fetching manga:", error);
+      return null;
+    }
   }
 
   async function deleteManga(id: string): Promise<boolean> {
-    const { error } = await supabase
-      .from("manga_collection")
-      .delete()
-      .eq("id", id);
-
-    return !error;
+    try {
+      await $fetch(`/api/manga/${id}`, {
+        method: "DELETE",
+      });
+      return true;
+    } catch (error) {
+      console.error("Error deleting manga:", error);
+      return false;
+    }
   }
 
-  function mapDbToManga(row: Record<string, unknown>): MangaEntry {
-    const pricePerVolume = row.price_per_volume
-    const totalCost = row.total_cost
-    
+  function mapDbToManga(row: {
+    id: string;
+    title: string;
+    author: string | null;
+    totalVolumes: number | null;
+    ownedVolumes: number[];
+    status: string;
+    score: number | null;
+    notes: string | null;
+    coverUrl: string | null;
+    pricePerVolume: any;
+    totalCost: any;
+  }): MangaEntry {
     return {
-      id: row.id as string,
-      title: row.title as string,
-      author: row.author as string | null,
-      totalVolumes: row.total_volumes as number | null,
-      ownedVolumes: (row.owned_volumes as number[]) ?? [],
+      id: row.id,
+      title: row.title,
+      author: row.author,
+      totalVolumes: row.totalVolumes,
+      ownedVolumes: row.ownedVolumes,
       status: row.status as MangaEntry["status"],
-      score: row.score as number | null,
-      notes: row.notes as string | null,
-      coverUrl: row.cover_url as string | null,
-      pricePerVolume: pricePerVolume != null ? parseFloat(String(pricePerVolume)) : null,
-      totalCost: totalCost != null ? parseFloat(String(totalCost)) : null,
+      score: row.score,
+      notes: row.notes,
+      coverUrl: row.coverUrl,
+      pricePerVolume:
+        row.pricePerVolume != null ? Number(row.pricePerVolume) : null,
+      totalCost: row.totalCost != null ? Number(row.totalCost) : null,
     };
   }
 
