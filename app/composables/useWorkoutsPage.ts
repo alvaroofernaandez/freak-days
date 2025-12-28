@@ -86,12 +86,8 @@ export function useWorkoutsPage() {
   async function removeSet(exerciseId: string, setId: string) {
     if (!currentWorkout.value) return
 
-    const { error } = await useSupabase()
-      .from('workout_sets')
-      .delete()
-      .eq('id', setId)
-
-    if (!error) {
+    const success = await workoutsApi.deleteSet(setId)
+    if (success) {
       const exercise = currentWorkout.value.exercises.find(e => e.id === exerciseId)
       if (exercise) {
         exercise.sets = exercise.sets.filter(s => s.id !== setId)
@@ -102,21 +98,18 @@ export function useWorkoutsPage() {
   async function updateSet(exerciseId: string, setId: string, updates: { reps?: number; weight_kg?: number }) {
     if (!currentWorkout.value) return
 
-    const { error } = await useSupabase()
-      .from('workout_sets')
-      .update({
-        reps: updates.reps,
-        weight_kg: updates.weight_kg,
-      })
-      .eq('id', setId)
+    const updatedSet = await workoutsApi.updateSet(setId, {
+      reps: updates.reps,
+      weight_kg: updates.weight_kg,
+    })
 
-    if (!error) {
+    if (updatedSet) {
       const exercise = currentWorkout.value.exercises.find(e => e.id === exerciseId)
       if (exercise) {
         const set = exercise.sets.find(s => s.id === setId)
         if (set) {
-          set.reps = updates.reps ?? set.reps
-          set.weightKg = updates.weight_kg ?? set.weightKg
+          set.reps = updatedSet.reps
+          set.weightKg = updatedSet.weightKg
         }
       }
     }
@@ -201,7 +194,7 @@ export function useWorkoutsPage() {
 
   return {
     workouts: readonly(workouts),
-    currentWorkout: readonly(currentWorkout),
+    currentWorkout,
     selectedWorkout: readonly(selectedWorkout),
     loading: readonly(loading),
     loadingDetail: readonly(loadingDetail),

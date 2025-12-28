@@ -2,7 +2,12 @@
 import { X, Clock, Plus, Check, Dumbbell } from 'lucide-vue-next'
 import type { Workout, WorkoutExercise } from '@/composables/useWorkouts'
 import { getElapsedTime } from '@/utils/workout-formatters'
+import { calculateWorkoutStats } from '@/utils/workout-calculations'
+import { CardTitle, CardDescription } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import ExerciseCard from './ExerciseCard.vue'
+import WorkoutDetailStats from './WorkoutDetailStats.vue'
 
 type ReadonlyWorkout = {
   readonly id: string
@@ -56,6 +61,10 @@ const emit = defineEmits<{
 function handleAddExercise() {
   emit('addExercise')
 }
+
+const stats = computed(() => {
+  return calculateWorkoutStats(props.workout as Workout)
+})
 </script>
 
 <template>
@@ -89,6 +98,8 @@ function handleAddExercise() {
       </div>
 
       <div class="max-w-2xl mx-auto px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+        <WorkoutDetailStats v-if="workout.exercises.length > 0" :stats="stats" />
+
         <div v-if="workout.exercises.length === 0" class="text-center py-12 sm:py-16">
           <div class="flex flex-col items-center gap-4">
             <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-primary/10 flex items-center justify-center">

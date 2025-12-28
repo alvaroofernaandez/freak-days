@@ -39,127 +39,106 @@ export interface CreateWorkoutDTO {
 }
 
 export function useWorkouts() {
-  const supabase = useSupabase();
   const authStore = useAuthStore();
 
   async function fetchWorkouts(limit = 20): Promise<Workout[]> {
     if (!authStore.userId) return [];
 
-    const { data, error } = await supabase
-      .from("workouts")
-      .select(
-        `
-        *,
-        workout_exercises (
-          *,
-          workout_sets (*)
-        )
-      `
-      )
-      .eq("user_id", authStore.userId)
-      .order("workout_date", { ascending: false })
-      .limit(limit);
+    try {
+      const data = await $fetch<Array<Record<string, unknown>>>("/api/workouts", {
+        query: {
+          userId: authStore.userId,
+          limit,
+        },
+      });
 
-    if (error) throw error;
-
-    return (data ?? []).map(mapDbToWorkout);
+      return (data ?? []).map(mapDbToWorkout);
+    } catch (error) {
+      console.error("Error fetching workouts:", error);
+      return [];
+    }
   }
 
   async function getInProgressWorkout(): Promise<Workout | null> {
     if (!authStore.userId) return null;
 
-    const { data, error } = await supabase
-      .from("workouts")
-      .select(
-        `
-        *,
-        workout_exercises (
-          *,
-          workout_sets (*)
-        )
-      `
-      )
-      .eq("user_id", authStore.userId)
-      .eq("status", "in_progress")
-      .order("started_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    try {
+      const data = await $fetch<Record<string, unknown> | null>(
+        "/api/workouts/in-progress",
+        {
+          query: {
+            userId: authStore.userId,
+          },
+        }
+      );
 
-    if (error || !data) return null;
-    return mapDbToWorkout(data);
+      if (!data) return null;
+      return mapDbToWorkout(data);
+    } catch (error) {
+      console.error("Error fetching in-progress workout:", error);
+      return null;
+    }
   }
 
   async function getWorkoutById(id: string): Promise<Workout | null> {
-    const { data, error } = await supabase
-      .from("workouts")
-      .select(
-        `
-        *,
-        workout_exercises (
-          *,
-          workout_sets (*)
-        )
-      `
-      )
-      .eq("id", id)
-      .single();
-
-    if (error) return null;
-    return data ? mapDbToWorkout(data) : null;
+    try {
+      const data = await $fetch<Record<string, unknown>>(`/api/workouts/${id}`);
+      return mapDbToWorkout(data);
+    } catch (error) {
+      console.error("Error fetching workout:", error);
+      return null;
+    }
   }
 
   async function createWorkout(dto: CreateWorkoutDTO): Promise<Workout | null> {
     if (!authStore.userId) return null;
 
-    const status = dto.status || 'in_progress';
-    const now = new Date().toISOString();
+    try {
+      const data = await $fetch<Record<string, unknown>>("/api/workouts", {
+        method: "POST",
+        body: {
+          userId: authStore.userId,
+          name: dto.name,
+          description: dto.description,
+          workout_date: dto.workout_date,
+          duration_minutes: dto.duration_minutes,
+          status: dto.status || "in_progress",
+        },
+      });
 
-    const { data: workout, error: workoutError } = await supabase
-      .from("workouts")
-      .insert({
-        user_id: authStore.userId,
-        name: dto.name,
-        description: dto.description,
-        workout_date: dto.workout_date,
-        duration_minutes: dto.duration_minutes,
-        status: status,
-        started_at: status === 'in_progress' ? now : null,
-      })
-      .select()
-      .single();
-
-    if (workoutError) throw workoutError;
-    if (!workout) return null;
-
-    return getWorkoutById(workout.id);
+      return mapDbToWorkout(data);
+    } catch (error) {
+      console.error("Error creating workout:", error);
+      return null;
+    }
   }
 
   async function addExercise(
     workoutId: string,
     exerciseName: string
   ): Promise<WorkoutExercise | null> {
-    const workout = await getWorkoutById(workoutId);
-    if (!workout) return null;
+    try {
+      const data = await $fetch<Record<string, unknown>>(
+        `/api/workouts/${workoutId}/exercises`,
+        {
+          method: "POST",
+          body: {
+            exercise_name: exerciseName,
+          },
+        }
+      );
 
-    const { data, error } = await supabase
-      .from("workout_exercises")
-      .insert({
-        workout_id: workoutId,
-        exercise_name: exerciseName,
-        order_index: workout.exercises.length,
-      })
-      .select()
-      .single();
-
-    if (error) return null;
-
-    return {
-      id: data.id,
-      exerciseName: data.exercise_name,
-      notes: data.notes,
-      orderIndex: data.order_index,
-      sets: [],
-    };
+      return {
+        id: data.id as string,
+        exerciseName: data.exercise_name as string,
+        notes: data.notes as string | null,
+        orderIndex: data.order_index as number,
+        sets: [],
+      };
+    } catch (error) {
+      console.error("Error adding exercise:", error);
+      return null;
+    }
   }
 
   async function addSet(
@@ -170,68 +149,106 @@ export function useWorkouts() {
       rest_seconds?: number;
     }
   ): Promise<WorkoutSet | null> {
-    const { data: exercise } = await supabase
-      .from("workout_exercises")
-      .select("id")
-      .eq("id", exerciseId)
-      .single();
+    try {
+      const data = await $fetch<Record<string, unknown>>(
+        `/api/workouts/exercises/${exerciseId}/sets`,
+        {
+          method: "POST",
+          body: {
+            reps: set.reps,
+            weight_kg: set.weight_kg,
+            rest_seconds: set.rest_seconds,
+          },
+        }
+      );
 
-    if (!exercise) return null;
+      return {
+        id: data.id as string,
+        setNumber: data.set_number as number,
+        reps: data.reps as number | null,
+        weightKg: data.weight_kg as number | null,
+        restSeconds: data.rest_seconds as number | null,
+        notes: data.notes as string | null,
+      };
+    } catch (error) {
+      console.error("Error adding set:", error);
+      return null;
+    }
+  }
 
-    const { data: existingSets } = await supabase
-      .from("workout_sets")
-      .select("set_number")
-      .eq("exercise_id", exerciseId)
-      .order("set_number", { ascending: false })
-      .limit(1);
+  async function updateSet(
+    setId: string,
+    updates: {
+      reps?: number | null;
+      weight_kg?: number | null;
+      rest_seconds?: number | null;
+    }
+  ): Promise<WorkoutSet | null> {
+    try {
+      const data = await $fetch<Record<string, unknown>>(
+        `/api/workouts/sets/${setId}`,
+        {
+          method: "PATCH" as any,
+          body: {
+            reps: updates.reps,
+            weight_kg: updates.weight_kg,
+            rest_seconds: updates.rest_seconds,
+          },
+        }
+      );
 
-    const nextSetNumber = existingSets && existingSets.length > 0
-      ? existingSets[0].set_number + 1
-      : 1;
+      return {
+        id: data.id as string,
+        setNumber: data.set_number as number,
+        reps: data.reps as number | null,
+        weightKg: data.weight_kg as number | null,
+        restSeconds: data.rest_seconds as number | null,
+        notes: data.notes as string | null,
+      };
+    } catch (error) {
+      console.error("Error updating set:", error);
+      return null;
+    }
+  }
 
-    const { data, error } = await supabase
-      .from("workout_sets")
-      .insert({
-        exercise_id: exerciseId,
-        set_number: nextSetNumber,
-        reps: set.reps,
-        weight_kg: set.weight_kg,
-        rest_seconds: set.rest_seconds,
-      })
-      .select()
-      .single();
-
-    if (error) return null;
-
-    return {
-      id: data.id,
-      setNumber: data.set_number,
-      reps: data.reps,
-      weightKg: data.weight_kg,
-      restSeconds: data.rest_seconds,
-      notes: data.notes,
-    };
+  async function deleteSet(setId: string): Promise<boolean> {
+    try {
+      await $fetch(`/api/workouts/sets/${setId}`, {
+        method: "DELETE" as any,
+      });
+      return true;
+    } catch (error) {
+      console.error("Error deleting set:", error);
+      return false;
+    }
   }
 
   async function completeWorkout(workoutId: string, durationMinutes?: number): Promise<boolean> {
-    const now = new Date().toISOString();
-    
-    const { error } = await supabase
-      .from("workouts")
-      .update({
-        status: 'completed',
-        completed_at: now,
-        duration_minutes: durationMinutes,
-      })
-      .eq("id", workoutId);
-
-    return !error;
+    try {
+      await $fetch(`/api/workouts/${workoutId}`, {
+        method: "PATCH" as any,
+        body: {
+          status: "completed",
+          duration_minutes: durationMinutes,
+        },
+      });
+      return true;
+    } catch (error) {
+      console.error("Error completing workout:", error);
+      return false;
+    }
   }
 
   async function deleteWorkout(id: string): Promise<boolean> {
-    const { error } = await supabase.from("workouts").delete().eq("id", id);
-
-    return !error;
+    try {
+      await $fetch(`/api/workouts/${id}`, {
+        method: "DELETE" as any,
+      });
+      return true;
+    } catch (error) {
+      console.error("Error deleting workout:", error);
+      return false;
+    }
   }
 
   async function getWeeklyStats(): Promise<{
@@ -240,25 +257,21 @@ export function useWorkouts() {
   }> {
     if (!authStore.userId) return { count: 0, totalMinutes: 0 };
 
-    const weekAgo = new Date();
-    weekAgo.setDate(weekAgo.getDate() - 7);
+    try {
+      const data = await $fetch<{ count: number; totalMinutes: number }>(
+        "/api/workouts/weekly-stats",
+        {
+          query: {
+            userId: authStore.userId,
+          },
+        }
+      );
 
-    const { data, error } = await supabase
-      .from("workouts")
-      .select("duration_minutes")
-      .eq("user_id", authStore.userId)
-      .gte("workout_date", weekAgo.toISOString().split("T")[0]);
-
-    if (error) return { count: 0, totalMinutes: 0 };
-
-    const workouts = data ?? [];
-    return {
-      count: workouts.length,
-      totalMinutes: workouts.reduce(
-        (sum, w) => sum + (w.duration_minutes ?? 0),
-        0
-      ),
-    };
+      return data;
+    } catch (error) {
+      console.error("Error fetching weekly stats:", error);
+      return { count: 0, totalMinutes: 0 };
+    }
   }
 
   function mapDbToWorkout(row: Record<string, unknown>): Workout {
@@ -306,6 +319,8 @@ export function useWorkouts() {
     createWorkout,
     addExercise,
     addSet,
+    updateSet,
+    deleteSet,
     completeWorkout,
     deleteWorkout,
     getWeeklyStats,

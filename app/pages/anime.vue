@@ -5,11 +5,15 @@ import AnimeCardSkeleton from '@/components/anime/AnimeCardSkeleton.vue'
 import AnimeMarketplace from '@/components/anime/AnimeMarketplace.vue'
 import AnimeStats from '@/components/anime/AnimeStats.vue'
 import AnimeStatsSkeleton from '@/components/anime/AnimeStatsSkeleton.vue'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Empty } from '@/components/ui/empty'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import type { AnimeStatus } from '@/composables/useAnime'
 import { useAnimePage } from '@/composables/useAnimePage'
-import { BookOpen, CheckCircle2, List, Pause, Play, Plus, Search, Tv, X } from 'lucide-vue-next'
+import { BookOpen, CheckCircle2, List, Pause, Play, Plus, Repeat, Search, Tv, X, XCircle } from 'lucide-vue-next'
 
 const {
   animeList,
@@ -33,12 +37,15 @@ const {
   deleteAnimeEntry,
 } = useAnimePage()
 
+const CloseIcon = X
+
 const statusConfig: Record<AnimeStatus, { icon: any, color: string, label: string }> = {
   watching: { icon: Play, color: 'text-primary', label: 'En curso' },
   completed: { icon: CheckCircle2, color: 'text-exp-easy', label: 'Visto' },
   on_hold: { icon: Pause, color: 'text-exp-medium', label: 'En pausa' },
-  dropped: { icon: X, color: 'text-destructive', label: 'Droppeado' },
-  plan_to_watch: { icon: Tv, color: 'text-muted-foreground', label: 'Pendiente' }
+  dropped: { icon: XCircle, color: 'text-destructive', label: 'Droppeado' },
+  plan_to_watch: { icon: Tv, color: 'text-muted-foreground', label: 'Pendiente' },
+  rewatching: { icon: Repeat, color: 'text-accent', label: 'Reviendo' }
 }
 
 const tabs: Array<{ value: 'all' | AnimeStatus; label: string; icon: any }> = [
@@ -152,7 +159,7 @@ const tabs: Array<{ value: 'all' | AnimeStatus; label: string; icon: any }> = [
                 <Button variant="ghost" size="icon"
                   class="h-8 w-8 sm:h-9 sm:w-9 hover:bg-muted hover:text-foreground cursor-pointer"
                   @click="modal.close()">
-                  <X class="h-4 w-4" />
+                  <CloseIcon class="h-4 w-4" />
                 </Button>
               </CardHeader>
               <CardContent class="space-y-4 pt-4 sm:pt-6">
