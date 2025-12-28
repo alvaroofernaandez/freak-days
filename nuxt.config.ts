@@ -19,7 +19,22 @@ export default defineNuxtConfig({
 
   vite: {
     plugins: [tailwindcss()],
+    optimizeDeps: {
+      exclude: ["@prisma/client"],
+    },
   },
+
+  nitro: {
+    externals: {
+      inline: [],
+    },
+    experimental: {
+      wasm: true,
+    },
+    noExternals: false,
+  },
+
+  ssr: true,
 
   typescript: {
     strict: true,
@@ -30,6 +45,7 @@ export default defineNuxtConfig({
     public: {
       supabaseUrl: process.env.SUPABASE_URL,
       supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
+      databaseUrl: process.env.DATABASE_URL,
     },
   },
 
