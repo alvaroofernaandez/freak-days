@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { TrendingUp, Calendar, Award, Zap, Target, Flame } from 'lucide-vue-next'
 import { Card, CardContent } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import LoadingSpinner from '@/components/index/LoadingSpinner.vue'
 import WelcomeSection from '@/components/index/WelcomeSection.vue'
 import ProfileCard from '@/components/index/ProfileCard.vue'
@@ -34,15 +35,34 @@ const {
 
     <section v-show="authStore.isAuthenticated" class="space-y-6">
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div class="space-y-2">
-          <h1 class="text-3xl sm:text-4xl font-bold bg-linear-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
-            {{ greeting }}, {{ profile?.displayName || profile?.username || 'aventurero' }}!
-          </h1>
-          <p class="text-muted-foreground text-base sm:text-lg">
-            ¿Qué quieres hacer hoy?
-          </p>
+        <div class="space-y-2 flex-1 min-w-0">
+          <template v-if="isLoading || !profile">
+            <Skeleton class="h-9 sm:h-11 w-64 sm:w-80 rounded-lg mb-2" />
+            <Skeleton class="h-5 sm:h-6 w-48 sm:w-56 rounded-lg" />
+          </template>
+          <template v-else>
+            <h1 class="text-3xl sm:text-4xl font-bold bg-linear-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+              {{ greeting }}, {{ profile?.displayName || profile?.username || 'aventurero' }}!
+            </h1>
+            <p class="text-muted-foreground text-base sm:text-lg">
+              ¿Qué quieres hacer hoy?
+            </p>
+          </template>
         </div>
-        <Card v-if="profile" class="relative overflow-hidden border-exp-legendary/30 bg-linear-to-br from-exp-legendary/10 via-exp-legendary/5 to-primary/10 hover:border-exp-legendary/50 transition-all duration-300 group">
+        <template v-if="isLoading || !profile">
+          <Card class="relative overflow-hidden border-exp-legendary/30 bg-linear-to-br from-exp-legendary/10 via-exp-legendary/5 to-primary/10">
+            <CardContent class="relative p-4 sm:p-5">
+              <div class="flex items-center gap-3 sm:gap-4">
+                <Skeleton class="w-12 h-12 sm:w-14 sm:h-14 rounded-full shrink-0" />
+                <div class="flex flex-col gap-2 min-w-0">
+                  <Skeleton class="h-3 w-12 rounded" />
+                  <Skeleton class="h-7 sm:h-9 w-16 rounded" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </template>
+        <Card v-else-if="profile" class="relative overflow-hidden border-exp-legendary/30 bg-linear-to-br from-exp-legendary/10 via-exp-legendary/5 to-primary/10 hover:border-exp-legendary/50 transition-all duration-300 group">
           <div class="absolute inset-0 bg-exp-legendary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           <div class="absolute top-0 right-0 w-24 h-24 bg-exp-legendary/10 rounded-full blur-2xl opacity-50" />
           <CardContent class="relative p-4 sm:p-5">
