@@ -162,12 +162,15 @@ export function useWorkouts() {
         }
       );
 
+      const reps = data.reps;
+      const weightKg = data.weight_kg;
+      
       return {
         id: data.id as string,
-        setNumber: data.set_number as number,
-        reps: data.reps as number | null,
-        weightKg: data.weight_kg as number | null,
-        restSeconds: data.rest_seconds as number | null,
+        setNumber: Number(data.set_number),
+        reps: reps !== null && reps !== undefined ? Number(reps) : null,
+        weightKg: weightKg !== null && weightKg !== undefined ? Number(weightKg) : null,
+        restSeconds: data.rest_seconds !== null && data.rest_seconds !== undefined ? Number(data.rest_seconds) : null,
         notes: data.notes as string | null,
       };
     } catch (error) {
@@ -197,12 +200,15 @@ export function useWorkouts() {
         }
       );
 
+      const reps = data.reps;
+      const weightKg = data.weight_kg;
+      
       return {
         id: data.id as string,
-        setNumber: data.set_number as number,
-        reps: data.reps as number | null,
-        weightKg: data.weight_kg as number | null,
-        restSeconds: data.rest_seconds as number | null,
+        setNumber: Number(data.set_number),
+        reps: reps !== null && reps !== undefined ? Number(reps) : null,
+        weightKg: weightKg !== null && weightKg !== undefined ? Number(weightKg) : null,
+        restSeconds: data.rest_seconds !== null && data.rest_seconds !== undefined ? Number(data.rest_seconds) : null,
         notes: data.notes as string | null,
       };
     } catch (error) {
@@ -212,6 +218,10 @@ export function useWorkouts() {
   }
 
   async function deleteSet(setId: string): Promise<boolean> {
+    if (!setId || setId.length < 10) {
+      return false;
+    }
+
     try {
       await $fetch(`/api/workouts/sets/${setId}`, {
         method: "DELETE" as any,
@@ -297,14 +307,23 @@ export function useWorkouts() {
             notes: e.notes as string | null,
             orderIndex: e.order_index as number,
             sets: sets
-              .map((s) => ({
-                id: s.id as string,
-                setNumber: s.set_number as number,
-                reps: s.reps as number | null,
-                weightKg: s.weight_kg as number | null,
-                restSeconds: s.rest_seconds as number | null,
-                notes: s.notes as string | null,
-              }))
+              .map((s) => {
+                const setId = (s.id as string) || (s.set_id as string)
+                if (!setId || typeof setId !== 'string' || setId.length < 10) {
+                  return null
+                }
+                const reps = s.reps;
+                const weightKg = s.weight_kg;
+                return {
+                  id: setId,
+                  setNumber: Number(s.set_number),
+                  reps: reps !== null && reps !== undefined && reps !== '' ? Number(reps) : null,
+                  weightKg: weightKg !== null && weightKg !== undefined && weightKg !== '' ? Number(weightKg) : null,
+                  restSeconds: s.rest_seconds !== null && s.rest_seconds !== undefined ? Number(s.rest_seconds) : null,
+                  notes: s.notes as string | null,
+                };
+              })
+              .filter((s): s is NonNullable<typeof s> => s !== null)
               .sort((a, b) => a.setNumber - b.setNumber),
           };
         })
