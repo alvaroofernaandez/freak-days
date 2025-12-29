@@ -27,7 +27,7 @@ export function calculateWorkoutStats(workout: Workout): WorkoutStats {
     totalExercises,
     totalSets,
     totalReps,
-    totalVolume,
+    totalVolume: Math.round(totalVolume * 10) / 10,
     avgWeight: Math.round(avgWeight * 10) / 10,
   }
 }

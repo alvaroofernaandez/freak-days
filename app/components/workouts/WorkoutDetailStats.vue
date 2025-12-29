@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Activity, BarChart3, TrendingUp, Flame } from 'lucide-vue-next'
 import type { WorkoutStats } from '@/utils/workout-calculations'
+import { Card } from '@/components/ui/card'
 
 interface Props {
   stats: WorkoutStats
@@ -36,7 +37,7 @@ defineProps<Props>()
       <div class="flex items-center justify-center mb-2">
         <Flame class="h-4 w-4 sm:h-5 sm:w-5 text-exp-legendary" />
       </div>
-      <div class="text-lg sm:text-2xl font-bold text-exp-legendary">{{ stats.totalVolume }} kg</div>
+      <div class="text-lg sm:text-2xl font-bold text-exp-legendary">{{ stats.totalVolume.toFixed(1) }} kg</div>
       <div class="text-[10px] sm:text-xs text-muted-foreground mt-1">Volumen total</div>
     </Card>
   </div>
