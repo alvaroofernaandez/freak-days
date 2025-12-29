@@ -50,7 +50,7 @@ export default defineEventHandler(async (event) => {
       id: data.id,
       set_number: data.setNumber,
       reps: data.reps,
-      weight_kg: data.weightKg ? Number(data.weightKg) : null,
+      weight_kg: data.weightKg !== null && data.weightKg !== undefined ? Number(data.weightKg.toString()) : null,
       rest_seconds: data.restSeconds,
       notes: data.notes,
     };

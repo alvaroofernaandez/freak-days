@@ -69,9 +69,9 @@ export default defineEventHandler(async (event) => {
         workout_sets: exercise.sets.map((set) => ({
           id: set.id,
           set_number: set.setNumber,
-          reps: set.reps,
-          weight_kg: set.weightKg ? Number(set.weightKg) : null,
-          rest_seconds: set.restSeconds,
+          reps: set.reps !== null && set.reps !== undefined ? Number(set.reps) : null,
+          weight_kg: set.weightKg !== null && set.weightKg !== undefined ? Number(set.weightKg.toString()) : null,
+          rest_seconds: set.restSeconds !== null && set.restSeconds !== undefined ? Number(set.restSeconds) : null,
           notes: set.notes,
         })),
       })),
