@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { X, Play } from 'lucide-vue-next'
+import { X, Play, Loader2 } from 'lucide-vue-next'
 import { getTodayDate } from '@/utils/workout-formatters'
 import { DatePicker } from '@/components/ui/date-picker'
 
@@ -11,6 +11,7 @@ interface WorkoutForm {
 
 const props = defineProps<{
   open: boolean
+  starting?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -90,10 +91,11 @@ function handleStart() {
           size="lg" 
           class="w-full h-12 text-base font-semibold mt-2" 
           @click="handleStart" 
-          :disabled="!form.name.trim()"
+          :disabled="!form.name.trim() || starting"
         >
-          <Play class="h-5 w-5 mr-2" />
-          Iniciar Entrenamiento
+          <Play v-if="!starting" class="h-5 w-5 mr-2" />
+          <Loader2 v-else class="h-5 w-5 mr-2 animate-spin" />
+          {{ starting ? 'Iniciando...' : 'Iniciar Entrenamiento' }}
         </Button>
       </CardContent>
     </Card>
