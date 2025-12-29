@@ -159,36 +159,37 @@ function handleDeleteKeyboard(e: KeyboardEvent) {
     @dragend="handleDragEnd" @touchstart="isHovered = true" @touchend="isHovered = false" @mouseenter="isHovered = true"
     @mouseleave="isHovered = false" @keydown.enter.prevent="handleDragStartKeyboard"
     @keydown.space.prevent="handleDragStartKeyboard">
-    <div class="px-2.5 py-2 sm:px-2.5 sm:py-2 relative min-h-[44px] flex items-center">
+    <div
+      class="px-1.5 py-1 sm:px-1.5 sm:py-1 md:px-1.5 md:py-1 lg:px-2 lg:py-1.5 relative min-h-[32px] sm:min-h-[28px] md:min-h-[24px] lg:min-h-[32px] flex items-center">
       <span :id="`event-${release.id}-description`" class="sr-only">
         {{ config.label }} programado para {{ release.releaseDate.toLocaleDateString('es-ES', {
           day: 'numeric', month:
             'long', year: 'numeric'
         }) }}
       </span>
-      <div class="flex items-center gap-1.5 sm:gap-1 flex-1 min-w-0">
+      <div class="flex items-center gap-1 sm:gap-0.5 md:gap-0.5 lg:gap-1 flex-1 min-w-0">
         <p :class="[
-          'text-[10px] sm:text-xs font-medium truncate leading-tight sm:leading-snug flex-1 min-w-0',
+          'text-[9px] sm:text-[9px] md:text-[9px] lg:text-[10px] font-medium truncate leading-tight flex-1 min-w-0',
           config.color
         ]" :title="release.title" :aria-label="release.title">
           {{ release.title }}
         </p>
         <div
-          class="flex items-center gap-1 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity">
+          class="flex items-center gap-0.5 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity">
           <button
-            class="transition-all p-1 sm:p-1.5 hover:bg-white/20 active:bg-white/30 rounded shrink-0 touch-manipulation min-h-[36px] min-w-[36px] sm:min-h-[32px] sm:min-w-[32px] flex items-center justify-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-transparent"
+            class="transition-all p-0.5 sm:p-0.5 md:p-0.5 lg:p-1 hover:bg-white/20 active:bg-white/30 rounded shrink-0 touch-manipulation min-h-[28px] min-w-[28px] sm:min-h-[24px] sm:min-w-[24px] md:min-h-[20px] md:min-w-[20px] lg:min-h-[24px] lg:min-w-[24px] flex items-center justify-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-transparent"
             :class="config.color" @click.stop="handleEdit" @keydown.enter.stop="handleEditKeyboard"
             @keydown.space.stop.prevent="handleEditKeyboard" :aria-label="`Editar evento: ${release.title}`"
             :aria-describedby="`event-${release.id}-description`" title="Editar evento">
-            <MoreVertical class="h-3 w-3 sm:h-3.5 sm:w-3.5" aria-hidden="true" />
+            <MoreVertical class="h-2.5 sm:h-2.5 w-2.5 md:h-2.5 lg:h-3 lg:w-3" aria-hidden="true" />
             <span class="sr-only">Editar evento {{ release.title }}</span>
           </button>
           <button
-            class="transition-all p-1 sm:p-1.5 hover:bg-white/20 active:bg-white/30 rounded shrink-0 touch-manipulation min-h-[36px] min-w-[36px] sm:min-h-[32px] sm:min-w-[32px] flex items-center justify-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-transparent"
+            class="transition-all p-0.5 sm:p-0.5 md:p-0.5 lg:p-1 hover:bg-white/20 active:bg-white/30 rounded shrink-0 touch-manipulation min-h-[28px] min-w-[28px] sm:min-h-[24px] sm:min-w-[24px] md:min-h-[20px] md:min-w-[20px] lg:min-h-[24px] lg:min-w-[24px] flex items-center justify-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-transparent"
             :class="config.color" @click.stop="handleDelete" @keydown.enter.stop="handleDeleteKeyboard"
             @keydown.space.stop.prevent="handleDeleteKeyboard" :aria-label="`Eliminar evento: ${release.title}`"
             :aria-describedby="`event-${release.id}-description`" title="Eliminar evento">
-            <Trash2 class="h-3 w-3 sm:h-3.5 sm:w-3.5" aria-hidden="true" />
+            <Trash2 class="h-2.5 w-2.5 sm:h-2.5 md:h-2.5 lg:h-3 lg:w-3" aria-hidden="true" />
             <span class="sr-only">Eliminar evento {{ release.title }}</span>
           </button>
         </div>

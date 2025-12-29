@@ -139,7 +139,7 @@ function handleDayClick() {
     @mouseleave="handleMouseLeave"
     @click="handleDayClick"
   >
-    <div class="p-1 sm:p-2 h-full flex flex-col relative" :class="events.length > 0 ? 'overflow-visible sm:overflow-visible' : 'overflow-hidden'">
+    <div class="p-1 sm:p-1.5 md:p-1.5 lg:p-2 h-full flex flex-col relative" :class="events.length > 0 ? 'overflow-hidden sm:overflow-hidden md:overflow-hidden lg:overflow-visible' : 'overflow-hidden'">
       <div class="flex items-start gap-1 sm:gap-2 mb-0.5 sm:mb-1.5 shrink-0 relative z-10">
         <span
           :class="[
@@ -161,18 +161,18 @@ function handleDayClick() {
       </div>
       <div
         v-if="events.length > 0"
-        class="hidden lg:flex flex-1 space-y-0 min-w-0 relative z-20 overflow-visible lg:relative"
+        class="hidden lg:flex flex-1 space-y-0.5 sm:space-y-0.5 md:space-y-0.5 lg:space-y-1 min-w-0 relative z-20 overflow-hidden lg:overflow-visible lg:relative"
       >
-        <TransitionGroup name="event" tag="div" class="space-y-0">
+        <TransitionGroup name="event" tag="div" class="space-y-0.5 sm:space-y-0.5 md:space-y-0.5 lg:space-y-1 w-full">
             <CalendarEventCard
               v-for="(event, index) in events.slice(0, 3)"
               :key="event.id"
               :release="event"
               :is-dragging="isDragging"
               :class="[
-                index === 0 ? 'sm:top-0' : '',
-                index === 1 ? 'sm:top-[2.5rem]' : '',
-                index === 2 ? 'sm:top-[5rem]' : ''
+                index === 0 ? 'sm:top-0 md:top-0 lg:top-0' : '',
+                index === 1 ? 'sm:top-[1.5rem] md:top-[1.25rem] lg:top-[2rem]' : '',
+                index === 2 ? 'sm:top-[3rem] md:top-[2.5rem] lg:top-[4rem]' : ''
               ]"
               @delete.stop="emit('delete', $event)"
               @deleteRequest="emit('deleteRequest', $event)"
@@ -183,7 +183,7 @@ function handleDayClick() {
         </TransitionGroup>
         <div
           v-if="events.length > 3"
-          class="text-[9px] sm:text-[10px] text-muted-foreground text-center py-0.5 font-medium relative z-10"
+          class="text-[8px] sm:text-[8px] md:text-[8px] lg:text-[9px] text-muted-foreground text-center py-0.5 font-medium relative z-10"
         >
           +{{ events.length - 3 }} más
         </div>
