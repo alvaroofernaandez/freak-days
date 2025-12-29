@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { X, Clock, Plus, Check, Dumbbell } from 'lucide-vue-next'
+import { X, Clock, Plus, Check, Dumbbell, Loader2 } from 'lucide-vue-next'
 import type { Workout, WorkoutExercise } from '@/composables/useWorkouts'
 import { getElapsedTime } from '@/utils/workout-formatters'
 import { calculateWorkoutStats } from '@/utils/workout-calculations'
@@ -44,15 +44,23 @@ interface Props {
   elapsedTime: string
   newExerciseName: string
   addingExercise: boolean
+  addingSets?: Set<string>
+  updatingSets?: Set<string>
+  savedSets?: Set<string>
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  addingSets: () => new Set<string>() as Set<string>,
+  updatingSets: () => new Set<string>() as Set<string>,
+  savedSets: () => new Set<string>() as Set<string>,
+})
 
 const emit = defineEmits<{
   close: []
   addExercise: []
   addSet: [exerciseId: string]
   updateSet: [exerciseId: string, setId: string, updates: { reps?: number; weight_kg?: number }]
+  saveSet: [exerciseId: string, setId: string, updates: { reps?: number; weight_kg?: number }]
   removeSet: [exerciseId: string, setId: string]
   complete: []
   'update:newExerciseName': [value: string]
@@ -118,9 +126,13 @@ const stats = computed(() => {
             :key="exercise.id"
             :exercise="exercise"
             :is-active="true"
+            :adding-set="addingSets && typeof addingSets.has === 'function' ? addingSets.has(exercise.id) : false"
+            :updating-sets="updatingSets"
+            :saved-sets="savedSets"
             @add-set="emit('addSet', $event)"
-            @update-set="emit('updateSet', $event[0], $event[1], $event[2])"
-            @remove-set="emit('removeSet', $event[0], $event[1])"
+            @update-set="(exerciseId, setId, updates) => emit('updateSet', exerciseId, setId, updates)"
+            @save-set="(exerciseId, setId, updates) => emit('saveSet', exerciseId, setId, updates)"
+            @remove-set="(exerciseId, setId) => emit('removeSet', exerciseId, setId)"
           />
         </div>
 
@@ -140,8 +152,9 @@ const stats = computed(() => {
                 @click="handleAddExercise" 
                 :disabled="!newExerciseName.trim() || addingExercise"
               >
-                <Plus class="h-5 w-5 mr-2" />
-                <span class="hidden sm:inline">Añadir</span>
+                <Plus v-if="!addingExercise" class="h-5 w-5 mr-2" />
+                <Loader2 v-else class="h-5 w-5 mr-2 animate-spin" />
+                <span class="hidden sm:inline">{{ addingExercise ? 'Añadiendo...' : 'Añadir' }}</span>
               </Button>
             </div>
             
