@@ -108,14 +108,15 @@ onBeforeUnmount(() => {
     </div>
 
     <div class="relative z-0">
-      <AppHeader :profile="profile" :loading="loadingProfile" :exp-progress="expProgress" :is-active="isActive" @logout="handleLogout">
+      <AppHeader :profile="profile" :loading="loadingProfile" :exp-progress="expProgress" :is-active="isActive"
+        :menu-open="mobileMenuOpen" @logout="handleLogout">
         <template #nav>
           <DesktopNav :items="desktopNavItems" :is-active="isActive" />
           <DesktopNavSecondary :items="desktopSecondaryNavItems" :is-active="isActive" />
         </template>
       </AppHeader>
 
-      <MobileHeader :profile="profile" :loading="loadingProfile" />
+      <MobileHeader :profile="profile" :loading="loadingProfile" :menu-open="mobileMenuOpen" />
 
       <MobileNav :items="mobilePreviewItems" :is-active="isActive" v-model:menu-open="mobileMenuOpen" />
 

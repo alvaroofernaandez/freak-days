@@ -14,10 +14,12 @@ interface Props {
     progress: number
   }
   isActive: (to: string) => boolean
+  menuOpen?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   loading: false,
+  menuOpen: false,
 })
 
 const emit = defineEmits<{
@@ -27,7 +29,8 @@ const emit = defineEmits<{
 
 <template>
   <header
-    class="sticky top-0 z-50 w-full border-b border-border/50 bg-background/95 backdrop-blur-xl hidden md:block shadow-sm"
+    v-if="!menuOpen"
+    class="sticky top-0 z-50 w-full border-b border-border/50 bg-background/95 backdrop-blur-xl hidden lg:block shadow-sm"
     style="position: sticky; z-index: 9999; pointer-events: auto;">
     <div class="container mx-auto flex h-14 md:h-16 items-center px-3 sm:px-4 md:px-6">
       <NuxtLink to="/" class="flex items-center gap-2 md:gap-3 font-bold group shrink-0">
