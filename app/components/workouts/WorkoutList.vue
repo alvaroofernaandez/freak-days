@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Dumbbell, Plus } from 'lucide-vue-next'
 import type { Workout } from '@/composables/useWorkouts'
+import { Dumbbell, Plus } from 'lucide-vue-next'
 import WorkoutCard from './WorkoutCard.vue'
 import WorkoutCardSkeleton from './WorkoutCardSkeleton.vue'
 
@@ -53,11 +53,11 @@ const emit = defineEmits<{
     <h2 class="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider px-1">
       Historial Reciente
     </h2>
-    
+
     <template v-if="loading">
       <WorkoutCardSkeleton v-for="i in 3" :key="i" />
     </template>
-    
+
     <div v-else-if="workouts.length === 0" class="text-center py-12 sm:py-16">
       <div class="flex flex-col items-center gap-4">
         <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-primary/10 flex items-center justify-center">
@@ -75,14 +75,8 @@ const emit = defineEmits<{
     </div>
 
     <div v-else class="space-y-2 sm:space-y-3">
-      <WorkoutCard
-        v-for="workout in workouts"
-        :key="workout.id"
-        :workout="workout"
-        @view="emit('view', $event)"
-        @delete="emit('delete', $event)"
-      />
+      <WorkoutCard v-for="workout in workouts" :key="workout.id" :workout="workout" @view="emit('view', $event)"
+        @delete="emit('delete', $event)" />
     </div>
   </section>
 </template>
-
