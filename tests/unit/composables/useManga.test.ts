@@ -1,165 +1,183 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { setActivePinia, createPinia } from 'pinia'
-import { useManga } from '../../../app/composables/useManga'
-import { useAuthStore } from '../../../stores/auth'
+import { createPinia, setActivePinia } from "pinia";
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
+import { useManga } from "../../../app/composables/useManga";
+import { useAuthStore } from "../../../stores/auth";
 
-const mockSupabase = {
-  from: vi.fn(() => mockSupabase),
-  select: vi.fn(() => mockSupabase),
-  insert: vi.fn(() => mockSupabase),
-  update: vi.fn(() => mockSupabase),
-  delete: vi.fn(() => mockSupabase),
-  eq: vi.fn(() => mockSupabase),
-  order: vi.fn(() => mockSupabase),
-  single: vi.fn(() => mockSupabase),
-}
+// Mock global $fetch
+const mockFetch = vi.fn();
 
-vi.mock('../../../app/composables/useSupabase', () => ({
-  useSupabase: () => mockSupabase,
-}))
+// Try to mock ofetch module
+vi.mock("ofetch", () => ({
+  $fetch: mockFetch,
+  ofetch: mockFetch,
+  createFetch: () => mockFetch,
+}));
 
-describe('useManga', () => {
+describe("useManga", () => {
+  beforeAll(() => {
+    vi.stubGlobal("$fetch", mockFetch);
+  });
+
+  afterAll(() => {
+    vi.unstubAllGlobals();
+  });
+
   beforeEach(() => {
-    setActivePinia(createPinia())
-    vi.clearAllMocks()
-  })
+    setActivePinia(createPinia());
+    vi.clearAllMocks();
+    mockFetch.mockReset();
+  });
 
-  describe('fetchCollection', () => {
-    it('should return empty array when user is not authenticated', async () => {
-      const authStore = useAuthStore()
-      authStore.setSession(null)
+  describe("fetchCollection", () => {
+    it("should return empty array when user is not authenticated", async () => {
+      const authStore = useAuthStore();
+      authStore.setSession(null);
 
-      const mangaApi = useManga()
-      const collection = await mangaApi.fetchCollection()
+      const mangaApi = useManga();
+      const collection = await mangaApi.fetchCollection();
 
-      expect(collection).toEqual([])
-    })
+      expect(collection).toEqual([]);
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
 
-    it('should fetch collection when user is authenticated', async () => {
-      const authStore = useAuthStore()
-      authStore.setSession({ user: { id: 'user-1' }, access_token: '', refresh_token: '', expires_in: 3600, expires_at: 0, token_type: 'bearer' } as any)
+    it("should fetch collection when user is authenticated", async () => {
+      const authStore = useAuthStore();
+      authStore.setSession({
+        user: { id: "user-1" },
+        access_token: "token",
+      } as any);
 
       const mockData = [
         {
-          id: '1',
-          title: 'Test Manga',
-          author: 'Test Author',
-          total_volumes: 10,
-          owned_volumes: [1, 2, 3],
-          status: 'collecting',
+          id: "1",
+          title: "Test Manga",
+          author: "Test Author",
+          totalVolumes: 10,
+          ownedVolumes: [1, 2, 3],
+          status: "collecting",
           score: null,
           notes: null,
-          cover_url: null,
-          price_per_volume: 10.5,
-          total_cost: 31.5,
+          coverUrl: null,
+          pricePerVolume: 10.5,
+          totalCost: 31.5,
         },
-      ]
+      ];
 
-      const queryChain = {
-        eq: vi.fn(() => ({
-          order: vi.fn().mockResolvedValue({ data: mockData, error: null }),
-        })),
-      }
-      mockSupabase.from.mockReturnValue(mockSupabase)
-      mockSupabase.select.mockReturnValue(queryChain as any)
+      mockFetch.mockResolvedValue(mockData);
 
-      const mangaApi = useManga()
-      const collection = await mangaApi.fetchCollection()
+      const mangaApi = useManga();
+      const collection = await mangaApi.fetchCollection();
 
-      expect(collection).toHaveLength(1)
-      expect(collection[0].title).toBe('Test Manga')
-    })
-  })
+      expect(collection).toHaveLength(1);
+      expect(collection[0].title).toBe("Test Manga");
+      expect(mockFetch).toHaveBeenCalledWith("/api/manga?userId=user-1");
+    });
+  });
 
-  describe('addManga', () => {
-    it('should return null when user is not authenticated', async () => {
-      const authStore = useAuthStore()
-      authStore.setSession(null)
+  describe("addManga", () => {
+    it("should return null when user is not authenticated", async () => {
+      const authStore = useAuthStore();
+      authStore.setSession(null);
 
-      const mangaApi = useManga()
-      const result = await mangaApi.addManga({ title: 'Test' })
+      const mangaApi = useManga();
+      const result = await mangaApi.addManga({ title: "Test" });
 
-      expect(result).toBe(null)
-    })
+      expect(result).toBe(null);
+    });
 
-    it('should add manga when valid data is provided', async () => {
-      const authStore = useAuthStore()
-      authStore.setSession({ user: { id: 'user-1' }, access_token: '', refresh_token: '', expires_in: 3600, expires_at: 0, token_type: 'bearer' } as any)
+    it("should add manga when valid data is provided", async () => {
+      const authStore = useAuthStore();
+      authStore.setSession({ user: { id: "user-1" } } as any);
 
       const mockData = {
-        id: '1',
-        title: 'Test Manga',
-        author: 'Test Author',
-        total_volumes: 10,
-        owned_volumes: [],
-        status: 'collecting',
+        id: "1",
+        title: "Test Manga",
+        author: "Test Author",
+        totalVolumes: 10,
+        ownedVolumes: [],
+        status: "collecting",
         score: null,
         notes: null,
-        cover_url: null,
-        price_per_volume: 10.5,
-        total_cost: 0,
-      }
+        coverUrl: null,
+        pricePerVolume: 10.5,
+        totalCost: 0,
+      };
 
-      const insertChain = {
-        select: vi.fn(() => ({
-          single: vi.fn().mockResolvedValue({ data: mockData, error: null }),
-        })),
-      }
-      mockSupabase.from.mockReturnValue(mockSupabase)
-      mockSupabase.insert.mockReturnValue(insertChain as any)
+      mockFetch.mockResolvedValue(mockData);
 
-      const mangaApi = useManga()
+      const mangaApi = useManga();
       const result = await mangaApi.addManga({
-        title: 'Test Manga',
-        author: 'Test Author',
-      })
+        title: "Test Manga",
+        author: "Test Author",
+      });
 
-      expect(result).not.toBe(null)
-      expect(result?.title).toBe('Test Manga')
-    })
-  })
+      expect(result).not.toBe(null);
+      expect(result?.title).toBe("Test Manga");
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/api/manga",
+        expect.objectContaining({
+          method: "POST",
+          body: expect.objectContaining({
+            title: "Test Manga",
+            userId: "user-1",
+          }),
+        })
+      );
+    });
+  });
 
-  describe('addVolume', () => {
-    it('should return false when manga does not exist', async () => {
-      const authStore = useAuthStore()
-      authStore.setSession({ user: { id: 'user-1' }, access_token: '', refresh_token: '', expires_in: 3600, expires_at: 0, token_type: 'bearer' } as any)
+  describe("addVolume", () => {
+    it("should return false when manga does not exist", async () => {
+      const authStore = useAuthStore();
+      authStore.setSession({ user: { id: "user-1" } } as any);
 
-      mockSupabase.from.mockReturnValue(mockSupabase)
-      mockSupabase.select.mockReturnValue(mockSupabase)
-      mockSupabase.eq.mockReturnValue(mockSupabase)
-      mockSupabase.single.mockResolvedValue({ data: null, error: null })
+      // fetchCollection returns empty
+      mockFetch.mockResolvedValue([]);
 
-      const mangaApi = useManga()
-      const result = await mangaApi.addVolume('non-existent', 1)
+      const mangaApi = useManga();
+      const result = await mangaApi.addVolume("non-existent", 1);
 
-      expect(result).toBe(false)
-    })
+      expect(result).toBe(false);
+    });
 
-    it('should add volume when manga exists', async () => {
-      const authStore = useAuthStore()
-      authStore.setSession({ user: { id: 'user-1' }, access_token: '', refresh_token: '', expires_in: 3600, expires_at: 0, token_type: 'bearer' } as any)
+    it("should add volume when manga exists", async () => {
+      const authStore = useAuthStore();
+      authStore.setSession({ user: { id: "user-1" } } as any);
 
       const mockManga = {
-        id: '1',
-        owned_volumes: [1, 2],
-        price_per_volume: 10.5,
-        total_cost: 21,
-      }
+        id: "1",
+        title: "Manga 1",
+        ownedVolumes: [1, 2],
+        pricePerVolume: 10.5,
+        totalCost: 21,
+        totalVolumes: 10,
+        status: "collecting",
+      };
 
-      mockSupabase.from.mockReturnValue(mockSupabase)
-      mockSupabase.select.mockReturnValue(mockSupabase)
-      mockSupabase.eq.mockReturnValue(mockSupabase)
-      mockSupabase.single
-        .mockResolvedValueOnce({ data: mockManga, error: null })
-        .mockResolvedValueOnce({ data: { ...mockManga, owned_volumes: [1, 2, 3] }, error: null })
+      // First call: fetchCollection (for getMangaById)
+      // Second call: PATCH update
+      mockFetch.mockResolvedValueOnce([mockManga]).mockResolvedValueOnce({});
 
-      mockSupabase.update.mockReturnValue(mockSupabase)
+      const mangaApi = useManga();
+      const result = await mangaApi.addVolume("1", 3);
 
-      const mangaApi = useManga()
-      const result = await mangaApi.addVolume('1', 3)
-
-      expect(result).toBe(true)
-    })
-  })
-})
-
+      expect(result).toBe(true);
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        2,
+        "/api/manga/1",
+        expect.objectContaining({
+          method: "PATCH",
+          // We could verify body but complex logic makes it fragile, basic check is ok
+        })
+      );
+    });
+  });
+});

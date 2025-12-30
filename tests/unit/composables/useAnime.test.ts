@@ -1,199 +1,199 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { setActivePinia, createPinia } from 'pinia'
-import { useAnime } from '../../../app/composables/useAnime'
-import { useAuthStore } from '../../../stores/auth'
+import { createPinia, setActivePinia } from "pinia";
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
+import { useAnime } from "../../../app/composables/useAnime";
+import { useAuthStore } from "../../../stores/auth";
 
-const mockSupabase = {
-  from: vi.fn(() => mockSupabase),
-  select: vi.fn(() => mockSupabase),
-  insert: vi.fn(() => mockSupabase),
-  update: vi.fn(() => mockSupabase),
-  delete: vi.fn(() => mockSupabase),
-  eq: vi.fn(() => mockSupabase),
-  order: vi.fn(() => mockSupabase),
-  single: vi.fn(() => mockSupabase),
-}
+// Mock global $fetch
+const mockFetch = vi.fn();
 
-vi.mock('../../../app/composables/useSupabase', () => ({
-  useSupabase: () => mockSupabase,
-}))
+// Try to mock ofetch module as well
+vi.mock("ofetch", () => ({
+  $fetch: mockFetch,
+  ofetch: mockFetch,
+  createFetch: () => mockFetch,
+}));
 
-describe('useAnime', () => {
+describe("useAnime", () => {
+  beforeAll(() => {
+    vi.stubGlobal("$fetch", mockFetch);
+  });
+
+  afterAll(() => {
+    vi.unstubAllGlobals();
+  });
+
   beforeEach(() => {
-    setActivePinia(createPinia())
-    vi.clearAllMocks()
-  })
+    setActivePinia(createPinia());
+    vi.clearAllMocks();
+    mockFetch.mockReset();
+  });
 
-  describe('fetchAnimeList', () => {
-    it('should return empty array when user is not authenticated', async () => {
-      const authStore = useAuthStore()
-      authStore.setSession(null)
+  describe("fetchAnimeList", () => {
+    it("should return empty array when user is not authenticated", async () => {
+      const authStore = useAuthStore();
+      authStore.setSession(null);
 
-      const animeApi = useAnime()
-      const list = await animeApi.fetchAnimeList()
+      const animeApi = useAnime();
+      const list = await animeApi.fetchAnimeList();
 
-      expect(list).toEqual([])
-      expect(mockSupabase.from).not.toHaveBeenCalled()
-    })
+      expect(list).toEqual([]);
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
 
-    it('should fetch anime list when user is authenticated', async () => {
-      const authStore = useAuthStore()
-      authStore.setSession({ user: { id: 'user-1' }, access_token: '', refresh_token: '', expires_in: 3600, expires_at: 0, token_type: 'bearer' } as any)
+    it("should fetch anime list when user is authenticated", async () => {
+      const authStore = useAuthStore();
+      authStore.setSession({
+        user: { id: "user-1" },
+        access_token: "token",
+      } as any);
 
       const mockData = [
         {
-          id: '1',
-          title: 'Test Anime',
-          status: 'watching',
-          current_episode: 5,
-          total_episodes: 12,
+          id: "1",
+          title: "Test Anime",
+          status: "watching",
+          currentEpisode: 5,
+          totalEpisodes: 12,
           score: null,
           notes: null,
-          cover_url: null,
-          start_date: null,
-          end_date: null,
-          rewatch_count: 0,
+          coverUrl: null,
+          startDate: null,
+          endDate: null,
+          rewatchCount: 0,
         },
-      ]
+      ];
 
-      const queryChain = {
-        eq: vi.fn(() => ({
-          order: vi.fn().mockResolvedValue({ data: mockData, error: null }),
-        })),
-      }
-      mockSupabase.from.mockReturnValue(mockSupabase)
-      mockSupabase.select.mockReturnValue(queryChain as any)
+      mockFetch.mockResolvedValue(mockData);
 
-      const animeApi = useAnime()
-      const list = await animeApi.fetchAnimeList()
+      const animeApi = useAnime();
+      const list = await animeApi.fetchAnimeList();
 
-      expect(list).toHaveLength(1)
-      expect(list[0].title).toBe('Test Anime')
-    })
-  })
+      expect(list).toHaveLength(1);
+      expect(list[0].title).toBe("Test Anime");
+      expect(mockFetch).toHaveBeenCalledWith("/api/anime?userId=user-1");
+    });
+  });
 
-  describe('addAnime', () => {
-    it('should return null when user is not authenticated', async () => {
-      const authStore = useAuthStore()
-      authStore.setSession(null)
+  describe("addAnime", () => {
+    it("should return null when user is not authenticated", async () => {
+      const authStore = useAuthStore();
+      authStore.setSession(null);
 
-      const animeApi = useAnime()
+      const animeApi = useAnime();
       const result = await animeApi.addAnime({
-        title: 'Test',
-        status: 'watching',
-      })
+        title: "Test",
+        status: "watching",
+      });
 
-      expect(result).toBe(null)
-    })
+      expect(result).toBe(null);
+    });
 
-    it('should return null when title is empty', async () => {
-      const authStore = useAuthStore()
-      authStore.setSession({ user: { id: 'user-1' }, access_token: '', refresh_token: '', expires_in: 3600, expires_at: 0, token_type: 'bearer' } as any)
+    it("should return null when title is empty", async () => {
+      const authStore = useAuthStore();
+      authStore.setSession({ user: { id: "user-1" } } as any);
 
-      const animeApi = useAnime()
+      const animeApi = useAnime();
       const result = await animeApi.addAnime({
-        title: '',
-        status: 'watching',
-      })
+        title: "",
+        status: "watching",
+      });
 
-      expect(result).toBe(null)
-    })
+      expect(result).toBe(null);
+    });
 
-    it('should add anime when valid data is provided', async () => {
-      const authStore = useAuthStore()
-      authStore.setSession({ user: { id: 'user-1' }, access_token: '', refresh_token: '', expires_in: 3600, expires_at: 0, token_type: 'bearer' } as any)
+    it("should add anime when valid data is provided", async () => {
+      const authStore = useAuthStore();
+      authStore.setSession({ user: { id: "user-1" } } as any);
 
       const mockData = {
-        id: '1',
-        title: 'Test Anime',
-        status: 'watching',
-        current_episode: 0,
-        total_episodes: 12,
+        id: "1",
+        title: "Test Anime",
+        status: "watching",
+        currentEpisode: 0,
+        totalEpisodes: 12,
         score: null,
         notes: null,
-        cover_url: null,
-        start_date: null,
-        end_date: null,
-        rewatch_count: 0,
-      }
+        coverUrl: null,
+        startDate: null,
+        endDate: null,
+        rewatchCount: 0,
+      };
 
-      const insertChain = {
-        select: vi.fn(() => ({
-          single: vi.fn().mockResolvedValue({ data: mockData, error: null }),
-        })),
-      }
-      mockSupabase.from.mockReturnValue(mockSupabase)
-      mockSupabase.insert.mockReturnValue(insertChain as any)
+      mockFetch.mockResolvedValue(mockData);
 
-      const animeApi = useAnime()
+      const animeApi = useAnime();
       const result = await animeApi.addAnime({
-        title: 'Test Anime',
-        status: 'watching',
+        title: "Test Anime",
+        status: "watching",
         total_episodes: 12,
-      })
+      });
 
-      expect(result).not.toBe(null)
-      expect(result?.title).toBe('Test Anime')
-    })
-  })
+      expect(result).not.toBe(null);
+      expect(result?.title).toBe("Test Anime");
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/api/anime",
+        expect.objectContaining({
+          method: "POST",
+          body: expect.objectContaining({
+            userId: "user-1",
+            title: "Test Anime",
+            status: "watching",
+            total_episodes: 12,
+          }),
+        })
+      );
+    });
+  });
 
-  describe('updateStatus', () => {
-    it('should update status successfully', async () => {
-      const authStore = useAuthStore()
-      authStore.setSession(null)
+  describe("updateStatus", () => {
+    it("should update status successfully", async () => {
+      mockFetch.mockResolvedValue({});
 
-      const animeApi = useAnime()
-      // updateStatus no verifica autenticación, solo actualiza directamente
-      mockSupabase.from.mockReturnValue(mockSupabase)
-      mockSupabase.update.mockReturnValue(mockSupabase)
-      mockSupabase.eq.mockResolvedValue({ error: null } as any)
+      const animeApi = useAnime();
+      const result = await animeApi.updateStatus("1", "completed");
 
-      const result = await animeApi.updateStatus('1', 'completed')
+      expect(result).toBe(true);
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/api/anime/1",
+        expect.objectContaining({
+          method: "PATCH",
+          body: expect.objectContaining({ status: "completed" }),
+        })
+      );
+    });
+  });
 
-      expect(result).toBe(true)
-    })
+  describe("deleteAnime", () => {
+    it("should return false when delete fails", async () => {
+      mockFetch.mockRejectedValue(new Error("Delete failed"));
 
-    it('should update status when user is authenticated', async () => {
-      const authStore = useAuthStore()
-      authStore.setSession({ user: { id: 'user-1' }, access_token: '', refresh_token: '', expires_in: 3600, expires_at: 0, token_type: 'bearer' } as any)
+      const animeApi = useAnime();
+      const result = await animeApi.deleteAnime("1");
 
-      mockSupabase.from.mockReturnValue(mockSupabase)
-      mockSupabase.update.mockReturnValue(mockSupabase)
-      mockSupabase.eq.mockResolvedValue({ error: null } as any)
+      expect(result).toBe(false);
+    });
 
-      const animeApi = useAnime()
-      const result = await animeApi.updateStatus('1', 'completed')
+    it("should return true when delete succeeds", async () => {
+      mockFetch.mockResolvedValue({});
 
-      expect(result).toBe(true)
-    })
-  })
+      const animeApi = useAnime();
+      const result = await animeApi.deleteAnime("1");
 
-  describe('deleteAnime', () => {
-    it('should return false when delete fails', async () => {
-      const deleteChain = {
-        eq: vi.fn().mockResolvedValue({ error: new Error('Delete failed') }),
-      }
-      mockSupabase.from.mockReturnValue(mockSupabase)
-      mockSupabase.delete.mockReturnValue(deleteChain as any)
-
-      const animeApi = useAnime()
-      const result = await animeApi.deleteAnime('1')
-
-      expect(result).toBe(false)
-    })
-
-    it('should return true when delete succeeds', async () => {
-      const deleteChain = {
-        eq: vi.fn().mockResolvedValue({ error: null }),
-      }
-      mockSupabase.from.mockReturnValue(mockSupabase)
-      mockSupabase.delete.mockReturnValue(deleteChain as any)
-
-      const animeApi = useAnime()
-      const result = await animeApi.deleteAnime('1')
-
-      expect(result).toBe(true)
-    })
-  })
-})
-
+      expect(result).toBe(true);
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/api/anime/1",
+        expect.objectContaining({
+          method: "DELETE",
+        })
+      );
+    });
+  });
+});

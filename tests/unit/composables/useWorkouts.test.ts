@@ -1,181 +1,181 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { setActivePinia, createPinia } from 'pinia'
-import { useWorkouts } from '../../../app/composables/useWorkouts'
-import { useAuthStore } from '../../../stores/auth'
+import { createPinia, setActivePinia } from "pinia";
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
+import { useWorkouts } from "../../../app/composables/useWorkouts";
+import { useAuthStore } from "../../../stores/auth";
 
-const mockSupabase = {
-  from: vi.fn(() => mockSupabase),
-  select: vi.fn(() => mockSupabase),
-  insert: vi.fn(() => mockSupabase),
-  update: vi.fn(() => mockSupabase),
-  delete: vi.fn(() => mockSupabase),
-  eq: vi.fn(() => mockSupabase),
-  order: vi.fn(() => mockSupabase),
-  limit: vi.fn(() => mockSupabase),
-  single: vi.fn(() => mockSupabase),
-}
+// Mock global $fetch
+const mockFetch = vi.fn();
 
-vi.mock('../../../app/composables/useSupabase', () => ({
-  useSupabase: () => mockSupabase,
-}))
+// Try to mock ofetch module
+vi.mock("ofetch", () => ({
+  $fetch: mockFetch,
+  ofetch: mockFetch,
+  createFetch: () => mockFetch,
+}));
 
-describe('useWorkouts', () => {
+describe("useWorkouts", () => {
+  beforeAll(() => {
+    vi.stubGlobal("$fetch", mockFetch);
+  });
+
+  afterAll(() => {
+    vi.unstubAllGlobals();
+  });
+
   beforeEach(() => {
-    setActivePinia(createPinia())
-    vi.clearAllMocks()
-  })
+    setActivePinia(createPinia());
+    vi.clearAllMocks();
+    mockFetch.mockReset();
+  });
 
-  describe('fetchWorkouts', () => {
-    it('should return empty array when user is not authenticated', async () => {
-      const authStore = useAuthStore()
-      authStore.setSession(null)
+  describe("fetchWorkouts", () => {
+    it("should return empty array when user is not authenticated", async () => {
+      const authStore = useAuthStore();
+      authStore.setSession(null);
 
-      const workoutsApi = useWorkouts()
-      const workouts = await workoutsApi.fetchWorkouts()
+      const workoutsApi = useWorkouts();
+      const workouts = await workoutsApi.fetchWorkouts();
 
-      expect(workouts).toEqual([])
-    })
+      expect(workouts).toEqual([]);
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
 
-    it('should fetch workouts when user is authenticated', async () => {
-      const authStore = useAuthStore()
-      authStore.setSession({ user: { id: 'user-1' }, access_token: '', refresh_token: '', expires_in: 3600, expires_at: 0, token_type: 'bearer' } as any)
+    it("should fetch workouts when user is authenticated", async () => {
+      const authStore = useAuthStore();
+      authStore.setSession({
+        user: { id: "user-1" },
+        access_token: "token",
+      } as any);
 
       const mockData = [
         {
-          id: '1',
-          name: 'Test Workout',
+          id: "1",
+          name: "Test Workout",
           description: null,
           workout_date: new Date().toISOString(),
           duration_minutes: 60,
           notes: null,
-          status: 'completed',
+          status: "completed",
           started_at: null,
           completed_at: null,
           workout_exercises: [],
         },
-      ]
+      ];
 
-      const queryChain = {
-        eq: vi.fn(() => ({
-          order: vi.fn(() => ({
-            limit: vi.fn().mockResolvedValue({ data: mockData, error: null }),
-          })),
-        })),
-      }
-      mockSupabase.from.mockReturnValue(mockSupabase)
-      mockSupabase.select.mockReturnValue(queryChain as any)
+      mockFetch.mockResolvedValue(mockData);
 
-      const workoutsApi = useWorkouts()
-      const workouts = await workoutsApi.fetchWorkouts()
+      const workoutsApi = useWorkouts();
+      const workouts = await workoutsApi.fetchWorkouts();
 
-      expect(workouts).toHaveLength(1)
-      expect(workouts[0].name).toBe('Test Workout')
-    })
-  })
+      expect(workouts).toHaveLength(1);
+      expect(workouts[0].name).toBe("Test Workout");
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/api/workouts",
+        expect.objectContaining({
+          query: expect.objectContaining({ userId: "user-1" }),
+        })
+      );
+    });
+  });
 
-  describe('createWorkout', () => {
-    it('should return null when user is not authenticated', async () => {
-      const authStore = useAuthStore()
-      authStore.setSession(null)
+  describe("createWorkout", () => {
+    it("should return null when user is not authenticated", async () => {
+      const authStore = useAuthStore();
+      authStore.setSession(null);
 
-      const workoutsApi = useWorkouts()
+      const workoutsApi = useWorkouts();
       const result = await workoutsApi.createWorkout({
-        name: 'Test',
+        name: "Test",
         workout_date: new Date().toISOString(),
-      })
+      });
 
-      expect(result).toBe(null)
-    })
+      expect(result).toBe(null);
+    });
 
-    it('should create workout when valid data is provided', async () => {
-      const authStore = useAuthStore()
-      authStore.setSession({ user: { id: 'user-1' }, access_token: '', refresh_token: '', expires_in: 3600, expires_at: 0, token_type: 'bearer' } as any)
+    it("should create workout when valid data is provided", async () => {
+      const authStore = useAuthStore();
+      authStore.setSession({ user: { id: "user-1" } } as any);
 
       const mockData = {
-        id: '1',
-        name: 'Test Workout',
+        id: "1",
+        name: "Test Workout",
         workout_date: new Date().toISOString(),
-        status: 'in_progress',
+        status: "in_progress",
         description: null,
         duration_minutes: null,
         notes: null,
         started_at: new Date().toISOString(),
         completed_at: null,
         workout_exercises: [],
-      }
+      };
 
-      const insertChain = {
-        select: vi.fn(() => ({
-          single: vi.fn().mockResolvedValue({ data: mockData, error: null }),
-        })),
-      }
-      const getWorkoutChain = {
-        eq: vi.fn(() => ({
-          single: vi.fn().mockResolvedValue({ data: mockData, error: null }),
-        })),
-      }
-      mockSupabase.from
-        .mockReturnValueOnce({
-          insert: vi.fn(() => insertChain),
-        } as any)
-        .mockReturnValueOnce({
-          select: vi.fn(() => getWorkoutChain),
-        } as any)
+      mockFetch.mockResolvedValue(mockData);
 
-      const workoutsApi = useWorkouts()
+      const workoutsApi = useWorkouts();
       const result = await workoutsApi.createWorkout({
-        name: 'Test Workout',
+        name: "Test Workout",
         workout_date: new Date().toISOString(),
-      })
+      });
 
-      expect(result).not.toBe(null)
-      expect(result?.name).toBe('Test Workout')
-    })
-  })
+      expect(result).not.toBe(null);
+      expect(result?.name).toBe("Test Workout");
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/api/workouts",
+        expect.objectContaining({
+          method: "POST",
+          body: expect.objectContaining({
+            userId: "user-1",
+            name: "Test Workout",
+          }),
+        })
+      );
+    });
+  });
 
-  describe('getInProgressWorkout', () => {
-    it('should return null when user is not authenticated', async () => {
-      const authStore = useAuthStore()
-      authStore.setSession(null)
+  describe("getInProgressWorkout", () => {
+    it("should return null when user is not authenticated", async () => {
+      const authStore = useAuthStore();
+      authStore.setSession(null);
 
-      const workoutsApi = useWorkouts()
-      const result = await workoutsApi.getInProgressWorkout()
+      const workoutsApi = useWorkouts();
+      const result = await workoutsApi.getInProgressWorkout();
 
-      expect(result).toBe(null)
-    })
+      expect(result).toBe(null);
+    });
 
-    it('should return workout when in progress workout exists', async () => {
-      const authStore = useAuthStore()
-      authStore.setSession({ user: { id: 'user-1' }, access_token: '', refresh_token: '', expires_in: 3600, expires_at: 0, token_type: 'bearer' } as any)
+    it("should return workout when in progress workout exists", async () => {
+      const authStore = useAuthStore();
+      authStore.setSession({ user: { id: "user-1" } } as any);
 
       const mockData = {
-        id: '1',
-        name: 'In Progress Workout',
-        status: 'in_progress',
+        id: "1",
+        name: "In Progress Workout",
+        status: "in_progress",
+        workout_date: new Date().toISOString(),
         workout_exercises: [],
-      }
+      };
 
-      const queryChain = {
-        eq: vi.fn()
-          .mockReturnValueOnce({
-            eq: vi.fn(() => ({
-              order: vi.fn(() => ({
-                limit: vi.fn(() => ({
-                  maybeSingle: vi.fn().mockResolvedValue({ data: mockData, error: null }),
-                })),
-              })),
-            })),
-          }),
-      }
-      mockSupabase.from.mockReturnValue(mockSupabase)
-      mockSupabase.select.mockReturnValue(queryChain as any)
+      mockFetch.mockResolvedValue(mockData);
 
-      const workoutsApi = useWorkouts()
-      const result = await workoutsApi.getInProgressWorkout()
+      const workoutsApi = useWorkouts();
+      const result = await workoutsApi.getInProgressWorkout();
 
-      expect(result).not.toBe(null)
-      expect(result?.name).toBe('In Progress Workout')
-    })
-  })
-})
-
+      expect(result).not.toBe(null);
+      expect(result?.name).toBe("In Progress Workout");
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/api/workouts/in-progress",
+        expect.objectContaining({
+          query: expect.objectContaining({ userId: "user-1" }),
+        })
+      );
+    });
+  });
+});
