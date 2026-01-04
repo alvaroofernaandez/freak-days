@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { toRef } from 'vue'
+import BannerCropModal from '@/components/profile/BannerCropModal.vue'
 import ProfileEditForm from '@/components/profile/ProfileEditForm.vue'
 import ProfileHeader from '@/components/profile/ProfileHeader.vue'
 import ProfileInfoCards from '@/components/profile/ProfileInfoCards.vue'
 import ProfileProgressCard from '@/components/profile/ProfileProgressCard.vue'
 import ProfileStats from '@/components/profile/ProfileStats.vue'
-import BannerCropModal from '@/components/profile/BannerCropModal.vue'
 import ConfirmDisableDialog from '@/components/settings/ConfirmDisableDialog.vue'
 import ModuleCard from '@/components/settings/ModuleCard.vue'
 import { Badge } from '@/components/ui/badge'
@@ -14,10 +13,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { useProfile } from '@/composables/useProfile'
 import { useProfilePage } from '@/composables/useProfilePage'
 import { useToast } from '@/composables/useToast'
-import { useProfile } from '@/composables/useProfile'
 import { Check, LogOut, Power, RefreshCw, Settings, Trash2, Upload, User } from 'lucide-vue-next'
+import { toRef } from 'vue'
 import { useModulesStore } from '~~/stores/modules'
 
 const modulesStore = useModulesStore()
@@ -176,33 +176,20 @@ onMounted(() => {
         <div class="absolute bottom-0 left-0 w-80 h-80 bg-accent/5 rounded-full blur-3xl" />
 
         <div class="h-32 sm:h-40 md:h-48 relative overflow-hidden group">
-          <img
-            v-if="bannerPreview || profile.bannerUrl"
-            :src="bannerPreview || profile.bannerUrl"
-            :alt="`Banner de ${profile.displayName || profile.username}`"
-            class="w-full h-full object-cover"
-          />
-          <div
-            v-else
-            class="w-full h-full bg-linear-to-r from-primary/20 via-accent/10 to-primary/20"
-          >
-            <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(var(--primary),0.2),transparent)]" />
+          <img v-if="bannerPreview || profile.bannerUrl" :src="(bannerPreview || profile.bannerUrl) ?? undefined"
+            :alt="`Banner de ${profile.displayName || profile.username}`" class="w-full h-full object-cover" />
+          <div v-else class="w-full h-full bg-linear-to-r from-primary/20 via-accent/10 to-primary/20">
+            <div
+              class="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(var(--primary),0.2),transparent)]" />
             <div class="absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,rgba(var(--accent),0.15),transparent)]" />
           </div>
-          <div
-            v-if="editing"
-            class="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm"
-          >
+          <div v-if="editing"
+            class="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">
             <div class="flex gap-2">
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <Button
-                    size="icon"
-                    variant="secondary"
-                    class="h-10 w-10"
-                    @click="triggerBannerUploadLocal"
-                    :disabled="uploadingBanner"
-                  >
+                  <Button size="icon" variant="secondary" class="h-10 w-10" @click="triggerBannerUploadLocal"
+                    :disabled="uploadingBanner">
                     <Upload class="h-5 w-5" />
                   </Button>
                 </TooltipTrigger>
@@ -212,14 +199,8 @@ onMounted(() => {
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <Button
-                    v-if="bannerPreview || profile.bannerUrl"
-                    size="icon"
-                    variant="destructive"
-                    class="h-10 w-10"
-                    @click="handleDeleteBanner"
-                    :disabled="uploadingBanner"
-                  >
+                  <Button v-if="bannerPreview || profile.bannerUrl" size="icon" variant="destructive" class="h-10 w-10"
+                    @click="handleDeleteBanner" :disabled="uploadingBanner">
                     <Trash2 class="h-5 w-5" />
                   </Button>
                 </TooltipTrigger>
@@ -230,13 +211,8 @@ onMounted(() => {
             </div>
           </div>
         </div>
-        <input
-          ref="bannerFileInputLocal"
-          type="file"
-          accept="image/*"
-          class="hidden"
-          @change="handleBannerFileSelect"
-        />
+        <input ref="bannerFileInputLocal" type="file" accept="image/*" class="hidden"
+          @change="handleBannerFileSelect" />
 
         <CardContent class="-mt-16 relative z-10">
           <ProfileHeader :profile="profile" :editing="editing" :avatar-preview="avatarPreview"
@@ -285,7 +261,7 @@ onMounted(() => {
         </CardHeader>
         <CardContent class="relative space-y-4">
           <div class="space-y-2">
-            <ModuleCard v-for="module in modules" :key="`module-${module.id}-${module.enabled}`" :module="module"
+            <ModuleCard v-for="module in modules" :key="`module-${module.id}`" :module="module"
               @toggle="handleToggleModule" />
           </div>
 
@@ -351,13 +327,7 @@ onMounted(() => {
     <ConfirmDisableDialog :open="confirmDialog.isOpen.value" :module-name="moduleToDisable?.name ?? null"
       :saving="savingModules" @confirm="confirmDisable" @cancel="cancelDisable" />
 
-    <BannerCropModal
-      :open="bannerCropModalOpen"
-      :image-file="selectedBannerFile"
-      :aspect-ratio="16 / 9"
-      @update:open="bannerCropModalOpen = $event"
-      @crop="handleBannerCrop"
-      @cancel="handleBannerCropCancel"
-    />
+    <BannerCropModal :open="bannerCropModalOpen" :image-file="selectedBannerFile" :aspect-ratio="16 / 9"
+      @update:open="bannerCropModalOpen = $event" @crop="handleBannerCrop" @cancel="handleBannerCropCancel" />
   </div>
 </template>

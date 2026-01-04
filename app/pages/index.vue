@@ -29,11 +29,12 @@ const {
 
 <template>
   <div class="space-y-6 w-full">
-    <div v-show="!isLoading && !authStore.isAuthenticated" class="min-h-[600px]">
-      <WelcomeSection />
-    </div>
-
-    <section v-show="authStore.isAuthenticated" class="space-y-6">
+    <ClientOnly>
+      <template #default>
+        <div v-if="!isLoading && !authStore.isAuthenticated" class="min-h-[600px]">
+          <WelcomeSection />
+        </div>
+        <section v-else-if="authStore.isAuthenticated" class="space-y-6">
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div class="space-y-2 flex-1 min-w-0">
           <template v-if="isLoading || !profile">
@@ -178,7 +179,14 @@ const {
         </ClientOnly>
       </div>
 
-      <SettingsPrompt />
-    </section>
+        <SettingsPrompt />
+        </section>
+      </template>
+      <template #fallback>
+        <div class="min-h-[600px] flex items-center justify-center">
+          <LoadingSpinner />
+        </div>
+      </template>
+    </ClientOnly>
   </div>
 </template>
