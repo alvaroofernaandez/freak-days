@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { setActivePinia, createPinia } from "pinia";
+import { createPinia, setActivePinia } from "pinia";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { AppModule, ModuleId } from "../../../domain/types";
 import { useModulesStore } from "../../../stores/modules";
-import type { ModuleId } from "../../../domain/types";
 
 describe("useModulesStore", () => {
   beforeEach(() => {
@@ -13,7 +13,7 @@ describe("useModulesStore", () => {
       const store = useModulesStore();
 
       expect(store.modules).toHaveLength(6);
-      store.modules.forEach((module) => {
+      store.modules.forEach((module: AppModule) => {
         expect(module.enabled).toBe(false);
       });
     });
@@ -30,7 +30,7 @@ describe("useModulesStore", () => {
       ];
 
       expectedIds.forEach((id) => {
-        const module = store.modules.find((m) => m.id === id);
+        const module = store.modules.find((m: AppModule) => m.id === id);
         expect(module).toBeDefined();
       });
     });
@@ -61,8 +61,10 @@ describe("useModulesStore", () => {
 
       store.toggleModule("quests");
 
-      const otherModules = store.modules.filter((m) => m.id !== "quests");
-      otherModules.forEach((module) => {
+      const otherModules = store.modules.filter(
+        (m: AppModule) => m.id !== "quests"
+      );
+      otherModules.forEach((module: AppModule) => {
         expect(module.enabled).toBe(false);
       });
     });
@@ -88,7 +90,7 @@ describe("useModulesStore", () => {
       store.enableModules(["quests", "anime"]);
       store.disableAllModules();
 
-      store.modules.forEach((module) => {
+      store.modules.forEach((module: AppModule) => {
         expect(module.enabled).toBe(false);
       });
     });
@@ -256,7 +258,9 @@ describe("useModulesStore", () => {
         ),
       };
 
-      await store.syncToDatabase(mockSupabase, "user-123");
+      await expect(
+        store.syncToDatabase(mockSupabase, "user-123")
+      ).rejects.toMatchObject({ message: "Database error" });
 
       expect(consoleErrorSpy).toHaveBeenCalled();
 
@@ -274,13 +278,15 @@ describe("useModulesStore", () => {
 
       await store.syncToDatabase(mockSupabase, "user-123");
 
-      const upsertCalls = mockSupabase.upsert.mock.calls;
+      const upsertCalls = mockSupabase.upsert.mock.calls as unknown as Array<
+        [{ module_id: string; enabled: boolean; enabled_at: string | null }]
+      >;
       const questsCall = upsertCalls.find(
         (call) => call[0]?.module_id === "quests"
       );
 
-      expect(questsCall[0].enabled_at).toBeTruthy();
-      expect(questsCall[0].enabled).toBe(true);
+      expect(questsCall?.[0].enabled_at).toBeTruthy();
+      expect(questsCall?.[0].enabled).toBe(true);
     });
 
     it("should set enabled_at to null when module is disabled", async () => {
@@ -294,13 +300,15 @@ describe("useModulesStore", () => {
 
       await store.syncToDatabase(mockSupabase, "user-123");
 
-      const upsertCalls = mockSupabase.upsert.mock.calls;
+      const upsertCalls = mockSupabase.upsert.mock.calls as unknown as Array<
+        [{ module_id: string; enabled: boolean; enabled_at: string | null }]
+      >;
       const questsCall = upsertCalls.find(
         (call) => call[0]?.module_id === "quests"
       );
 
-      expect(questsCall[0].enabled_at).toBeNull();
-      expect(questsCall[0].enabled).toBe(false);
+      expect(questsCall?.[0].enabled_at).toBeNull();
+      expect(questsCall?.[0].enabled).toBe(false);
     });
   });
 
@@ -312,7 +320,7 @@ describe("useModulesStore", () => {
       store.synced = true;
       store.reset();
 
-      expect(store.modules.every((m) => !m.enabled)).toBe(true);
+      expect(store.modules.every((m: AppModule) => !m.enabled)).toBe(true);
       expect(store.moduleMap).toEqual({});
       expect(store.synced).toBe(false);
     });
