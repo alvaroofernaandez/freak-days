@@ -10,10 +10,11 @@ import RemoveMemberConfirmModal from '@/components/party/RemoveMemberConfirmModa
 import { Button } from '@/components/ui/button'
 import { usePartyPage } from '@/composables/usePartyPage'
 import { Plus, UserPlus, Users } from 'lucide-vue-next'
-import { computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '~~/stores/auth'
 
 const authStore = useAuthStore()
+const router = useRouter()
 
 const {
   parties,
@@ -80,11 +81,15 @@ function handleRemoveMember(partyId: string, memberId: string) {
 function handleRegenerateCode(partyId: string) {
   regenerateInviteCode(partyId)
 }
+
+function handleEnterParty(partyId: string) {
+  router.push(`/party/${partyId}`)
+}
 </script>
 
 <template>
-  <div class="space-y-4 sm:space-y-6 px-1 sm:px-0">
-    <header class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+  <div class="space-y-4 sm:space-y-6 px-1 sm:px-0" role="main">
+    <header class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4" role="banner">
       <div>
         <h1 class="text-lg sm:text-xl md:text-2xl font-bold flex items-center gap-2">
           <Users class="h-5 w-5 sm:h-6 sm:w-6 text-primary shrink-0" aria-hidden="true" />
@@ -94,27 +99,30 @@ function handleRegenerateCode(partyId: string) {
           Crea grupos con tus amigos y comparte tus progresos
         </p>
       </div>
-      <div class="flex gap-2 sm:gap-2">
+      <div class="flex gap-2 sm:gap-2" role="group" aria-label="Acciones principales">
         <Button variant="outline" size="sm" class="flex-1 sm:flex-none min-h-[44px] sm:min-h-0"
-          @click="joinModal.open()" aria-label="Unirse a una party con código">
-          <UserPlus class="h-4 w-4 sm:mr-2" />
+          @click="joinModal.open()" aria-label="Unirse a una party con código de invitación">
+          <UserPlus class="h-4 w-4 sm:mr-2" aria-hidden="true" />
           <span class="hidden sm:inline">Unirse</span>
+          <span class="sm:hidden">Unirse</span>
         </Button>
         <Button size="sm" class="flex-1 sm:flex-none glow-primary min-h-[44px] sm:min-h-0" @click="createModal.open()"
           aria-label="Crear nueva party">
-          <Plus class="h-4 w-4 sm:mr-2" />
+          <Plus class="h-4 w-4 sm:mr-2" aria-hidden="true" />
           <span class="hidden sm:inline">Crear Party</span>
           <span class="sm:hidden">Crear</span>
         </Button>
       </div>
     </header>
 
-    <section v-if="loading" class="space-y-3 sm:space-y-4">
+    <section v-if="loading" class="space-y-3 sm:space-y-4" role="status" aria-live="polite" aria-label="Cargando parties">
       <h2 class="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider px-1">
         Cargando...
       </h2>
-      <div class="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        <PartyCardSkeleton v-for="i in 3" :key="i" />
+      <div class="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" role="list">
+        <div v-for="i in 3" :key="i" role="listitem">
+          <PartyCardSkeleton />
+        </div>
       </div>
     </section>
 
@@ -123,11 +131,14 @@ function handleRegenerateCode(partyId: string) {
         Tus Parties ({{ parties.length }})
       </h2>
 
-      <div class="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+      <div class="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" role="list" aria-label="Lista de parties">
         <TransitionGroup name="list" tag="div" class="contents">
-          <PartyCard v-for="(party, index) in parties" :key="party.id" :party="party" :is-owner="isOwner(party)"
-            :copied-code="copiedCode" :is-submitting="isSubmitting" :style="{ animationDelay: `${index * 50}ms` }"
-            @copy-code="copyInviteCode" @view-details="openDetails" @leave="leaveParty" />
+          <div v-for="(party, index) in parties" :key="party.id" role="listitem"
+            :style="{ animationDelay: `${index * 50}ms` }">
+            <PartyCard :party="party" :is-owner="isOwner(party)" :copied-code="copiedCode"
+              :is-submitting="isSubmitting" @copy-code="copyInviteCode" @view-details="openDetails"
+              @leave="leaveParty" @enter="handleEnterParty" />
+          </div>
         </TransitionGroup>
       </div>
     </section>
