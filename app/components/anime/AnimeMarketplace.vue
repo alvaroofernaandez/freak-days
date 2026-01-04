@@ -56,7 +56,7 @@ function handleClear() {
 }
 
 function handleAdd(anime: AnimeSearchResult) {
-  if (addingAnimeId.value === anime.mal_id || props.adding) return
+  if (addingAnimeId.value === anime.mal_id) return
 
   addingAnimeId.value = anime.mal_id
   emit('add', anime)

@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import type { AppModule } from '~~/domain/types'
+import { storeToRefs } from 'pinia'
+import { computed } from 'vue'
 import { getModuleIcon } from '~~/domain/constants/module-icons'
-import type { ModuleId } from '~~/domain/types'
+import type { AppModule, ModuleId } from '~~/domain/types'
+import { useModulesStore } from '~~/stores/modules'
 
 interface Props {
   module: AppModule
@@ -12,13 +14,24 @@ const props = defineProps<Props>()
 const emit = defineEmits<{
   toggle: [id: ModuleId]
 }>()
+
+const modulesStore = useModulesStore()
+const { moduleMap, synced } = storeToRefs(modulesStore)
+
+// Directly access moduleMap.value to ensure reactivity
+const isEnabled = computed(() => {
+  const moduleId = props.module.id
+  // Access synced to force reactivity update when modules are loaded
+  const _sync = synced.value
+  // Directly access moduleMap.value to ensure reactivity
+  const enabled = moduleMap.value[moduleId]
+  // Return strict boolean
+  return Boolean(enabled)
+})
 </script>
 
 <template>
-  <Card 
-    class="transition-all hover:border-primary/30"
-    :class="module.enabled ? 'border-primary/50 bg-primary/5' : ''"
-  >
+  <Card class="transition-all hover:border-primary/30" :class="isEnabled ? 'border-primary/50 bg-primary/5' : ''">
     <CardHeader class="flex flex-row items-center justify-between py-3 px-4">
       <div class="flex items-center gap-3 flex-1 min-w-0">
         <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
@@ -29,18 +42,8 @@ const emit = defineEmits<{
           <CardDescription class="text-xs truncate">{{ module.description }}</CardDescription>
         </div>
       </div>
-      <Switch 
-        :key="`switch-${module.id}-${module.enabled}`"
-        :checked="module.enabled === true"
-        @update:checked="(checked) => {
-          if (checked && !module.enabled) {
-            emit('toggle', module.id)
-          } else if (!checked && module.enabled) {
-            emit('toggle', module.id)
-          }
-        }"
-      />
+      <Switch :checked="isEnabled"
+        @update:checked="(checked) => { if (checked !== isEnabled) emit('toggle', module.id) }" />
     </CardHeader>
   </Card>
 </template>
-

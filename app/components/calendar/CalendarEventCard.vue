@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Release, ReleaseType } from '@/composables/useCalendar';
 import { MoreVertical, Trash2 } from 'lucide-vue-next';
+import { onBeforeUnmount, onMounted } from 'vue';
 
 interface Props {
   release: Release
@@ -40,10 +41,33 @@ const typeConfig: Record<ReleaseType, { color: string; bgColor: string; label: s
 const config = computed(() => typeConfig[props.release.type])
 const isHovered = ref(false)
 const isDraggingLocal = ref(false)
+const cardElement = ref<HTMLElement | null>(null)
 
 const isMobile = computed(() => {
   if (typeof window === 'undefined') return false
   return window.innerWidth < 1024
+})
+
+function handleTouchStart() {
+  isHovered.value = true
+}
+
+function handleTouchEnd() {
+  isHovered.value = false
+}
+
+onMounted(() => {
+  if (cardElement.value) {
+    cardElement.value.addEventListener('touchstart', handleTouchStart, { passive: true })
+    cardElement.value.addEventListener('touchend', handleTouchEnd, { passive: true })
+  }
+})
+
+onBeforeUnmount(() => {
+  if (cardElement.value) {
+    cardElement.value.removeEventListener('touchstart', handleTouchStart)
+    cardElement.value.removeEventListener('touchend', handleTouchEnd)
+  }
 })
 
 
@@ -143,7 +167,7 @@ function handleDeleteKeyboard(e: KeyboardEvent) {
 </script>
 
 <template>
-  <div :id="`event-${release.id}`" :class="[
+  <div ref="cardElement" :id="`event-${release.id}`" :class="[
     'group cursor-grab active:cursor-grabbing touch-manipulation w-full',
     'rounded-lg transition-all duration-200 select-none',
     'active:scale-[0.98] sm:active:scale-100',
@@ -156,9 +180,8 @@ function handleDeleteKeyboard(e: KeyboardEvent) {
     :draggable="!isMobile" role="button"
     :aria-label="`Evento: ${release.title}, ${config.label}. Arrastra para mover o presiona Enter para arrastrar.`"
     :aria-describedby="`event-${release.id}-description`" tabindex="0" @dragstart="handleDragStart"
-    @dragend="handleDragEnd" @touchstart="isHovered = true" @touchend="isHovered = false" @mouseenter="isHovered = true"
-    @mouseleave="isHovered = false" @keydown.enter.prevent="handleDragStartKeyboard"
-    @keydown.space.prevent="handleDragStartKeyboard">
+    @dragend="handleDragEnd" @mouseenter="isHovered = true" @mouseleave="isHovered = false"
+    @keydown.enter.prevent="handleDragStartKeyboard" @keydown.space.prevent="handleDragStartKeyboard">
     <div
       class="px-1.5 py-1 sm:px-1.5 sm:py-1 md:px-1.5 md:py-1 lg:px-2 lg:py-1.5 relative min-h-[32px] sm:min-h-[28px] md:min-h-[24px] lg:min-h-[32px] flex items-center">
       <span :id="`event-${release.id}-description`" class="sr-only">
