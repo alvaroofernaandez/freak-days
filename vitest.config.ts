@@ -3,6 +3,10 @@ import { defineVitestConfig } from "@nuxt/test-utils/config";
 export default defineVitestConfig({
   test: {
     environment: "nuxt",
+    env: {
+      SUPABASE_URL: "https://example.supabase.co",
+      SUPABASE_ANON_KEY: "example-key",
+    },
     environmentOptions: {
       nuxt: {
         domEnvironment: "happy-dom",
