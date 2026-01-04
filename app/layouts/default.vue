@@ -8,9 +8,11 @@ import MobileNav from '@/components/layout/MobileNav.vue'
 import type { UserProfile } from '@/composables/useProfile'
 import { getAllNavItems } from '@/utils/nav-items'
 import { useModulesStore } from '~~/stores/modules'
+import { useAuthStore } from '~~/stores/auth'
 
 const route = useRoute()
 const modulesStore = useModulesStore()
+const authStore = useAuthStore()
 const profileApi = useProfile()
 const auth = useAuth()
 
@@ -64,11 +66,35 @@ async function handleLogout() {
 }
 
 onMounted(async () => {
-  loadingProfile.value = true
-  try {
-    profile.value = await profileApi.fetchProfile()
-  } finally {
-    loadingProfile.value = false
+  if (import.meta.client) {
+    loadingProfile.value = true
+    try {
+      profile.value = await profileApi.fetchProfile()
+      
+      // Ensure modules are loaded if authenticated
+      const supabase = useSupabase()
+      if (authStore.isAuthenticated && authStore.userId) {
+        // Always reload modules to ensure they're up to date after page refresh
+        try {
+          const { data, error } = await supabase
+            .from("user_modules")
+            .select("module_id, enabled")
+            .eq("user_id", authStore.userId)
+          
+          if (!error && data) {
+            if (data.length > 0) {
+              modulesStore.setModulesFromDb(data)
+            } else {
+              modulesStore.synced = true
+            }
+          }
+        } catch (error) {
+          console.error("Error loading modules in layout:", error)
+        }
+      }
+    } finally {
+      loadingProfile.value = false
+    }
   }
 })
 
