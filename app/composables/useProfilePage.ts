@@ -2,6 +2,7 @@ import type { AnimeEntry } from '@/composables/useAnime'
 import type { MangaEntry } from '@/composables/useManga'
 import type { UserProfile } from '@/composables/useProfile'
 import type { ModuleId } from '~~/domain/types'
+import { nextTick } from 'vue'
 import { useAuthStore } from '~~/stores/auth'
 import { useModulesStore } from '~~/stores/modules'
 
@@ -64,7 +65,14 @@ export function useProfilePage() {
     return mangaList.value.find(m => m.id === profile.value!.favoriteMangaId) || null
   })
 
-  const modules = computed(() => modulesStore.modules)
+  const modules = computed(() => {
+    // Access moduleMap directly to ensure reactivity
+    const moduleMap = modulesStore.moduleMap
+    return modulesStore.modules.map(m => ({
+      ...m,
+      enabled: moduleMap[m.id] ?? false
+    }))
+  })
 
   async function loadAnimeAndManga() {
     try {
@@ -80,19 +88,30 @@ export function useProfilePage() {
   }
 
   async function loadModules() {
-    if (!authStore.userId) return
+    if (!authStore.userId) {
+      return
+    }
 
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("user_modules")
         .select("module_id, enabled")
         .eq("user_id", authStore.userId)
 
+      if (error) {
+        console.error('Error loading modules:', error)
+        modulesStore.synced = true
+        return
+      }
+      
       if (data && data.length > 0) {
         modulesStore.setModulesFromDb(data)
+      } else {
+        modulesStore.synced = true
       }
     } catch (error) {
       console.error('Error loading modules:', error)
+      modulesStore.synced = true
     }
   }
 
@@ -249,7 +268,6 @@ export function useProfilePage() {
   }
 
   function triggerBannerUpload() {
-    console.log('triggerBannerUpload called, bannerFileInput:', bannerFileInput.value)
     if (bannerFileInput.value) {
       bannerFileInput.value.click()
     } else {
@@ -377,6 +395,8 @@ export function useProfilePage() {
       loadAnimeAndManga(),
       loadModules()
     ])
+    // Force reactivity update after loading modules
+    await nextTick()
   }
 
   return {
@@ -406,6 +426,7 @@ export function useProfilePage() {
     handleAvatarUpload,
     handleDeleteAvatar,
     triggerAvatarUpload,
+    handleDeleteBanner,
     handleLogout,
     handleToggleModule,
     confirmDisable,
