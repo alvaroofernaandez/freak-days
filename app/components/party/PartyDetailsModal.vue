@@ -96,44 +96,49 @@ const emit = defineEmits<{
                   </h3>
                   <div v-if="party.inviteCode" class="flex items-center gap-2">
                     <code
-                      class="px-2 sm:px-3 py-1.5 bg-muted rounded text-xs sm:text-sm font-mono font-semibold tracking-wider sm:tracking-widest"
-                      aria-label="Código de invitación"
+                      class="px-2 sm:px-3 py-1.5 bg-muted rounded text-xs sm:text-sm font-mono font-semibold tracking-wider sm:tracking-widest select-all"
+                      aria-label="Código de invitación: {{ party.inviteCode }}"
                     >
                       {{ party.inviteCode }}
                     </code>
                     <Button
                       variant="ghost"
                       size="icon"
-                      class="h-9 w-9 sm:h-8 sm:w-8 touch-manipulation"
+                      class="h-9 w-9 sm:h-8 sm:w-8 touch-manipulation min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0"
                       @click="emit('copyCode', party.inviteCode!)"
-                      :aria-label="copiedCode === party.inviteCode ? 'Código copiado' : 'Copiar código'"
+                      :aria-label="copiedCode === party.inviteCode ? 'Código copiado al portapapeles' : 'Copiar código de invitación'"
+                      :aria-pressed="copiedCode === party.inviteCode"
                     >
-                      <Check v-if="copiedCode === party.inviteCode" class="h-4 w-4 text-exp-easy" />
+                      <Check v-if="copiedCode === party.inviteCode" class="h-4 w-4 text-exp-easy animate-in zoom-in duration-200" />
                       <Copy v-else class="h-4 w-4" />
                     </Button>
                     <Button
                       v-if="isOwner"
                       variant="ghost"
                       size="icon"
-                      class="h-9 w-9 sm:h-8 sm:w-8 touch-manipulation"
+                      class="h-9 w-9 sm:h-8 sm:w-8 touch-manipulation min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0"
                       @click="emit('regenerateCode', party.id)"
                       :disabled="isRegeneratingCode"
                       aria-label="Regenerar código de invitación"
                     >
                       <RefreshCw :class="['h-4 w-4', isRegeneratingCode && 'animate-spin']" />
+                      <span v-if="isRegeneratingCode" class="sr-only">Regenerando código...</span>
                     </Button>
                   </div>
                 </div>
 
-                <div class="space-y-2">
+                <div class="space-y-2" role="list" aria-label="Lista de miembros">
                   <div
                     v-for="member in party.members"
                     :key="member.id"
-                    class="flex items-center justify-between p-2.5 sm:p-3 bg-muted/30 rounded-md hover:bg-muted/50 transition-colors"
+                    class="flex items-center justify-between p-2.5 sm:p-3 bg-muted/30 rounded-md hover:bg-muted/50 transition-colors focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 focus-within:ring-offset-background"
+                    role="listitem"
                   >
                     <div class="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                      <Avatar class="h-9 w-9 sm:h-10 sm:w-10 shrink-0">
-                        <AvatarImage v-if="member.profile?.avatarUrl" :src="member.profile.avatarUrl" />
+                      <Avatar class="h-9 w-9 sm:h-10 sm:w-10 shrink-0" role="img"
+                        :aria-label="`Avatar de ${member.profile?.displayName || member.profile?.username || 'Usuario'}`">
+                        <AvatarImage v-if="member.profile?.avatarUrl" :src="member.profile.avatarUrl"
+                          :alt="member.profile?.displayName || member.profile?.username" />
                         <AvatarFallback class="text-xs sm:text-sm">
                           {{
                             (member.profile?.username || member.profile?.displayName || '?')
@@ -146,11 +151,12 @@ const emit = defineEmits<{
                         <p class="font-medium truncate text-sm sm:text-base">
                           {{ member.profile?.displayName || member.profile?.username || 'Usuario' }}
                         </p>
-                        <div class="flex items-center gap-1.5 sm:gap-2 text-xs text-muted-foreground flex-wrap">
-                          <Shield class="h-3 w-3 shrink-0" />
+                        <div class="flex items-center gap-1.5 sm:gap-2 text-xs text-muted-foreground flex-wrap" role="group"
+                          aria-label="Información del miembro">
+                          <Shield class="h-3 w-3 shrink-0" aria-hidden="true" />
                           <span>{{ getMemberRoleLabel(member.role) }}</span>
-                          <span class="mx-0.5 sm:mx-1">•</span>
-                          <Calendar class="h-3 w-3 shrink-0" />
+                          <span class="mx-0.5 sm:mx-1" aria-hidden="true">•</span>
+                          <Calendar class="h-3 w-3 shrink-0" aria-hidden="true" />
                           <span class="truncate">Se unió {{ formatDate(member.joinedAt) }}</span>
                         </div>
                       </div>
@@ -159,11 +165,11 @@ const emit = defineEmits<{
                       v-if="canManageMembers && member.role !== 'owner' && member.userId !== currentUserId"
                       variant="ghost"
                       size="icon"
-                      class="h-9 w-9 sm:h-8 sm:w-8 text-destructive hover:text-destructive shrink-0 touch-manipulation"
+                      class="h-9 w-9 sm:h-8 sm:w-8 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0 touch-manipulation min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 transition-colors"
                       @click="emit('removeMember', party, member)"
-                      aria-label="Expulsar miembro"
+                      :aria-label="`Expulsar a ${member.profile?.displayName || member.profile?.username || 'este miembro'}`"
                     >
-                      <UserMinus class="h-4 w-4" />
+                      <UserMinus class="h-4 w-4" aria-hidden="true" />
                     </Button>
                   </div>
                 </div>

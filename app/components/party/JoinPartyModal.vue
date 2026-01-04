@@ -66,19 +66,31 @@ function handleInput(event: Event) {
                   :disabled="isSubmitting"
                   autofocus
                   aria-required="true"
-                  @keydown.enter="emit('submit')"
+                  aria-invalid="code.length > 0 && code.length !== 6"
+                  aria-describedby="code-helper code-status"
+                  @keydown.enter.prevent="code.length === 6 && !isSubmitting && emit('submit')"
                 />
-                <p class="text-xs text-muted-foreground text-center">
-                  Introduce el código de 6 caracteres que te compartieron
-                </p>
+                <div class="space-y-1">
+                  <p id="code-helper" class="text-xs text-muted-foreground text-center">
+                    Introduce el código de 6 caracteres que te compartieron
+                  </p>
+                  <p id="code-status" v-if="code.length > 0 && code.length !== 6"
+                    class="text-xs text-destructive text-center" role="alert">
+                    El código debe tener exactamente 6 caracteres
+                  </p>
+                  <p v-else-if="code.length === 6" class="text-xs text-exp-easy text-center" role="status">
+                    ✓ Código válido
+                  </p>
+                </div>
               </div>
               <Button
                 class="w-full min-h-[44px]"
                 @click="emit('submit')"
                 :disabled="code.length !== 6 || isSubmitting"
+                aria-label="Unirse a la party con código {{ code }}"
               >
-                <UserPlus v-if="!isSubmitting" class="h-4 w-4 mr-2" />
-                <span v-else class="animate-spin mr-2">⏳</span>
+                <UserPlus v-if="!isSubmitting" class="h-4 w-4 mr-2" aria-hidden="true" />
+                <span v-else class="animate-spin mr-2 inline-block" role="status" aria-label="Uniéndose a party">⏳</span>
                 {{ isSubmitting ? 'Uniéndose...' : 'Unirse' }}
               </Button>
             </CardContent>

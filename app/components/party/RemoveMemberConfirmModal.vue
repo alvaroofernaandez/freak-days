@@ -41,24 +41,41 @@ const emit = defineEmits<{
         >
           <Card class="w-full max-w-md shadow-xl border-2 border-destructive/20 my-auto" @click.stop>
             <CardHeader class="p-4 sm:p-6">
-              <CardTitle id="remove-member-title" class="text-destructive text-lg sm:text-xl">
-                Expulsar Miembro
-              </CardTitle>
-              <CardDescription class="text-sm sm:text-base mt-2">
-                ¿Estás seguro de que quieres expulsar a
-                <strong>{{ member.profile?.displayName || member.profile?.username || 'este miembro' }}</strong>
-                de "{{ party.name }}"?
-              </CardDescription>
+              <div class="flex items-center gap-3">
+                <div class="p-2 bg-destructive/10 rounded-lg">
+                  <UserMinus class="h-5 w-5 text-destructive" aria-hidden="true" />
+                </div>
+                <div class="flex-1">
+                  <CardTitle id="remove-member-title" class="text-destructive text-lg sm:text-xl">
+                    Expulsar Miembro
+                  </CardTitle>
+                  <CardDescription class="text-sm sm:text-base mt-1">
+                    Esta acción no se puede deshacer
+                  </CardDescription>
+                </div>
+              </div>
+              <div class="mt-4 p-3 bg-destructive/5 border border-destructive/20 rounded-md">
+                <p class="text-sm font-medium">
+                  ¿Estás seguro de que quieres expulsar a
+                  <strong>{{ member.profile?.displayName || member.profile?.username || 'este miembro' }}</strong>
+                  de "{{ party.name }}"?
+                </p>
+                <p class="text-xs text-muted-foreground mt-1">
+                  El miembro perderá acceso inmediatamente y será notificado
+                </p>
+              </div>
             </CardHeader>
             <CardContent class="flex flex-col sm:flex-row gap-2 p-4 sm:p-6 pt-0">
-              <Button variant="outline" class="flex-1 min-h-[44px]" @click="emit('close')" :disabled="isSubmitting">
+              <Button variant="outline" class="flex-1 min-h-[44px] order-2 sm:order-1" @click="emit('close')"
+                :disabled="isSubmitting">
                 Cancelar
               </Button>
-              <Button variant="destructive" class="flex-1 min-h-[44px]" @click="emit('confirm', party.id, member.id)"
-                :disabled="isSubmitting">
-                <UserMinus v-if="!isSubmitting" class="h-4 w-4 mr-2" />
-                <span v-else class="animate-spin mr-2">⏳</span>
-                {{ isSubmitting ? 'Expulsando...' : 'Expulsar' }}
+              <Button variant="destructive" class="flex-1 min-h-[44px] order-1 sm:order-2"
+                @click="emit('confirm', party.id, member.id)" :disabled="isSubmitting"
+                :aria-label="`Confirmar expulsión de ${member.profile?.displayName || member.profile?.username || 'miembro'}`">
+                <UserMinus v-if="!isSubmitting" class="h-4 w-4 mr-2" aria-hidden="true" />
+                <span v-else class="animate-spin mr-2 inline-block" role="status" aria-label="Expulsando miembro">⏳</span>
+                {{ isSubmitting ? 'Expulsando...' : 'Expulsar Miembro' }}
               </Button>
             </CardContent>
           </Card>

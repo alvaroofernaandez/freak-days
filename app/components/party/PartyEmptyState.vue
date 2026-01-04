@@ -46,14 +46,15 @@ import { Plus, Shield, UserPlus, Users } from 'lucide-vue-next'
             </p>
           </div>
 
-          <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto" role="group" aria-label="Acciones para empezar">
             <Button
               size="lg"
               class="flex-1 sm:flex-none glow-primary group relative overflow-hidden min-h-[44px]"
               @click="$emit('create')"
+              aria-label="Crear tu primera party"
             >
               <span class="relative z-10 flex items-center justify-center">
-                <Plus class="h-5 w-5 mr-2 group-hover:rotate-90 transition-transform duration-300" />
+                <Plus class="h-5 w-5 mr-2 group-hover:rotate-90 transition-transform duration-300" aria-hidden="true" />
                 <span>Crear Party</span>
               </span>
               <div
@@ -65,8 +66,9 @@ import { Plus, Shield, UserPlus, Users } from 'lucide-vue-next'
               size="lg"
               class="flex-1 sm:flex-none border-2 hover:border-primary/50 hover:bg-primary/5 transition-all duration-200 min-h-[44px]"
               @click="$emit('join')"
+              aria-label="Unirse a una party existente con código de invitación"
             >
-              <UserPlus class="h-5 w-5 mr-2" />
+              <UserPlus class="h-5 w-5 mr-2" aria-hidden="true" />
               <span>Unirse con Código</span>
             </Button>
           </div>

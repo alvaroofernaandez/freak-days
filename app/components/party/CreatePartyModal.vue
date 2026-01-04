@@ -61,9 +61,19 @@ const emit = defineEmits<{
                   maxlength="50"
                   :disabled="isSubmitting"
                   aria-required="true"
-                  @keydown.enter="emit('submit')"
+                  aria-invalid="false"
+                  aria-describedby="name-helper name-count"
+                  autofocus
+                  @keydown.enter.prevent="!isSubmitting && name.trim() && emit('submit')"
                 />
-                <p class="text-xs text-muted-foreground">{{ name.length }}/50 caracteres</p>
+                <div class="flex items-center justify-between">
+                  <p id="name-helper" class="text-xs text-muted-foreground">
+                    Elige un nombre único y descriptivo para tu party
+                  </p>
+                  <p id="name-count" class="text-xs text-muted-foreground" :class="{ 'text-primary': name.length > 40 }">
+                    {{ name.length }}/50
+                  </p>
+                </div>
               </div>
               <div class="space-y-2">
                 <Label for="party-description">Descripción (opcional)</Label>
@@ -75,13 +85,23 @@ const emit = defineEmits<{
                   class="w-full"
                   maxlength="200"
                   :disabled="isSubmitting"
-                  @keydown.enter="emit('submit')"
+                  aria-describedby="description-helper description-count"
+                  @keydown.enter.prevent="!isSubmitting && name.trim() && emit('submit')"
                 />
-                <p class="text-xs text-muted-foreground">{{ description.length }}/200 caracteres</p>
+                <div class="flex items-center justify-between">
+                  <p id="description-helper" class="text-xs text-muted-foreground">
+                    Ayuda a otros a entender el propósito de esta party
+                  </p>
+                  <p id="description-count" class="text-xs text-muted-foreground"
+                    :class="{ 'text-primary': description.length > 180 }">
+                    {{ description.length }}/200
+                  </p>
+                </div>
               </div>
-              <Button class="w-full min-h-[44px]" @click="emit('submit')" :disabled="!name.trim() || isSubmitting">
-                <Plus v-if="!isSubmitting" class="h-4 w-4 mr-2" />
-                <span v-else class="animate-spin mr-2">⏳</span>
+              <Button class="w-full min-h-[44px]" @click="emit('submit')" :disabled="!name.trim() || isSubmitting"
+                aria-label="Crear party con nombre {{ name }}">
+                <Plus v-if="!isSubmitting" class="h-4 w-4 mr-2" aria-hidden="true" />
+                <span v-else class="animate-spin mr-2 inline-block" role="status" aria-label="Creando party">⏳</span>
                 {{ isSubmitting ? 'Creando...' : 'Crear Party' }}
               </Button>
             </CardContent>
