@@ -19,20 +19,24 @@
   "dependencies": {
     "@pinia/nuxt": "^0.11.3",
     "@prisma/client": "^6.0.0",
-    "@supabase/supabase-js": "^2.88.0",
+    "@supabase/supabase-js": "^2.89.0",
     "@tanstack/vue-query": "^5.92.1",
     "date-fns": "^3.6.0",
     "nuxt": "^4.2.2",
     "pinia": "^3.0.4",
     "reka-ui": "^2.6.1",
     "vue": "^3.5.25",
-    "vue-router": "^4.6.4"
+    "vue-router": "^4.6.4",
+    "vuedraggable": "^4.1.0"
   },
   "devDependencies": {
     "@nuxt/test-utils": "^3.21.0",
+    "@nuxtjs/supabase": "^2.0.3",
+    "@pinia/testing": "^1.0.3",
     "@tailwindcss/vite": "^4.1.18",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/vue": "^8.1.0",
+    "@types/node": "^25.0.3",
     "@vue/test-utils": "^2.4.6",
     "@vueuse/core": "^14.1.0",
     "class-variance-authority": "^0.7.1",
