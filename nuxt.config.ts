@@ -1,4 +1,5 @@
 import tailwindcss from "@tailwindcss/vite";
+import { supabaseWarningsFilter } from "./vite-plugins/supabase-warnings-filter";
 
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
@@ -8,17 +9,23 @@ export default defineNuxtConfig({
     compatibilityVersion: 4,
   },
 
-  modules: ["shadcn-nuxt", "@pinia/nuxt"],
+  modules: ["shadcn-nuxt", "@pinia/nuxt", "@nuxtjs/supabase"],
 
   shadcn: {
     prefix: "",
     componentDir: "@/components/ui",
   },
 
+  supabase: {
+    redirect: false,
+    url: process.env.SUPABASE_URL,
+    key: process.env.SUPABASE_ANON_KEY,
+  },
+
   css: ["~/assets/css/tailwind.css"],
 
   vite: {
-    plugins: [tailwindcss()],
+    plugins: [tailwindcss(), supabaseWarningsFilter()],
     optimizeDeps: {
       exclude: ["@prisma/client"],
     },
