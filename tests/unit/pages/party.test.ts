@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { mount } from '@vue/test-utils'
-import { setActivePinia, createPinia } from 'pinia'
-import PartyPage from '../../../app/pages/party.vue'
+import { mount } from "@vue/test-utils";
+import { createPinia, setActivePinia } from "pinia";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import PartyPage from "../../../app/pages/party/index.vue";
 
-vi.mock('../../../app/composables/usePartyPage', () => ({
+vi.mock("../../../app/composables/usePartyPage", () => ({
   usePartyPage: () => ({
     parties: { value: [] },
     loading: { value: false },
@@ -32,8 +32,8 @@ vi.mock('../../../app/composables/usePartyPage', () => ({
       open: vi.fn(),
       close: vi.fn(),
     },
-    newParty: { value: { name: '', description: '' } },
-    joinCode: { value: '' },
+    newParty: { value: { name: "", description: "" } },
+    joinCode: { value: "" },
     selectedParty: { value: null },
     memberToRemove: { value: null },
     copiedCode: { value: null },
@@ -54,20 +54,20 @@ vi.mock('../../../app/composables/usePartyPage', () => ({
     getMemberRoleLabel: vi.fn((role: string) => role),
     initialize: vi.fn(),
   }),
-}))
+}));
 
-vi.mock('../../../stores/auth', () => ({
+vi.mock("../../../stores/auth", () => ({
   useAuthStore: () => ({
-    userId: 'test-user-id',
+    userId: "test-user-id",
   }),
-}))
+}));
 
-describe('party.vue', () => {
+describe("party.vue", () => {
   beforeEach(() => {
-    setActivePinia(createPinia())
-  })
+    setActivePinia(createPinia());
+  });
 
-  it('should render party page', () => {
+  it("should render party page", () => {
     const wrapper = mount(PartyPage, {
       global: {
         stubs: {
@@ -84,14 +84,14 @@ describe('party.vue', () => {
           Transition: true,
         },
       },
-    })
+    });
 
-    expect(wrapper.text()).toContain('Party System')
-  })
+    expect(wrapper.text()).toContain("Party System");
+  });
 
-  it('should render page with initialize function', () => {
-    const initialize = vi.fn()
-    vi.doMock('../../../app/composables/usePartyPage', () => ({
+  it("should render page with initialize function", () => {
+    const initialize = vi.fn();
+    vi.doMock("../../../app/composables/usePartyPage", () => ({
       usePartyPage: () => ({
         parties: { value: [] },
         loading: { value: false },
@@ -120,8 +120,8 @@ describe('party.vue', () => {
           open: vi.fn(),
           close: vi.fn(),
         },
-        newParty: { value: { name: '', description: '' } },
-        joinCode: { value: '' },
+        newParty: { value: { name: "", description: "" } },
+        joinCode: { value: "" },
         selectedParty: { value: null },
         memberToRemove: { value: null },
         copiedCode: { value: null },
@@ -142,7 +142,7 @@ describe('party.vue', () => {
         getMemberRoleLabel: vi.fn((role: string) => role),
         initialize,
       }),
-    }))
+    }));
 
     const wrapper = mount(PartyPage, {
       global: {
@@ -160,12 +160,12 @@ describe('party.vue', () => {
           Transition: true,
         },
       },
-    })
+    });
 
-    expect(wrapper.exists()).toBe(true)
-  })
+    expect(wrapper.exists()).toBe(true);
+  });
 
-  it('should show empty state when no parties', () => {
+  it("should show empty state when no parties", () => {
     const wrapper = mount(PartyPage, {
       global: {
         stubs: {
@@ -182,17 +182,17 @@ describe('party.vue', () => {
           Transition: true,
         },
       },
-    })
+    });
 
-    expect(wrapper.exists()).toBe(true)
-  })
+    expect(wrapper.exists()).toBe(true);
+  });
 
-  it('should show loading skeletons when loading', () => {
-    vi.doMock('../../../app/composables/usePartyPage', () => ({
+  it("should show loading skeletons when loading", () => {
+    vi.doMock("../../../app/composables/usePartyPage", () => ({
       usePartyPage: () => ({
         loading: { value: true },
       }),
-    }))
+    }));
 
     const wrapper = mount(PartyPage, {
       global: {
@@ -210,9 +210,8 @@ describe('party.vue', () => {
           Transition: true,
         },
       },
-    })
+    });
 
-    expect(wrapper.exists()).toBe(true)
-  })
-})
-
+    expect(wrapper.exists()).toBe(true);
+  });
+});
