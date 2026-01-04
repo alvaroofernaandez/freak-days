@@ -35,6 +35,8 @@ model Profile {
   questNotifications QuestNotification[]
   partiesOwned      Party[]        @relation("PartyOwner")
   partyMembers      PartyMember[]
+  createdLists      PartySharedList[] @relation("ListCreator")
+  addedAnimeItems   PartyAnimeItem[]  @relation("AddedBy")
   releaseCalendar   ReleaseCalendar[]
 
   @@map("profiles")
@@ -255,10 +257,39 @@ model PartySharedList {
   createdBy String   @map("created_by") @db.Uuid
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  party     Party    @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  party     Party             @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  creator   Profile           @relation("ListCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+  animeItems PartyAnimeItem[]
+
+  content   Json?            @map("content")
 
   @@index([partyId])
   @@map("party_shared_lists")
+}
+
+model PartyAnimeItem {
+  id            String    @id @default(uuid()) @db.Uuid
+  listId        String    @map("list_id") @db.Uuid
+  addedBy       String?   @map("added_by") @db.Uuid
+  title         String
+  status        String
+  currentEpisode Int      @default(0) @map("current_episode")
+  totalEpisodes Int?      @map("total_episodes")
+  score         Int?
+  notes         String?
+  coverUrl      String?   @map("cover_url")
+  startDate     DateTime? @map("start_date") @db.Date
+  endDate       DateTime? @map("end_date") @db.Date
+  rewatchCount  Int       @default(0) @map("rewatch_count")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  sharedList    PartySharedList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  addedByUser   Profile?        @relation("AddedBy", fields: [addedBy], references: [id], onDelete: SetNull)
+
+  @@index([listId])
+  @@index([listId, status])
+  @@map("party_anime_items")
 }
 
 model ReleaseCalendar {
