@@ -23,7 +23,7 @@ export const useModulesStore = defineStore("modules", {
       },
 
     enabledModules: (state): AppModule[] => {
-      return state.modules.filter((m) => m.enabled);
+      return state.modules.filter((m) => state.moduleMap[m.id] ?? m.enabled);
     },
 
     hasCompletedOnboarding: (state): boolean => {
@@ -39,11 +39,23 @@ export const useModulesStore = defineStore("modules", {
 
   actions: {
     setModule(moduleId: ModuleId, enabled: boolean) {
-      this.moduleMap[moduleId] = enabled;
-      const module = this.modules.find((m) => m.id === moduleId);
-      if (module) {
-        module.enabled = enabled;
-      }
+      // Use $patch to ensure reactivity
+      this.$patch((state) => {
+        state.moduleMap = { ...state.moduleMap, [moduleId]: enabled };
+        const moduleIndex = state.modules.findIndex((m) => m.id === moduleId);
+        if (moduleIndex !== -1) {
+          const module = state.modules[moduleIndex];
+          if (module) {
+            state.modules[moduleIndex] = {
+              id: module.id,
+              name: module.name,
+              description: module.description,
+              icon: module.icon,
+              enabled,
+            };
+          }
+        }
+      });
     },
 
     toggleModule(moduleId: ModuleId) {
@@ -64,10 +76,41 @@ export const useModulesStore = defineStore("modules", {
     },
 
     setModulesFromDb(data: Array<{ module_id: ModuleId; enabled: boolean }>) {
-      data.forEach(({ module_id, enabled }) => {
-        this.setModule(module_id, enabled);
+      // Create a fresh moduleMap object with all modules initialized as disabled
+      const newModuleMap = {} as Record<ModuleId, boolean>;
+
+      // Initialize all modules as disabled first
+      ALL_MODULES.forEach((module) => {
+        newModuleMap[module.id] = false;
       });
-      this.synced = true;
+
+      // Then set enabled modules from database
+      data.forEach(({ module_id, enabled }) => {
+        // enabled is already a boolean from Supabase
+        const isEnabled = Boolean(enabled);
+        newModuleMap[module_id] = isEnabled;
+
+        // Update the modules array
+        const moduleIndex = this.modules.findIndex((m) => m.id === module_id);
+        if (moduleIndex !== -1) {
+          const module = this.modules[moduleIndex];
+          if (module) {
+            this.modules[moduleIndex] = {
+              id: module.id,
+              name: module.name,
+              description: module.description,
+              icon: module.icon,
+              enabled: isEnabled,
+            };
+          }
+        }
+      });
+
+      // Use $patch to ensure reactivity
+      this.$patch({
+        moduleMap: { ...newModuleMap },
+        synced: true,
+      });
     },
 
     async syncToDatabase(supabase: any, userId: string) {
@@ -92,8 +135,11 @@ export const useModulesStore = defineStore("modules", {
 
         if (upsertError) {
           console.error(`Error syncing module ${module.id}:`, upsertError);
+          throw upsertError;
         }
       }
+
+      this.synced = true;
     },
 
     reset() {
