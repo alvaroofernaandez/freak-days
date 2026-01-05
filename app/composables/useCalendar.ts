@@ -9,6 +9,7 @@ export interface Release {
   releaseDate: Date;
   description: string | null;
   url: string | null;
+  createdAt: Date;
 }
 
 export interface CreateReleaseDTO {
@@ -127,6 +128,7 @@ export function useCalendar() {
       releaseDate: date,
       description: (row.description || row.notes) as string | null,
       url: row.url as string | null,
+      createdAt: new Date(row.created_at as string),
     };
   }
 
