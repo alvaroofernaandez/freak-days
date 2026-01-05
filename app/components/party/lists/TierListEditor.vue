@@ -2,13 +2,13 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useToast } from '@/composables/useToast'
 import { useSupabase } from '@/composables/useSupabase'
-import { useAuthStore } from '~~/stores/auth'
-import { Plus, Save, Trash2, LayoutGrid, AlertCircle } from 'lucide-vue-next'
+import { useToast } from '@/composables/useToast'
+import { AlertCircle, ChevronDown, ChevronUp, LayoutGrid, Pencil, Plus, Save, Trash2 } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
 import type { PartySharedList, Tier, TierItem, TierListState } from '~~/domain/types/party'
+import { useAuthStore } from '~~/stores/auth'
 
 const props = defineProps<{
   list: PartySharedList
@@ -22,6 +22,7 @@ const isDragging = ref(false)
 
 const TIER_COLORS = ['#FF7F7F', '#FFBF7F', '#FFFF7F', '#7FFF7F', '#7FFFFF', '#7F7FFF', '#FF7FFF']
 
+const listName = ref(props.list.name)
 const tiers = ref<Tier[]>([])
 const pool = ref<TierItem[]>([])
 const newItemText = ref('')
@@ -57,7 +58,7 @@ onMounted(() => {
 
 async function save() {
   if (isSaving.value) return
-  
+
   isSaving.value = true
   try {
     const token = await getAuthToken()
@@ -73,7 +74,7 @@ async function save() {
 
     await $fetch(`/api/party/lists/${props.list.id}`, {
       method: 'PUT',
-      body: { content },
+      body: { name: listName.value, content },
       credentials: 'include',
       headers,
     })
@@ -101,7 +102,7 @@ function addItem() {
     toast.info('Escribe un nombre para el item')
     return
   }
-  
+
   pool.value.push({
     id: crypto.randomUUID(),
     content: newItemText.value.trim(),
@@ -117,7 +118,7 @@ function removeItem(id: string) {
     toast.info('Item eliminado')
     return
   }
-  
+
   for (const tier of tiers.value) {
     const idx = tier.items.findIndex(i => i.id === id)
     if (idx !== -1) {
@@ -126,6 +127,44 @@ function removeItem(id: string) {
       return
     }
   }
+}
+
+function addTier() {
+  const nextColor = TIER_COLORS[tiers.value.length % TIER_COLORS.length] ?? '#FF7F7F'
+  tiers.value.push({
+    id: crypto.randomUUID(),
+    name: `Tier ${tiers.value.length + 1}`,
+    color: nextColor,
+    items: []
+  })
+  toast.success('Nuevo tier añadido')
+}
+
+function removeTier(tierId: string) {
+  const tier = tiers.value.find(t => t.id === tierId)
+  if (!tier) return
+
+  if (tier.items.length > 0) {
+    pool.value.push(...tier.items)
+    toast.info(`${tier.items.length} items movidos al pool`)
+  }
+
+  tiers.value = tiers.value.filter(t => t.id !== tierId)
+  toast.success('Tier eliminado')
+}
+
+function moveTierUp(index: number) {
+  if (index <= 0) return
+  const temp = tiers.value[index - 1]!
+  tiers.value[index - 1] = tiers.value[index]!
+  tiers.value[index] = temp
+}
+
+function moveTierDown(index: number) {
+  if (index >= tiers.value.length - 1) return
+  const temp = tiers.value[index + 1]!
+  tiers.value[index + 1] = tiers.value[index]!
+  tiers.value[index] = temp
 }
 
 function handleDragStart() {
@@ -139,15 +178,20 @@ function handleDragEnd() {
 
 <template>
   <div class="space-y-4 sm:space-y-6" role="main" aria-label="Editor de Tier List">
-    <!-- Header with Save Button -->
+    <!-- Header with Title and Save Button -->
     <div
       class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 bg-card border rounded-lg p-4 sm:p-5 shadow-sm">
-      <div class="flex items-center gap-3">
-        <div class="p-2 bg-primary/10 rounded-lg">
+      <div class="flex items-center gap-3 flex-1 w-full sm:w-auto">
+        <div class="p-2 bg-primary/10 rounded-lg shrink-0">
           <LayoutGrid class="h-5 w-5 text-primary" aria-hidden="true" />
         </div>
-        <div>
-          <h3 class="font-semibold text-base sm:text-lg">Editor de Tier List</h3>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2">
+            <Pencil class="h-3.5 w-3.5 text-muted-foreground shrink-0" aria-hidden="true" />
+            <Input v-model="listName"
+              class="font-semibold text-base sm:text-lg border-none bg-transparent p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
+              placeholder="Nombre de la tier list" aria-label="Nombre de la tier list" />
+          </div>
           <p class="text-xs sm:text-sm text-muted-foreground mt-0.5">
             Arrastra items entre tiers o desde el pool
           </p>
@@ -169,34 +213,49 @@ function handleDragEnd() {
         role="group" :aria-label="`Tier ${tier.name}`">
         <!-- Tier Header -->
         <div
-          class="w-full sm:w-20 md:w-32 flex items-center justify-center p-3 sm:p-2 font-bold text-xl sm:text-2xl text-black select-none shrink-0 border-b sm:border-b-0 sm:border-r border-border/50"
-          :style="{ backgroundColor: tier.color }" role="banner" :aria-label="`Tier ${tier.name}`">
-          <span class="drop-shadow-sm">{{ tier.name }}</span>
+          class="w-full sm:w-32 md:w-40 flex items-center justify-between p-3 sm:p-3 font-bold text-black select-none shrink-0 border-b sm:border-b-0 sm:border-r border-border/50"
+          :style="{ backgroundColor: tier.color }" role="banner">
+          <div class="flex-1 min-w-0">
+            <Input v-model="tier.name"
+              class="font-bold text-xl sm:text-2xl text-black bg-transparent border-none p-0 h-auto w-full text-center focus-visible:ring-0 focus-visible:ring-offset-0 drop-shadow-sm placeholder:text-black/50"
+              placeholder="Nombre" :aria-label="`Nombre del tier ${tier.name}`" />
+          </div>
+          <!-- Tier Controls -->
+          <div class="flex flex-row sm:flex-col gap-1 ml-2 bg-black/20 rounded-lg p-1">
+            <button v-if="tierIndex > 0" @click="moveTierUp(tierIndex)"
+              class="p-1.5 bg-white/30 hover:bg-white/50 rounded-md transition-colors min-w-[28px] min-h-[28px] flex items-center justify-center"
+              :aria-label="`Mover tier ${tier.name} arriba`">
+              <ChevronUp class="h-4 w-4 text-black" aria-hidden="true" />
+            </button>
+            <button v-if="tierIndex < tiers.length - 1" @click="moveTierDown(tierIndex)"
+              class="p-1.5 bg-white/30 hover:bg-white/50 rounded-md transition-colors min-w-[28px] min-h-[28px] flex items-center justify-center"
+              :aria-label="`Mover tier ${tier.name} abajo`">
+              <ChevronDown class="h-4 w-4 text-black" aria-hidden="true" />
+            </button>
+            <button @click="removeTier(tier.id)"
+              class="p-1.5 bg-red-500/40 hover:bg-red-500/70 rounded-md transition-colors min-w-[28px] min-h-[28px] flex items-center justify-center"
+              :aria-label="`Eliminar tier ${tier.name}`">
+              <Trash2 class="h-4 w-4 text-white" aria-hidden="true" />
+            </button>
+          </div>
         </div>
 
         <!-- Drop Zone -->
         <div class="flex-1 bg-muted/20 p-3 sm:p-2 min-h-[80px]" role="region"
           :aria-label="`Zona de drop para tier ${tier.name}`">
-          <draggable v-model="tier.items" group="tierlist" item-key="id"
-            :disabled="isMobile"
-            @start="handleDragStart"
-            @end="handleDragEnd"
-            class="flex flex-wrap gap-2 h-full min-h-[60px]"
+          <draggable v-model="tier.items" group="tierlist" item-key="id" :disabled="isMobile" @start="handleDragStart"
+            @end="handleDragEnd" class="flex flex-wrap gap-2 h-full min-h-[60px]"
             :class="{ 'pointer-events-none': isMobile }">
             <template #item="{ element }">
               <div
                 class="relative group/item cursor-grab active:cursor-grabbing bg-card border rounded-lg p-2.5 sm:p-2 shadow-sm hover:shadow-md hover:border-primary/50 transition-all duration-200 touch-manipulation min-h-[44px] sm:min-h-0"
-                :class="{ 'opacity-50': isDragging }"
-                role="button"
-                :aria-label="`Item: ${element.content}. Arrastra para mover o presiona para eliminar`"
-                tabindex="0"
-                @keydown.enter="removeItem(element.id)"
-                @keydown.delete="removeItem(element.id)">
-                <span class="pr-7 sm:pr-6 block text-sm font-medium break-words">{{ element.content }}</span>
+                :class="{ 'opacity-50': isDragging }" role="button"
+                :aria-label="`Item: ${element.content}. Arrastra para mover o presiona para eliminar`" tabindex="0"
+                @keydown.enter="removeItem(element.id)" @keydown.delete="removeItem(element.id)">
+                <span class="pr-7 sm:pr-6 block text-sm font-medium wrap-break-word">{{ element.content }}</span>
                 <button
                   class="absolute top-1.5 right-1.5 sm:top-1 sm:right-1 opacity-0 group-hover/item:opacity-100 group-focus/item:opacity-100 p-1.5 sm:p-1 hover:bg-destructive hover:text-destructive-foreground rounded transition-opacity min-h-[32px] min-w-[32px] sm:min-h-0 sm:min-w-0 flex items-center justify-center touch-manipulation"
-                  @click.stop="removeItem(element.id)"
-                  :aria-label="`Eliminar item: ${element.content}`">
+                  @click.stop="removeItem(element.id)" :aria-label="`Eliminar item: ${element.content}`">
                   <Trash2 class="h-3.5 w-3.5 sm:h-3 sm:w-3" aria-hidden="true" />
                 </button>
               </div>
@@ -209,6 +268,15 @@ function handleDragEnd() {
             </template>
           </draggable>
         </div>
+      </div>
+
+      <!-- Add Tier Button -->
+      <div class="p-3 border-t bg-muted/10">
+        <Button @click="addTier" variant="outline" class="w-full min-h-[44px] border-dashed"
+          aria-label="Añadir nuevo tier">
+          <Plus class="h-4 w-4 mr-2" aria-hidden="true" />
+          Añadir Tier
+        </Button>
       </div>
     </div>
 
@@ -245,10 +313,9 @@ function handleDragEnd() {
         </Button>
       </div>
 
-      <div
-        class="min-h-[120px] sm:min-h-[100px] p-4 bg-muted/30 rounded-lg border-2 border-dashed transition-colors"
-        :class="{ 'border-primary/30 bg-primary/5': pool.length === 0 }"
-        role="region" aria-label="Pool de items sin clasificar">
+      <div class="min-h-[120px] sm:min-h-[100px] p-4 bg-muted/30 rounded-lg border-2 border-dashed transition-colors"
+        :class="{ 'border-primary/30 bg-primary/5': pool.length === 0 }" role="region"
+        aria-label="Pool de items sin clasificar">
         <div v-if="pool.length === 0"
           class="flex flex-col items-center justify-center h-full min-h-[100px] text-center text-muted-foreground"
           role="status">
@@ -256,26 +323,18 @@ function handleDragEnd() {
           <p class="text-sm font-medium">No hay items sin clasificar</p>
           <p class="text-xs mt-1">Añade items usando el campo de arriba</p>
         </div>
-        <draggable v-else v-model="pool" group="tierlist" item-key="id"
-          :disabled="isMobile"
-          @start="handleDragStart"
-          @end="handleDragEnd"
-          class="flex flex-wrap gap-2"
-          :class="{ 'pointer-events-none': isMobile }">
+        <draggable v-else v-model="pool" group="tierlist" item-key="id" :disabled="isMobile" @start="handleDragStart"
+          @end="handleDragEnd" class="flex flex-wrap gap-2" :class="{ 'pointer-events-none': isMobile }">
           <template #item="{ element }">
             <div
               class="relative group/item cursor-grab active:cursor-grabbing bg-card border rounded-lg p-2.5 sm:p-2 shadow-sm hover:shadow-md hover:border-primary/50 transition-all duration-200 touch-manipulation min-h-[44px] sm:min-h-0"
-              :class="{ 'opacity-50': isDragging }"
-              role="button"
+              :class="{ 'opacity-50': isDragging }" role="button"
               :aria-label="`Item: ${element.content}. Arrastra para mover a un tier o presiona para eliminar`"
-              tabindex="0"
-              @keydown.enter="removeItem(element.id)"
-              @keydown.delete="removeItem(element.id)">
-              <span class="pr-7 sm:pr-6 block text-sm font-medium break-words">{{ element.content }}</span>
+              tabindex="0" @keydown.enter="removeItem(element.id)" @keydown.delete="removeItem(element.id)">
+              <span class="pr-7 sm:pr-6 block text-sm font-medium wrap-break-word">{{ element.content }}</span>
               <button
                 class="absolute top-1.5 right-1.5 sm:top-1 sm:right-1 opacity-0 group-hover/item:opacity-100 group-focus/item:opacity-100 p-1.5 sm:p-1 hover:bg-destructive hover:text-destructive-foreground rounded transition-opacity min-h-[32px] min-w-[32px] sm:min-h-0 sm:min-w-0 flex items-center justify-center touch-manipulation"
-                @click.stop="removeItem(element.id)"
-                :aria-label="`Eliminar item: ${element.content}`">
+                @click.stop="removeItem(element.id)" :aria-label="`Eliminar item: ${element.content}`">
                 <Trash2 class="h-3.5 w-3.5 sm:h-3 sm:w-3" aria-hidden="true" />
               </button>
             </div>
@@ -310,6 +369,7 @@ function handleDragEnd() {
 }
 
 @media (max-width: 1023px) {
+
   .sortable-ghost,
   .sortable-drag {
     opacity: 1;
